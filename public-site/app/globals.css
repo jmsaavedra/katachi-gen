@@ -125,4 +125,17 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* Custom link styling for footer and other links */
+  footer a {
+    @apply text-white px-1 py-0.5 rounded-sm transition-all duration-200;
+  }
+  
+  footer a:hover {
+    @apply bg-gray-200 text-black;
+  }
+  
+  .dark footer a:hover {
+    @apply bg-gray-700 text-white;
+  }
 }
