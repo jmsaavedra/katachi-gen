@@ -1,3 +1,22 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
 # Logs
 logs
 *.log
@@ -5,6 +24,7 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+.pnpm-debug.log*
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
@@ -67,8 +87,10 @@ web_modules/
 
 # dotenv environment variable files
 .env
-.env.*
-!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache
@@ -81,6 +103,7 @@ out
 # Nuxt.js build / generate output
 .nuxt
 dist
+build/
 
 # Gatsby files
 .cache/
@@ -125,6 +148,13 @@ dist
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
 
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
 # yarn v3
 .pnp.*
 .yarn/*
@@ -133,6 +163,10 @@ dist
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
 
 # Vite logs files
 vite.config.js.timestamp-*
