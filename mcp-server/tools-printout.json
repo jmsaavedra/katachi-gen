@@ -1,0 +1,279 @@
+{
+  "result": {
+    "tools": [
+      {
+        "name": "getShapeCreatorAnalytics",
+        "description": "Get Shape creator analytics: gasback earnings, balance, withdrawals, tx volume, and registered contracts.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "creatorAddress": {
+              "type": "string",
+              "description": "The creator/owner address to analyze gasback data for"
+            }
+          },
+          "required": [
+            "creatorAddress"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "title": "Shape Creator Gasback Analytics",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "requiresWallet": false,
+          "category": "gasback-analysis",
+          "educationalHint": true,
+          "chainableWith": [
+            "getTopShapeCreators",
+            "simulateGasbackRewards"
+          ],
+          "cacheTTL": 300
+        }
+      },
+      {
+        "name": "getTopShapeCreators",
+        "description": "Get Shape top creators by gasback earnings.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "title": "Top 15 Shape Creators by Gasback",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "requiresWallet": false,
+          "category": "gasback-analysis",
+          "educationalHint": true,
+          "chainableWith": [
+            "getShapeCreatorAnalytics",
+            "simulateGasbackRewards"
+          ],
+          "cacheTTL": 600
+        }
+      },
+      {
+        "name": "simulateGasbackEarnings",
+        "description": "Simulate potential Gasback earnings for a creator based on hypothetical number of transactions and average gas used per transaction.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "hypotheticalTxs": {
+              "type": "number",
+              "default": 100,
+              "description": "Number of hypothetical user transactions"
+            },
+            "avgGasPerTx": {
+              "type": "number",
+              "default": 150000,
+              "description": "Average gas used per transaction (150k=NFT mint/transfer, 250k=complex DeFi)"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "title": "Gasback Simulation",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "requiresWallet": false,
+          "category": "gasback-analysis",
+          "educationalHint": true,
+          "chainableWith": [
+            "getShapeCreatorAnalytics",
+            "getTopShapeCreators"
+          ],
+          "cacheTTL": 120
+        }
+      },
+      {
+        "name": "getCollectionMarketStats",
+        "description": "Get market statistics from Rarible: floor price, volume, and trading activity",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "collection": {
+              "type": "string",
+              "description": "The collection contract address"
+            }
+          },
+          "required": [
+            "collection"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "title": "Rarible Market Statistics",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "requiresWallet": false,
+          "category": "market-analysis",
+          "educationalHint": true,
+          "chainableWith": [
+            "getCollectionAnalytics"
+          ],
+          "cacheTTL": 300
+        }
+      },
+      {
+        "name": "getChainStatus",
+        "description": "Get Shape network status: RPC health & URLs, gas prices, latest block info, network metrics, etc.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {},
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "title": "Shape Chain Status",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "requiresWallet": false,
+          "category": "monitoring",
+          "educationalHint": true,
+          "cacheTTL": 60
+        }
+      },
+      {
+        "name": "getCollectionAnalytics",
+        "description": "Get essential NFT collection analytics: name, symbol, total supply, owner count, and floor price.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "contractAddress": {
+              "type": "string",
+              "description": "The NFT collection contract address to analyze"
+            }
+          },
+          "required": [
+            "contractAddress"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "title": "NFT Collection Analytics",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "requiresWallet": false,
+          "category": "nft-analysis",
+          "educationalHint": true,
+          "chainableWith": [
+            "getShapeNft",
+            "getCollectionMarketStats"
+          ],
+          "cacheTTL": 300
+        }
+      },
+      {
+        "name": "getShapeNft",
+        "description": "Get NFT ownership data for a given address.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "address": {
+              "type": "string",
+              "description": "The wallet address to get NFTs for"
+            }
+          },
+          "required": [
+            "address"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "title": "Get Shape NFTs",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "requiresWallet": false,
+          "category": "nft-analysis",
+          "educationalHint": true,
+          "chainableWith": [
+            "getCollectionAnalytics"
+          ],
+          "cacheTTL": 600
+        }
+      },
+      {
+        "name": "prepareMintSVGNFT",
+        "description": "Prepare transaction data for minting an SVG NFT on Shape Sepolia testnet",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "recipientAddress": {
+              "type": "string",
+              "description": "The wallet address to mint the NFT to"
+            },
+            "svgContent": {
+              "type": "string",
+              "description": "SVG content for the NFT"
+            },
+            "name": {
+              "type": "string",
+              "description": "NFT name"
+            },
+            "description": {
+              "type": "string",
+              "description": "NFT description (optional)"
+            }
+          },
+          "required": [
+            "recipientAddress",
+            "svgContent",
+            "name"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "category": "NFT",
+          "requiresAuth": false,
+          "network": "shape-sepolia",
+          "cacheTTL": 0
+        }
+      },
+      {
+        "name": "getStackAchievements",
+        "description": "Get a user's Stack achievements: total medals by tier (bronze, silver, gold, special), total count, and last medal claimed",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "userAddress": {
+              "type": "string",
+              "description": "The user address or ENS name to fetch Stack achievements for"
+            }
+          },
+          "required": [
+            "userAddress"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "annotations": {
+          "title": "Stack Achievement Tracker",
+          "readOnlyHint": true,
+          "destructiveHint": false,
+          "idempotentHint": true,
+          "requiresWallet": false,
+          "category": "stack-analysis",
+          "educationalHint": true,
+          "cacheTTL": 300
+        }
+      }
+    ]
+  },
+  "jsonrpc": "2.0",
+  "id": 1
+}
