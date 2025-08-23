@@ -1,7 +1,6 @@
 'use client';
 
 import { useAccount } from 'wagmi';
-import { Button } from '@/components/ui/button';
 import { WalletConnect } from '@/components/wallet-connect';
 import { KatachiGenerator } from '@/components/katachi-generator';
 
@@ -25,7 +24,7 @@ export default function Home() {
                 representing your on-chain journey on Shape.
               </p>
               <p className="text-muted-foreground text-base leading-relaxed">
-                By interpreting your wallet's ShapeL2 participation data, we generate 
+                By interpreting your wallet&apos;s ShapeL2 participation data, we generate 
                 unique, foldable origami patterns that represent your on-chain journey. 
                 Each NFT is both a digital collectible and a printable origami pattern 
                 that can be brought to life.

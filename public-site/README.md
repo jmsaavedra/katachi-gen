@@ -1,161 +1,176 @@
-# Builder Kit: Onchain Starter Template
+# Katachi Gen - Public Site
 
-A modern, production-ready starter template for building decentralized applications with sensible defaults.
+The Next.js web application for Katachi Gen, an NFT collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape Network.
 
-<table width="100%">
-  <tr>
-    <td width="50%"><img src="./public/lp-1.png" alt="Builder Kit Screenshot 1" width="100%"/></td>
-    <td width="50%"><img src="./public/lp-2.png" alt="Builder Kit Screenshot 2" width="100%"/></td>
-  </tr>
-</table>
+🏆 **Shapecraft2 Hackathon Submission**
 
-See deployed website: [builder-kit.vercel.app](https://builder-kit.vercel.app/)
+## Features
 
-## ✨ Features
+- **Wallet Connection**: Multi-wallet support via RainbowKit
+- **NFT Analysis**: Fetch and display all NFTs owned by connected wallet
+- **Pattern Generation**: Generate unique origami patterns based on wallet data
+- **Shape Network Integration**: Native support for Shape Mainnet and Sepolia
+- **Dark Theme**: Minimal, clean interface optimized for Web3 users
 
-- **Next.js 15** with App Router and React 19
-- **Web3 Integration** with Wagmi v2 and RainbowKit
-- **React Query** for data fetching
-- **Shape Network** support (Mainnet & Sepolia)
-- **Alchemy SDK** for performant blockchain interactions
-- **TypeScript** for type safety
-- **Tailwind CSS** with theming and dark mode support
-- **Shadcn/ui** for a large range of fully customizable and themable components
-- **Error Boundaries** for graceful error handling
+## Tech Stack
 
-## 🚀 Quick Start
+- **Next.js 15** - React framework with App Router and Turbopack
+- **TypeScript** - Type safety throughout the application
+- **Wagmi v2** - React hooks for Ethereum interactions
+- **RainbowKit** - Beautiful wallet connection UI
+- **Alchemy SDK** - NFT data fetching and blockchain queries
+- **Tailwind CSS** - Utility-first CSS framework
+- **Shadcn/ui** - Modern React component library
+- **React Query** - Powerful data synchronization
 
-1. **Clone or use as template**
+## Getting Started
 
-   ```bash
-   git clone https://github.com/shape-network/builder-kit.git
-   cd builder-kit
-   ```
+### Prerequisites
 
-2. **Install dependencies**
+- Node.js 18+
+- Yarn package manager
+- Alchemy API key
+- WalletConnect Project ID
 
-   ```bash
-   yarn install
-   ```
+### Environment Variables
 
-3. **Set up environment variables**
-
-   ```bash
-   cp .env-example .env
-   ```
-
-   Fill in your environment variables:
-
-   - `NEXT_PUBLIC_ALCHEMY_KEY`: Get from [Alchemy](https://alchemy.com)
-   - `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`: Get from [WalletConnect](https://cloud.walletconnect.com)
-   - `NEXT_PUBLIC_CHAIN_ID`: Use `11011` for Shape Sepolia or `360` for Shape Mainnet
-
-4. **Start development server**
-
-   ```bash
-   yarn dev
-   ```
-
-5. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-## 🛠️ Development
-
-### Available Scripts
-
-- `yarn dev` - Start development server with Turbopack
-- `yarn build` - Build for production
-- `yarn start` - Start production server
-- `yarn lint` - Run ESLint
-- `yarn lint:fix` - Fix ESLint issues
-- `yarn type-check` - Run TypeScript type checking
-- `yarn format` - Format code with Prettier
-- `yarn format:check` - Check code formatting
-
-### Project Structure
-
-```
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   │   ├── get-nfts/     # Fetch NFTs for address
-├── components/            # React components
-│   ├── ui/               # Shadcn/ui components
-│   ├── error-boundary.tsx
-│   ├── loading.tsx
-│   ├── providers.tsx
-│   ├── theme-toggle.tsx
-│   └── wallet-connect.tsx
-├── hooks/                 # Custom React hooks
-│   ├── web3.ts           # Web3 data fetching hooks
-│   ├── use-balance.ts    # Wallet balance hook
-│   ├── use-mobile.ts     # Mobile detection hook
-├── lib/                   # Utility functions and configurations
-│   ├── clients.ts        # Alchemy and RPC clients
-│   ├── config.ts         # Environment configuration
-│   ├── utils.ts          # Helper functions
-│   └── web3.ts           # Wagmi configuration
-└── public/               # Static assets
-```
-
-## 🎨 Customization
-
-### Theme Customization
-
-Edit `app/globals.css` to customize the color scheme:
-
-```css
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222.2 84% 4.9%;
-  /* ... other CSS variables */
-}
-```
-
-### Adding Components
-
-Use Shadcn/ui CLI to add new components:
+Create a `.env.local` file in the project root:
 
 ```bash
-npx shadcn@latest add button
+# Shape Network Configuration
+NEXT_PUBLIC_CHAIN_ID=360
+
+# Alchemy API Key (get from https://www.alchemy.com/)
+NEXT_PUBLIC_ALCHEMY_KEY=your_alchemy_api_key
+
+# WalletConnect Project ID (get from https://cloud.walletconnect.com/)
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_walletconnect_project_id
 ```
 
-### Web3 Integration
+### Installation
 
-The template includes examples of Web3 integration:
+```bash
+# Install dependencies
+yarn install
 
-- Wallet connection with RainbowKit
-- Balance fetching with custom hooks
-- Chain switching and network detection
-- Error handling for Web3 operations
+# Start development server
+yarn dev
+# or
+npx next dev --turbopack
 
-## 🌐 Deployment
+# Build for production
+yarn build
+
+# Start production server
+yarn start
+```
+
+The application will be available at [http://localhost:3000](http://localhost:3000).
+
+## Project Structure
+
+```bash
+public-site/
+├── app/                    # Next.js App Router
+│   ├── api/get-nfts/      # NFT fetching API route
+│   ├── layout.tsx         # Root layout with providers
+│   └── page.tsx           # Landing page
+├── components/            # React components
+│   ├── katachi-generator.tsx  # Main pattern generation UI
+│   ├── wallet-connect.tsx     # Wallet connection component
+│   └── ui/                # Shadcn/ui components
+├── hooks/                 # Custom React hooks
+│   └── web3.ts           # NFT fetching and Web3 interactions
+├── lib/                  # Utilities and configuration
+│   ├── clients.ts        # Alchemy and RPC client setup
+│   ├── config.ts         # Environment variable handling
+│   └── web3.ts          # Wagmi configuration
+└── package.json         # Dependencies and scripts
+```
+
+## How It Works
+
+1. **Wallet Connection**: Users connect their wallet using RainbowKit
+2. **NFT Analysis**: App fetches all NFTs owned by the wallet via Alchemy
+3. **Shape Participation**: Analyzes on-chain activity on Shape Network
+4. **Pattern Generation**: Creates unique origami patterns based on:
+   - Total NFT count
+   - Collection diversity
+   - Shape Network participation
+   - Stack achievements (coming soon)
+5. **Visualization**: Displays interactive 3D origami pattern preview
+6. **Minting**: Allows users to mint their generated pattern as an NFT (coming soon)
+
+## Supported Networks
+
+- **Shape Mainnet** (Chain ID: 360) - Primary network
+- **Shape Sepolia** (Chain ID: 11011) - Testnet
+- **Ethereum Mainnet** - Fallback for broader NFT analysis
+
+## Deployment
 
 ### Vercel (Recommended)
 
-1. Push your code to GitHub
-2. Connect your repository to [Vercel](https://vercel.com)
-3. Add your environment variables in Vercel dashboard
-4. Deploy!
+1. Connect your GitHub repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
 
-## 📚 Documentation
+### Manual Deployment
 
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Wagmi Documentation](https://wagmi.sh)
-- [RainbowKit Documentation](https://www.rainbowkit.com)
-- [Shadcn/ui Documentation](https://ui.shadcn.com)
-- [Shape Network Documentation](https://docs.shape.network)
-- [Alchemy SDK Documentation](https://docs.alchemy.com/reference/alchemy-sdk-quickstart)
+```bash
+# Build the application
+yarn build
 
-## 🤝 Contributing
+# The build output will be in the `.next` directory
+# Deploy to your preferred hosting platform
+```
 
-Contributions are welcome! Feel free to submit a Pull Request.
+## Development
 
-## 📄 License
+### Code Style
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **ESLint**: Enforced linting rules for code quality
+- **Prettier**: Automatic code formatting
+- **TypeScript**: Strict type checking enabled
 
-## 💬 Support
+### Available Scripts
 
-- [Shape Discord](http://discord.com/invite/shape-l2)
-- [Twitter/X @Shape_L2](https://x.com/Shape_L2)
-- [Twitter/X @williamhzo](https://x.com/williamhzo)
+```bash
+yarn dev          # Start development server with Turbopack
+yarn build        # Build for production
+yarn start        # Start production server
+yarn lint         # Run ESLint
+yarn lint:fix     # Fix ESLint errors automatically
+yarn type-check   # Run TypeScript compiler
+```
+
+### Adding New Features
+
+1. Create components in `components/` directory
+2. Add custom hooks in `hooks/` directory
+3. Update utilities in `lib/` directory
+4. Follow existing patterns for consistency
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/new-feature`
+3. Make your changes and commit: `git commit -m 'Add new feature'`
+4. Push to the branch: `git push origin feature/new-feature`
+5. Submit a pull request
+
+## License
+
+This project is part of the Katachi Gen submission for the Shapecraft2 Hackathon.
+
+## Links
+
+- [Shape Network](https://shape.network)
+- [Shapecraft2 Hackathon](https://shape.network/shapecraft)
+- [Main Repository](https://github.com/jmsaavedra/katachi-gen)
+
+---
+
+## About
+
+Transform your on-chain journey into unique origami art with Katachi Gen.
