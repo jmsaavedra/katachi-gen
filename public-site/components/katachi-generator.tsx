@@ -6,14 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { WalletConnect } from '@/components/wallet-connect';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Loader2, Sparkles, Package, Hash } from 'lucide-react';
+import Image from 'next/image';
 
 export function KatachiGenerator() {
   const { address } = useAccount();
   const { data: nfts, isLoading, error } = useNFTsForOwner(address);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedPattern, setGeneratedPattern] = useState<any>(null);
+  const [generatedPattern, setGeneratedPattern] = useState<{
+    complexity: number;
+    foldLines: number;
+    pattern: string;
+    colors: string[];
+  } | null>(null);
 
   const handleGenerateKatachi = async () => {
     setIsGenerating(true);
@@ -183,12 +189,15 @@ export function KatachiGenerator() {
           <CardContent>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
               {nfts.ownedNfts.slice(0, 12).map((nft, index) => (
-                <div key={index} className="aspect-square rounded-lg overflow-hidden bg-muted">
+                <div key={index} className="aspect-square rounded-lg overflow-hidden bg-muted relative">
                   {nft.image?.thumbnailUrl ? (
-                    <img 
+                    <Image 
                       src={nft.image.thumbnailUrl} 
                       alt={nft.name || 'NFT'} 
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 16vw"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground">
