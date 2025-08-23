@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { WalletConnect } from '@/components/wallet-connect';
-import { useState } from 'react';
-import { Loader2, Sparkles, Package, Hash } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
 
 export function KatachiGenerator() {
@@ -20,6 +20,15 @@ export function KatachiGenerator() {
     pattern: string;
     colors: string[];
   } | null>(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Reset pagination when NFTs change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [nfts?.totalCount]);
 
   const handleGenerateKatachi = async () => {
     setIsGenerating(true);
@@ -41,10 +50,29 @@ export function KatachiGenerator() {
     return baseColors.slice(0, Math.min(nftCount, 5));
   };
 
+  // Pagination logic
+  const totalNfts = nfts?.ownedNfts?.length || 0;
+  const totalPages = Math.ceil(totalNfts / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentPageNfts = nfts?.ownedNfts?.slice(startIndex, endIndex) || [];
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
   return (
     <div className="w-full max-w-6xl mx-auto space-y-8">
       <div className="text-center space-y-4">
-        <h2 className="text-3xl font-light">Generate Your Katachi</h2>
+        <h2 className="text-3xl font-light">Generate Your Katachi Gen</h2>
         <p className="text-muted-foreground">
           Your unique origami pattern based on your Shape journey
         </p>
@@ -177,26 +205,31 @@ export function KatachiGenerator() {
         </Card>
       </div>
 
-      {/* NFT Grid Preview */}
+      {/* NFT Grid Preview with Pagination */}
       {nfts && nfts.ownedNfts && nfts.ownedNfts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Your NFT Collection</CardTitle>
+            <CardTitle className="flex items-center justify-between">
+              <span>Your NFT Collection</span>
+              <span className="text-sm font-normal text-muted-foreground">
+                {totalNfts} total NFTs
+              </span>
+            </CardTitle>
             <CardDescription>
               These NFTs influence your Katachi pattern
             </CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              {nfts.ownedNfts.slice(0, 12).map((nft, index) => (
-                <div key={index} className="aspect-square rounded-lg overflow-hidden bg-muted relative">
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              {currentPageNfts.map((nft, index) => (
+                <div key={`${nft.contract.address}-${nft.tokenId}-${index}`} className="aspect-square rounded-lg overflow-hidden bg-muted relative group">
                   {nft.image?.thumbnailUrl ? (
                     <Image 
                       src={nft.image.thumbnailUrl} 
                       alt={nft.name || 'NFT'} 
                       fill
-                      className="object-cover"
-                      sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 16vw"
+                      className="object-cover transition-transform group-hover:scale-105"
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                       unoptimized
                     />
                   ) : (
@@ -204,13 +237,49 @@ export function KatachiGenerator() {
                       <Package className="h-8 w-8" />
                     </div>
                   )}
+                  {/* NFT Info Overlay */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
+                    <p className="text-white text-xs font-medium truncate">{nft.name || 'Unnamed'}</p>
+                    <p className="text-white/70 text-xs truncate">#{nft.tokenId}</p>
+                  </div>
                 </div>
               ))}
             </div>
-            {nfts.ownedNfts.length > 12 && (
-              <p className="text-center text-muted-foreground text-sm mt-4">
-                And {nfts.ownedNfts.length - 12} more...
-              </p>
+            
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between pt-4 border-t">
+                <div className="text-sm text-muted-foreground">
+                  Showing {startIndex + 1}-{Math.min(endIndex, totalNfts)} of {totalNfts} NFTs
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handlePreviousPage}
+                    disabled={currentPage === 1}
+                    className="gap-1"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm text-muted-foreground">Page</span>
+                    <span className="text-sm font-medium">{currentPage}</span>
+                    <span className="text-sm text-muted-foreground">of {totalPages}</span>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleNextPage}
+                    disabled={currentPage === totalPages}
+                    className="gap-1"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             )}
           </CardContent>
         </Card>
