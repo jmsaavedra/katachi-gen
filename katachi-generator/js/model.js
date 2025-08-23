@@ -123,14 +123,20 @@ function initModel(globals){
             
             if (textureToUse) {
                 console.log("Setting texture material with texture:", textureToUse.name || "atlas");
-                // New texture mode for per-face texture mapping
+                // Enhanced texture material with subtle reflective properties
                 material = new THREE.MeshPhongMaterial({
                     map: textureToUse,
                     flatShading: true,
                     side: THREE.DoubleSide,
                     polygonOffset: true,
                     polygonOffsetFactor: polygonOffset,
-                    polygonOffsetUnits: 1
+                    polygonOffsetUnits: 1,
+                    // Subtle reflective properties to preserve texture visibility
+                    shininess: 30,         // Moderate shininess
+                    specular: 0x333333,    // Reduced specular reflection
+                    reflectivity: 0.2,     // Low reflectivity
+                    transparent: false,    // No transparency to keep colors vivid
+                    opacity: 1.0
                 });
                 backside.visible = false;
                 // Update UV coordinates for face-based texture mapping
@@ -145,14 +151,26 @@ function initModel(globals){
                     side:THREE.FrontSide,
                     polygonOffset: true,
                     polygonOffsetFactor: polygonOffset, // positive value pushes polygon further away
-                    polygonOffsetUnits: 1
+                    polygonOffsetUnits: 1,
+                    // Subtle reflective properties
+                    shininess: 25,
+                    specular: 0x222222,
+                    reflectivity: 0.15,
+                    transparent: false,
+                    opacity: 1.0
                 });
                 material2 = new THREE.MeshPhongMaterial({
                     flatShading:true,
                     side:THREE.BackSide,
                     polygonOffset: true,
                     polygonOffsetFactor: polygonOffset, // positive value pushes polygon further away
-                    polygonOffsetUnits: 1
+                    polygonOffsetUnits: 1,
+                    // Subtle reflective properties
+                    shininess: 25,
+                    specular: 0x222222,
+                    reflectivity: 0.15,
+                    transparent: false,
+                    opacity: 1.0
                 });
                 material.color.setStyle( "#" + globals.color1);
                 material2.color.setStyle( "#" + globals.color2);
@@ -164,14 +182,26 @@ function initModel(globals){
                 side:THREE.FrontSide,
                 polygonOffset: true,
                 polygonOffsetFactor: polygonOffset, // positive value pushes polygon further away
-                polygonOffsetUnits: 1
+                polygonOffsetUnits: 1,
+                // Subtle reflective properties
+                shininess: 25,         // Low shininess
+                specular: 0x222222,    // Reduced specular reflection
+                reflectivity: 0.15,    // Low reflectivity
+                transparent: false,
+                opacity: 1.0
             });
             material2 = new THREE.MeshPhongMaterial({
                 flatShading:true,
                 side:THREE.BackSide,
                 polygonOffset: true,
                 polygonOffsetFactor: polygonOffset, // positive value pushes polygon further away
-                polygonOffsetUnits: 1
+                polygonOffsetUnits: 1,
+                // Subtle reflective properties
+                shininess: 25,         // Low shininess
+                specular: 0x222222,    // Reduced specular reflection
+                reflectivity: 0.15,    // Low reflectivity
+                transparent: false,
+                opacity: 1.0
             });
             material.color.setStyle( "#" + globals.color1);
             material2.color.setStyle( "#" + globals.color2);

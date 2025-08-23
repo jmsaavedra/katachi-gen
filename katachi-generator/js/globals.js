@@ -56,7 +56,7 @@ function initGlobals(){
         simType: "dynamic",
 
         //compliant sim settings
-        creasePercent: 0.6,
+        creasePercent: 0,  // Start flat (0% folded)
         axialStiffness: 20,
         creaseStiffness: 0.7,
         panelStiffness: 0.7,
@@ -412,6 +412,20 @@ function initGlobals(){
             
             console.log("Texture loading completed:", successCount, "successful,", failedCount, "failed");
             
+            // Auto-enable random textures for testing (moved before fold data check)
+            console.log("🔍 Checking conditions: textureLibrary.length =", _globals.textureLibrary.length, "model exists =", !!_globals.model);
+            if (_globals.textureLibrary.length >= 1) {
+                console.log("✅ Textures detected, enabling random assignment (test mode - bypassing model check)");
+                assignRandomTextures();
+                _globals.randomTextures = true;
+                $("#randomTextures").prop("checked", true);
+            } else {
+                console.log("❌ Conditions not met for random textures");
+                if (_globals.textureLibrary.length < 1) {
+                    console.log("   - No textures in library");
+                }
+            }
+            
             // Check if we have fold data before proceeding with multiple textures
             if (!_globals.fold || !_globals.fold.faces_vertices) {
                 console.warn("⚠️ No origami pattern loaded. Please import an SVG pattern first for textures to display properly.");
@@ -432,15 +446,7 @@ function initGlobals(){
             } else {
                 updateLoadingStatus("✓ " + successCount + " image" + (successCount > 1 ? "s" : "") + " loaded successfully");
             }
-            
-            // Auto-enable random textures for multiple textures
-            if (_globals.textureLibrary.length > 1 && _globals.model) {
-                console.log("Multiple textures detected, enabling random assignment");
-                assignRandomTextures();
-                _globals.randomTextures = true;
-                $("#randomTextures").prop("checked", true);
-            }
-            
+
             // Set first texture as default for material
             if (_globals.textureLibrary.length > 0) {
                 _globals.faceTexture = _globals.textureLibrary[0];
@@ -525,6 +531,8 @@ function initGlobals(){
     _globals.removeTexture = removeTexture;
 
     function assignRandomTextures() {
+        console.log("🕐 assignRandomTextures called at:", new Date().toISOString());
+        
         if (!_globals.model || _globals.textureLibrary.length === 0) {
             console.warn("Cannot assign random textures: missing model or textures");
             return;
@@ -564,18 +572,34 @@ function initGlobals(){
         }
         
         // Shuffle the assignments for randomness
+        console.log("🎲 Random values for texture assignment (save these for fixed mapping):");
+        console.log("📊 faceAssignments array length:", faceAssignments.length);
+        console.log("📊 faceAssignments before shuffle:", JSON.stringify(faceAssignments));
+        
+        var randomValues = [];
         for (var i = faceAssignments.length - 1; i > 0; i--) {
-            var j = Math.floor(Math.random() * (i + 1));
+            var randomValue = Math.random();
+            var j = Math.floor(randomValue * (i + 1));
+            randomValues.push(randomValue);
+            console.log("Step " + (faceAssignments.length - 1 - i) + ": random=" + randomValue.toFixed(6) + ", j=" + j);
             var temp = faceAssignments[i];
             faceAssignments[i] = faceAssignments[j];
             faceAssignments[j] = temp;
         }
+        console.log("📋 All random values: [" + randomValues.map(function(v) { return v.toFixed(6); }).join(", ") + "]");
+        console.log("📊 faceAssignments after shuffle:", JSON.stringify(faceAssignments));
         
         // Apply assignments to faces
         for (var f = 0; f < faces.length; f++) {
             if (faceAssignments[f] !== undefined) {
                 _globals.faceTextureMapping[f] = faceAssignments[f];
             }
+        }
+        
+        // Debug: Show final face-to-texture mapping (first 20 faces)
+        console.log("🗺️ Final face mapping (first 20 faces):");
+        for (var f = 0; f < Math.min(20, faces.length); f++) {
+            console.log("Face " + f + " → Texture " + _globals.faceTextureMapping[f]);
         }
         
         // Statistics for logging

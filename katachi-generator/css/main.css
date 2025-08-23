@@ -15,6 +15,12 @@ body{
     padding:0;
     margin:0;
     overflow: hidden;
+    /* Gradient background: black to white to black */
+    background: linear-gradient(to bottom, 
+        #afafaf 0%,     /* Top: Black */
+        #ffffff 50%,    /* Center: White */
+        #afafaf 100%);  /* Bottom: Black */
+    background-attachment: fixed;
     /*min-width: 1025px;*/
     /*-webkit-touch-callout: none; !* iOS Safari *!*/
     /*-webkit-user-select: none;   !* Chrome/Safari/Opera *!*/
@@ -118,9 +124,11 @@ p{
 }
 
 #viewToggle{
+    display: none !important;
     left: 30px;
 }
 #controlsToggle{
+    display: none !important;
     right: 140px;
 }
 .preserveAspect{
@@ -172,6 +180,7 @@ p{
 }
 
 #resetBottom{
+    display: none !important;
     position: absolute;
     right:30px;
     top: 13px;
@@ -292,6 +301,19 @@ input.form-control {
     position: absolute;
     top: 0px;
     left: 0px;
+}
+
+/* Ensure Three.js canvas is transparent */
+#threeContainer canvas,
+canvas {
+    background: transparent !important;
+    background-color: transparent !important;
+}
+
+/* Force transparency for all WebGL canvases */
+canvas[data-engine="three.js"] {
+    background: none !important;
+    opacity: 1;
 }
 
 
