@@ -70,6 +70,9 @@ web_modules/
 # Optional npm cache directory
 .npm
 
+# Package lock files (prefer yarn.lock)
+package-lock.json
+
 # Optional eslint cache
 .eslintcache
 
