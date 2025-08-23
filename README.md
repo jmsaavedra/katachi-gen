@@ -4,14 +4,6 @@
 
 🏆 Shapecraft2 Hackathon Submission for [Shape Network](https://shape.network/shapecraft)
 
-## Team
-**Sembo** [@1000b](https://x.com/1000b)
-
-and 
-
-**Joe Saavedra** [@quietloops](https://x.com/quietloops)
-
-
 ## Overview
 
 Katachi Gen transforms blockchain data into physical art. By interpreting your wallet's ShapeL2 participation data, we generate unique, foldable origami patterns that represent your on-chain journey. Each NFT is both a digital collectible and a printable origami pattern that can be brought to life.
@@ -64,7 +56,7 @@ katachi-gen/
 ## Minting Eligibility
 
 - **Requirement**: Must own a Stack NFT on ShapeL2
-- **Limit**: 1 Katachi Gen NFT per eligible wallet
+- **Limit**: None
 - **Uniqueness**: Each mint generates a unique pattern based on current wallet state
 
 ## Cultural Inspiration
@@ -78,8 +70,8 @@ Every wallet tells a story through its on-chain activity. Katachi Gen transforms
 ## Team
 
 Built with ❤️ by:
-- **Joe** ([@josdotph](https://twitter.com/josdotph))
 - **Sembo** ([@1000b](https://twitter.com/1000b))
+- **Joe** ([@quietloops](https://twitter.com/quietloops))
 
 ## Links
 
