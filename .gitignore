@@ -70,6 +70,9 @@ web_modules/
 # Optional npm cache directory
 .npm
 
+# Package lock files (prefer yarn.lock)
+package-lock.json
+
 # Optional eslint cache
 .eslintcache
 
@@ -97,8 +100,8 @@ web_modules/
 .parcel-cache
 
 # Next.js build output
-.next
-out
+.next/
+out/
 
 # Nuxt.js build / generate output
 .nuxt
