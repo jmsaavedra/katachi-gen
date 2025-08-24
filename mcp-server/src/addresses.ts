@@ -11,7 +11,7 @@ export const addresses: Record<string, Record<number, Address>> = {
     [shapeSepolia.id]: '0xaF94F7b7Dd601967E3ebdba052F5Ed6d215220b3',
   },
   nftMinter: {
-    [shapeSepolia.id]: '0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85', // KatachiGen contract on testnet
-    [shape.id]: '0x9fba90186403d1c5e3e1971536862cf4ebb0f766', // KatachiGen contract on mainnet
+    [shapeSepolia.id]: (process.env.KATACHI_CONTRACT_TESTNET || '0x06740C004c98afA7f9F5C38C00B8DAF9c33ABFB3') as Address,
+    [shape.id]: (process.env.KATACHI_CONTRACT_MAINNET || '0x9fba90186403d1c5e3e1971536862cf4ebb0f766') as Address,
   },
 };
