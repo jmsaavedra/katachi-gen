@@ -7,7 +7,7 @@ const { chromium } = require('playwright-core');
 const { uploadFileToArweave } = require('./arweave-uploader');
 
 // Server port configuration
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 const templateHTML = 'template.html';
 const arweaveWalletPath = process.env.NODE_ENV === 'production' 
   ? '../keys/arweave-wallet.json'
