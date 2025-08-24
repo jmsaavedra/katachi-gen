@@ -33,6 +33,47 @@ function initGlobals(){
         faceTextureMapping: {}, // Map face indices to texture indices
         selectedTexture: 0, // Currently selected texture for assignment
         randomTextures: false,
+        
+        // Lighting settings - adjustable parameters for 3D scene lighting
+        lighting: {
+            // Main front light for texture clarity (from top front) - ハードコード値
+            frontMain: {
+                intensity: 1.2,  // デフォルト0.8から1.2に変更（明るく）
+                position: { x: 0, y: 100, z: 0 }
+            },
+            // Back light for depth (from bottom back)
+            backLight: {
+                intensity: 0.3,
+                position: { x: 0, y: -100, z: 0 }
+            },
+            // Side lights for even illumination
+            sideLeft: {
+                intensity: 0.6,
+                position: { x: 100, y: -30, z: 0 }
+            },
+            sideRight: {
+                intensity: 0.6,
+                position: { x: -100, y: -30, z: 0 }
+            },
+            // Front lights for texture detail - positioned to face the model directly
+            frontDetail1: {
+                intensity: 0.6,  // デフォルト0.7から0.9に変更（明るく）
+                position: { x: 0, y: 30, z: 100 }
+            },
+            frontDetail2: {
+                intensity: 0.3,  // デフォルト0.4から0.6に変更（明るく）
+                position: { x: 0, y: 30, z: -100 }
+            },
+            // Ambient light for overall visibility - ハードコード値
+            ambient: {
+                intensity: 0.35  // デフォルト0.25から0.35に変更（明るく）
+            }
+        },
+        
+        // Global random seed management
+        randomSeed: "origami-simulator-2024", // Default seed string
+        randomFunction: null, // Will store seeded random function
+        useSeededRandom: true, // Enable deterministic random behavior
 
         //flags
         simulationRunning: true,
@@ -297,6 +338,15 @@ function initGlobals(){
     }
     
     function loadTextureFromFile(file, callback) {
+        var callbackCalled = false; // Move outside to proper scope
+        
+        function safeCallback(result) {
+            if (!callbackCalled) {
+                callbackCalled = true;
+                if (callback) callback(result);
+            }
+        }
+        
         var reader = new FileReader();
         reader.onload = function(e) {
             var loader = new THREE.TextureLoader();
@@ -315,11 +365,29 @@ function initGlobals(){
                     // Ensure texture image is ready for atlas creation
                     if (texture.image) {
                         texture.image.crossOrigin = 'anonymous';
+                        
+                        // Wait for image to be fully loaded
+                        if (!texture.image.complete) {
+                            texture.image.onload = function() {
+                                console.log("✅ Texture image loaded completely:", texture.name, 
+                                           texture.image.width + "x" + texture.image.height);
+                                _globals.faceTexture = texture;
+                                safeCallback(texture);
+                            };
+                            texture.image.onerror = function() {
+                                console.error("❌ Failed to load texture image:", texture.name);
+                                safeCallback(null);
+                            };
+                        } else {
+                            console.log("✅ Texture image already complete:", texture.name, 
+                                       texture.image.width + "x" + texture.image.height);
+                            _globals.faceTexture = texture;
+                            safeCallback(texture);
+                        }
+                    } else {
+                        console.error("❌ Texture has no image data:", texture.name);
+                        safeCallback(null);
                     }
-                    
-                    _globals.faceTexture = texture;
-                    console.log("Texture loaded successfully:", texture.name, "Image ready:", !!texture.image);
-                    if (callback) callback(texture);
                 },
                 function(progress) {
                     // Progress callback
@@ -327,14 +395,16 @@ function initGlobals(){
                 },
                 function(error) {
                     // Error callback
-                    console.error("Error loading texture:", error);
+                    console.error("❌ Error loading texture:", file.name, error);
                     _globals.warn("Failed to load texture file: " + file.name);
+                    safeCallback(null);
                 }
             );
         };
         reader.onerror = function(error) {
-            console.error("Error reading file:", error);
+            console.error("❌ Error reading file:", file.name, error);
             _globals.warn("Failed to read texture file: " + file.name);
+            safeCallback(null);
         };
         reader.readAsDataURL(file);
     }
@@ -347,13 +417,24 @@ function initGlobals(){
         var loadedCount = 0;
         var totalFiles = files.length;
         var failedFiles = [];
+        var loadedTextures = []; // Track loaded textures to prevent duplicates
         
         if (totalFiles === 0) {
             if (callback) callback([]);
             return;
         }
         
-        console.log("Loading", totalFiles, "texture files...");
+        console.log("🎨 Loading", totalFiles, "texture files in deterministic order...");
+        
+        // Sort files by name to ensure consistent order
+        var sortedFiles = Array.from(files).sort(function(a, b) {
+            return a.name.localeCompare(b.name);
+        });
+        
+        console.log("📋 Sorted file order:");
+        for (var s = 0; s < sortedFiles.length; s++) {
+            console.log("  " + s + ": " + sortedFiles[s].name);
+        }
         
         // Update status
         function updateLoadingStatus(message) {
@@ -363,54 +444,83 @@ function initGlobals(){
             }
         }
         
-        updateLoadingStatus("📥 Loading " + totalFiles + " image" + (totalFiles > 1 ? "s" : "") + "...");
+        updateLoadingStatus("📥 Loading " + totalFiles + " image" + (totalFiles > 1 ? "s" : "") + " in order...");
         
-        for (var i = 0; i < totalFiles; i++) {
-            (function(index) {
-                var file = files[index];
-                
-                // Validate file type
-                var validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/avif', 'image/webp', 'image/gif'];
-                if (!validTypes.includes(file.type)) {
-                    console.warn("Unsupported file type:", file.type, "for file:", file.name);
-                    failedFiles.push(file.name + " (unsupported format)");
-                    loadedCount++;
-                    
-                    if (loadedCount === totalFiles) {
-                        finishLoading();
+        // Sequential loading to ensure deterministic order
+        var loadedTextures = new Array(totalFiles); // Pre-allocate array
+        
+        function loadSequentially(index) {
+            if (index >= totalFiles) {
+                // All files processed, compile results in order
+                _globals.textureLibrary = [];
+                for (var i = 0; i < loadedTextures.length; i++) {
+                    if (loadedTextures[i]) {
+                        _globals.textureLibrary.push(loadedTextures[i]);
                     }
-                    return;
+                }
+                finishLoading();
+                return;
+            }
+            
+            var file = sortedFiles[index];
+            
+            // Validate file type
+            var validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/avif', 'image/webp', 'image/gif'];
+            if (!validTypes.includes(file.type)) {
+                console.warn("Unsupported file type:", file.type, "for file:", file.name);
+                failedFiles.push(file.name + " (unsupported format)");
+                loadedTextures[index] = null;
+                loadSequentially(index + 1);
+                return;
+            }
+            
+            console.log("📥 Loading texture " + (index + 1) + "/" + totalFiles + ":", file.name);
+            
+            loadTexture(file, function(texture) {
+                if (texture) {
+                    // Check for duplicates in previously loaded textures
+                    var isDuplicate = false;
+                    for (var i = 0; i < index; i++) {
+                        if (loadedTextures[i] && loadedTextures[i].name === texture.name) {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!isDuplicate) {
+                        loadedTextures[index] = texture;
+                        console.log("✅ Loaded texture " + (index + 1) + ":", texture.name);
+                        console.log("   - Image dimensions:", texture.image ? texture.image.width + "x" + texture.image.height : "No image");
+                    } else {
+                        console.log("⚠️ Skipping duplicate texture:", texture.name);
+                        loadedTextures[index] = null;
+                    }
+                } else {
+                    failedFiles.push(file.name + " (load failed)");
+                    console.error("❌ Failed to load texture:", file.name);
+                    loadedTextures[index] = null;
                 }
                 
-                loadTexture(file, function(texture) {
-                    if (texture) {
-                        _globals.textureLibrary[index] = texture;
-                        console.log("Loaded texture", index + 1, "of", totalFiles + ":", texture.name);
-                    } else {
-                        failedFiles.push(file.name + " (load failed)");
-                        console.error("Failed to load texture:", file.name);
-                    }
-                    
-                    loadedCount++;
-                    updateTextureList();
-                    
-                    if (loadedCount === totalFiles) {
-                        finishLoading();
-                    }
-                });
-            })(i);
+                loadSequentially(index + 1);
+            });
         }
         
+        // Start sequential loading
+        loadSequentially(0);
+        
         function finishLoading() {
-            // Remove any null entries from failed loads
-            _globals.textureLibrary = _globals.textureLibrary.filter(function(texture) {
-                return texture !== null && texture !== undefined;
-            });
-            
             var successCount = _globals.textureLibrary.length;
             var failedCount = failedFiles.length;
             
-            console.log("Texture loading completed:", successCount, "successful,", failedCount, "failed");
+            console.log("📚 Texture loading completed:", successCount, "successful,", failedCount, "failed");
+            
+            // Debug: Show all loaded textures
+            console.log("🔍 Texture library contents:");
+            for (var i = 0; i < _globals.textureLibrary.length; i++) {
+                var texture = _globals.textureLibrary[i];
+                console.log("- Index " + i + ":", texture ? texture.name : "NULL", 
+                           texture && texture.image ? "(" + texture.image.width + "x" + texture.image.height + ")" : "(no image)");
+            }
             
             // Auto-enable random textures for testing (moved before fold data check)
             console.log("🔍 Checking conditions: textureLibrary.length =", _globals.textureLibrary.length, "model exists =", !!_globals.model);
@@ -447,9 +557,22 @@ function initGlobals(){
                 updateLoadingStatus("✓ " + successCount + " image" + (successCount > 1 ? "s" : "") + " loaded successfully");
             }
 
-            // Set first texture as default for material
-            if (_globals.textureLibrary.length > 0) {
+            // Set appropriate texture based on count
+            if (_globals.textureLibrary.length > 1) {
+                // Multiple textures: create atlas
+                console.log("🎨 Creating texture atlas for", _globals.textureLibrary.length, "textures");
+                var atlas = createTextureAtlas();
+                if (atlas) {
+                    _globals.faceTexture = atlas;
+                    console.log("✅ Texture atlas created and set as faceTexture");
+                } else {
+                    console.warn("⚠️ Failed to create atlas, falling back to first texture");
+                    _globals.faceTexture = _globals.textureLibrary[0];
+                }
+            } else if (_globals.textureLibrary.length === 1) {
+                // Single texture: use directly
                 _globals.faceTexture = _globals.textureLibrary[0];
+                console.log("✅ Single texture set as faceTexture");
             }
             
             // Clear status after 3 seconds
@@ -532,10 +655,26 @@ function initGlobals(){
 
     function assignRandomTextures() {
         console.log("🕐 assignRandomTextures called at:", new Date().toISOString());
+        console.log("🔑 Using seed:", _globals.randomSeed, "| Seeded random enabled:", _globals.useSeededRandom);
+        
+        // Ensure the random seed is properly initialized before assignment
+        if (!_globals.randomFunction || !_globals.useSeededRandom) {
+            console.log("🔄 Re-initializing random seed before texture assignment");
+            _globals.initializeRandomSeed(_globals.randomSeed);
+        }
         
         if (!_globals.model || _globals.textureLibrary.length === 0) {
             console.warn("Cannot assign random textures: missing model or textures");
             return;
+        }
+        
+        // Debug: Verify texture library state
+        console.log("🔍 Pre-assignment texture library verification:");
+        console.log("- Library length:", _globals.textureLibrary.length);
+        for (var t = 0; t < _globals.textureLibrary.length; t++) {
+            var tex = _globals.textureLibrary[t];
+            console.log("  [" + t + "]", tex ? tex.name : "NULL", 
+                       tex && tex.image ? "✓" : "✗");
         }
         
         // Get faces from the fold data if available, otherwise use model faces
@@ -555,38 +694,86 @@ function initGlobals(){
         
         console.log("🎲 Assigning", _globals.textureLibrary.length, "textures randomly to", faces.length, "faces");
         
-        // Clear existing mapping
+        // Clear existing mapping COMPLETELY to ensure fresh start
         _globals.faceTextureMapping = {};
         
         var numTextures = _globals.textureLibrary.length;
         
-        // Enhanced random distribution with better coverage
-        var texturesPerFace = Math.ceil(faces.length / numTextures);
+        // Enhanced distribution algorithm to ensure all textures are used
         var faceAssignments = [];
         
-        // Create balanced distribution - each texture gets roughly equal number of faces
-        for (var t = 0; t < numTextures; t++) {
-            for (var i = 0; i < texturesPerFace && faceAssignments.length < faces.length; i++) {
+        // Method 1: Ensure every texture gets at least one face (if possible)
+        if (faces.length >= numTextures) {
+            // First, assign each texture to at least one face
+            for (var t = 0; t < numTextures; t++) {
                 faceAssignments.push(t);
+            }
+            console.log("✅ Guaranteed assignment: Each of", numTextures, "textures gets at least 1 face");
+            
+            // Then distribute remaining faces
+            var remainingFaces = faces.length - numTextures;
+            for (var i = 0; i < remainingFaces; i++) {
+                var textureIndex = i % numTextures; // Cycle through textures
+                faceAssignments.push(textureIndex);
+            }
+        } else {
+            // More textures than faces - just assign textures in order
+            console.log("⚠️ More textures (" + numTextures + ") than faces (" + faces.length + ") - some textures won't be used");
+            for (var f = 0; f < faces.length; f++) {
+                faceAssignments.push(f % numTextures);
             }
         }
         
+        console.log("📊 Initial distribution before shuffle:");
+        var preShuffleUsage = {};
+        for (var j = 0; j < faceAssignments.length; j++) {
+            var texIdx = faceAssignments[j];
+            preShuffleUsage[texIdx] = (preShuffleUsage[texIdx] || 0) + 1;
+        }
+        for (var texIdx in preShuffleUsage) {
+            console.log("- Texture " + texIdx + ": " + preShuffleUsage[texIdx] + " faces");
+        }
+        
+        // Reset random function state to ensure consistent starting point
+        if (_globals.useSeededRandom) {
+            console.log("🔄 Resetting random seed state for deterministic assignment");
+            _globals.initializeRandomSeed(_globals.randomSeed);
+        }
+        
         // Shuffle the assignments for randomness
-        console.log("🎲 Random values for texture assignment (save these for fixed mapping):");
-        console.log("📊 faceAssignments array length:", faceAssignments.length);
+        console.log("🎲 Using seeded random values for texture assignment:");
+        console.log("🔑 Current seed:", _globals.randomSeed);
+        console.log("� Seeded random function available:", !!_globals.randomFunction);
+        console.log("�📊 faceAssignments array length:", faceAssignments.length);
         console.log("📊 faceAssignments before shuffle:", JSON.stringify(faceAssignments));
         
+        // Generate deterministic random values using seeded random
         var randomValues = [];
         for (var i = faceAssignments.length - 1; i > 0; i--) {
-            var randomValue = Math.random();
-            var j = Math.floor(randomValue * (i + 1));
+            var randomValue = _globals.getSeededRandom();
             randomValues.push(randomValue);
-            console.log("Step " + (faceAssignments.length - 1 - i) + ": random=" + randomValue.toFixed(6) + ", j=" + j);
+        }
+        
+        console.log("📋 Generated seeded random values: [" + randomValues.slice(0, 10).map(function(v) { return v.toFixed(6); }).join(", ") + (randomValues.length > 10 ? "..." : "") + "]");
+        
+        // Perform Fisher-Yates shuffle using the seeded random values
+        var shuffleIndex = 0;
+        for (var i = faceAssignments.length - 1; i > 0; i--) {
+            var randomValue = randomValues[shuffleIndex];
+            var j = Math.floor(randomValue * (i + 1));
+            shuffleIndex++;
+            
+            if (shuffleIndex <= 10) { // Log first few steps for debugging
+                console.log("Step " + (faceAssignments.length - 1 - i) + ": seeded random=" + randomValue.toFixed(6) + ", j=" + j + ", swapping indices " + i + " ↔ " + j);
+            }
+            
+            // Perform swap
             var temp = faceAssignments[i];
             faceAssignments[i] = faceAssignments[j];
             faceAssignments[j] = temp;
         }
-        console.log("📋 All random values: [" + randomValues.map(function(v) { return v.toFixed(6); }).join(", ") + "]");
+        
+        console.log("📋 All seeded random values: [" + randomValues.map(function(v) { return v.toFixed(6); }).join(", ") + "]");
         console.log("📊 faceAssignments after shuffle:", JSON.stringify(faceAssignments));
         
         // Apply assignments to faces
@@ -610,10 +797,33 @@ function initGlobals(){
         }
         
         console.log("✅ Random texture assignment completed:");
+        console.log("📈 Final texture usage statistics:");
+        var totalUsed = 0;
+        var unusedTextures = [];
         for (var texIdx in textureUsage) {
             var textureName = _globals.textureLibrary[texIdx] ? _globals.textureLibrary[texIdx].name : "Texture " + (parseInt(texIdx) + 1);
-            console.log("- " + textureName + ": " + textureUsage[texIdx] + " faces");
+            var usage = textureUsage[texIdx];
+            var percentage = ((usage / faces.length) * 100).toFixed(1);
+            console.log("- " + textureName + ": " + usage + " faces (" + percentage + "%)");
+            totalUsed += usage;
         }
+        
+        // Check for unused textures
+        for (var i = 0; i < _globals.textureLibrary.length; i++) {
+            if (!textureUsage.hasOwnProperty(i)) {
+                var textureName = _globals.textureLibrary[i] ? _globals.textureLibrary[i].name : "Texture " + (i + 1);
+                unusedTextures.push(textureName);
+            }
+        }
+        
+        if (unusedTextures.length > 0) {
+            console.warn("⚠️ Unused textures detected:", unusedTextures.join(", "));
+            console.warn("This indicates a distribution problem!");
+        } else {
+            console.log("✅ All textures are being used!");
+        }
+        
+        console.log("📊 Total faces assigned:", totalUsed, "/ Expected:", faces.length);
         
         // Debug: Show first few assignments
         console.log("📝 Sample assignments:", Object.keys(_globals.faceTextureMapping).slice(0, 10).map(function(faceIdx) {
@@ -626,20 +836,62 @@ function initGlobals(){
         // Update material to apply the new texture mapping
         if (_globals.colorMode === "texture") {
             console.log("🔄 Updating material with new texture mapping");
+            console.log("📋 Material update context:");
+            console.log("  - Atlas exists:", !!_globals.textureAtlas);
+            console.log("  - Atlas dimensions:", _globals.textureAtlas ? _globals.textureAtlas.image.width + "x" + _globals.textureAtlas.image.height : "N/A");
+            console.log("  - Face mapping size:", Object.keys(_globals.faceTextureMapping).length);
+            
             _globals.model.setMeshMaterial();
+            
+            console.log("✅ Material update completed");
+        }
+        
+        // Force UV mapping update for single texture grid system
+        if (_globals.textureLibrary.length <= 2 && _globals.model && _globals.model.updateUVMapping) {
+            console.log("🔲 Forcing UV mapping update for single texture grid system");
+            _globals.model.updateUVMapping();
         }
     }
     _globals.assignRandomTextures = assignRandomTextures;
 
     function createTextureAtlas() {
-        if (_globals.textureLibrary.length === 0) return null;
-        if (_globals.textureLibrary.length === 1) return _globals.textureLibrary[0];
+        if (_globals.textureLibrary.length === 0) {
+            console.warn("❌ No textures available for atlas creation");
+            return null;
+        }
+        if (_globals.textureLibrary.length === 1) {
+            console.log("📱 Single texture detected, using original texture without atlas");
+            return _globals.textureLibrary[0];
+        }
         
-        console.log("Creating texture atlas from", _globals.textureLibrary.length, "textures");
+        console.log("🎨 Creating texture atlas from", _globals.textureLibrary.length, "textures");
         
-        // Calculate atlas dimensions
-        var texturesPerRow = Math.ceil(Math.sqrt(_globals.textureLibrary.length));
-        var texturesPerCol = Math.ceil(_globals.textureLibrary.length / texturesPerRow);
+        // List all textures being included
+        console.log("📝 Textures to include in atlas:");
+        var validTextures = [];
+        for (var i = 0; i < _globals.textureLibrary.length; i++) {
+            var texture = _globals.textureLibrary[i];
+            var isValid = texture && texture.image && texture.image.complete && texture.image.width > 0 && texture.image.height > 0;
+            console.log("- Texture " + i + ":", texture ? texture.name : "NULL", 
+                       "Size:", (texture && texture.image ? texture.image.width + "x" + texture.image.height : "No image"),
+                       "Valid:", isValid ? "✅" : "❌");
+            if (isValid) {
+                validTextures.push({index: i, texture: texture});
+            }
+        }
+        
+        if (validTextures.length === 0) {
+            console.error("❌ No valid textures found for atlas creation");
+            return null;
+        }
+        
+        if (validTextures.length !== _globals.textureLibrary.length) {
+            console.warn("⚠️ Some textures are invalid:", _globals.textureLibrary.length - validTextures.length, "out of", _globals.textureLibrary.length);
+        }
+        
+        // Calculate atlas dimensions based on valid textures
+        var texturesPerRow = Math.ceil(Math.sqrt(validTextures.length));
+        var texturesPerCol = Math.ceil(validTextures.length / texturesPerRow);
         
         // Create canvas for atlas
         var canvas = document.createElement('canvas');
@@ -654,7 +906,8 @@ function initGlobals(){
         
         console.log("Atlas dimensions:", canvas.width + "x" + canvas.height, 
                    "Grid:", texturesPerRow + "x" + texturesPerCol, 
-                   "Texture size:", textureSize + "x" + textureSize);
+                   "Texture size:", textureSize + "x" + textureSize,
+                   "Valid textures:", validTextures.length + "/" + _globals.textureLibrary.length);
         
         // Store atlas layout information for UV mapping
         _globals.atlasLayout = {
@@ -663,11 +916,16 @@ function initGlobals(){
             textureSize: textureSize,
             width: canvas.width,
             height: canvas.height,
-            regions: [] // Initialize regions array
+            regions: [], // Initialize regions array
+            textureIndexMapping: {}, // Map original texture indices to atlas positions
+            validTextures: validTextures // Store mapping of valid textures
         };
         
-        // Calculate regions for each texture
-        for (var i = 0; i < _globals.textureLibrary.length; i++) {
+        // Calculate regions for each valid texture and create index mapping
+        for (var i = 0; i < validTextures.length; i++) {
+            var validTexture = validTextures[i];
+            var originalIndex = validTexture.index;
+            
             var row = Math.floor(i / texturesPerRow);
             var col = i % texturesPerRow;
             var x = col * textureSize;
@@ -679,6 +937,9 @@ function initGlobals(){
                 width: textureSize,
                 height: textureSize
             });
+            
+            // Map original texture index to atlas position
+            _globals.atlasLayout.textureIndexMapping[originalIndex] = i;
         }
         
         // Clear canvas with transparent background
@@ -686,14 +947,14 @@ function initGlobals(){
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
         
-        // Draw each texture to the atlas synchronously
+        // Draw each valid texture to the atlas synchronously
         var successCount = 0;
-        for (var i = 0; i < _globals.textureLibrary.length; i++) {
-            var texture = _globals.textureLibrary[i];
-            if (!texture || !texture.image) {
-                console.warn("Texture", i, "has no image data, skipping");
-                continue;
-            }
+        var drawnTextures = []; // Track which textures were actually drawn
+        
+        for (var i = 0; i < validTextures.length; i++) {
+            var validTexture = validTextures[i];
+            var texture = validTexture.texture;
+            var originalIndex = validTexture.index;
             
             var row = Math.floor(i / texturesPerRow);
             var col = i % texturesPerRow;
@@ -703,11 +964,52 @@ function initGlobals(){
             try {
                 // Draw texture to atlas position
                 ctx.drawImage(texture.image, x, y, textureSize, textureSize);
-                console.log("Drew texture", i, texture.name, "at position", x + "," + y);
+                console.log("✅ Drew texture", originalIndex, "'" + texture.name + "' at atlas position [" + x + "," + y + "]");
+                drawnTextures.push({
+                    originalIndex: originalIndex,
+                    atlasIndex: i,
+                    name: texture.name,
+                    position: [x, y],
+                    size: [textureSize, textureSize]
+                });
                 successCount++;
             } catch (error) {
-                console.error("Failed to draw texture", i, "to atlas:", error);
+                console.error("❌ Failed to draw texture", originalIndex, "to atlas:", error);
             }
+        }
+        
+        console.log("🎨 Atlas drawing summary:");
+        console.log("- Total textures in library:", _globals.textureLibrary.length);
+        console.log("- Valid textures found:", validTextures.length);
+        console.log("- Successfully drawn:", successCount);
+        console.log("- Drawn texture details:");
+        for (var i = 0; i < drawnTextures.length; i++) {
+            var drawn = drawnTextures[i];
+            console.log("  * Slot " + drawn.atlasIndex + ": " + drawn.name + " (original index " + drawn.originalIndex + ")");
+        }
+        
+        // Log texture index mapping for debugging
+        console.log("🗺️ Texture index mapping:");
+        for (var originalIndex in _globals.atlasLayout.textureIndexMapping) {
+            var atlasPos = _globals.atlasLayout.textureIndexMapping[originalIndex];
+            var textureName = _globals.textureLibrary[originalIndex] ? _globals.textureLibrary[originalIndex].name : "unknown";
+            console.log("  * Original index " + originalIndex + " (" + textureName + ") → Atlas position " + atlasPos);
+        }
+        
+        // Verify all valid textures are accounted for
+        var missingTextures = [];
+        for (var i = 0; i < validTextures.length; i++) {
+            var originalIndex = validTextures[i].index;
+            var found = drawnTextures.some(function(drawn) { return drawn.originalIndex === originalIndex; });
+            if (!found) {
+                missingTextures.push(originalIndex + ":" + validTextures[i].texture.name);
+            }
+        }
+        
+        if (missingTextures.length > 0) {
+            console.error("❌ Missing valid textures from atlas:", missingTextures.join(", "));
+        } else {
+            console.log("✅ All valid textures successfully included in atlas");
         }
         
         if (successCount === 0) {
@@ -772,6 +1074,200 @@ function initGlobals(){
         _globals.model.setMeshMaterial();
     }
     _globals.setTextureMode = setTextureMode;
+
+    // Global Random Seed Management System
+    function initializeRandomSeed(seed) {
+        if (typeof seed === "undefined") {
+            seed = _globals.randomSeed;
+        } else {
+            _globals.randomSeed = seed;
+        }
+        
+        console.log("🎲 Initializing global random seed:", seed);
+        
+        // Use numeric.js seedrandom if available
+        if (typeof numeric !== "undefined" && numeric.seedrandom && numeric.seedrandom.random) {
+            try {
+                // Create a simple seeded random generator using the seed string
+                var seedHash = 0;
+                for (var i = 0; i < seed.length; i++) {
+                    seedHash = ((seedHash << 5) - seedHash + seed.charCodeAt(i)) & 0xffffffff;
+                }
+                seedHash = Math.abs(seedHash);
+                
+                // Use seedHash to initialize a simple LCG (Linear Congruential Generator)
+                var currentSeed = seedHash % 2147483647;
+                if (currentSeed <= 0) currentSeed += 2147483646;
+                
+                _globals.randomFunction = function() {
+                    currentSeed = (currentSeed * 16807) % 2147483647;
+                    return (currentSeed - 1) / 2147483646;
+                };
+                
+                _globals.useSeededRandom = true;
+                console.log("✅ Using custom seeded random generator with hash:", seedHash);
+                
+            } catch (e) {
+                console.warn("🚨 Error creating seeded random generator:", e.message);
+                _globals.randomFunction = Math.random;
+                _globals.useSeededRandom = false;
+            }
+        } else {
+            console.warn("🚨 numeric.js not available, using Math.random");
+            _globals.randomFunction = Math.random;
+            _globals.useSeededRandom = false;
+        }
+        
+        console.log("✅ Random seed initialized. Seeded random:", _globals.useSeededRandom);
+    }
+    _globals.initializeRandomSeed = initializeRandomSeed;
+    
+    function getSeededRandom() {
+        if (_globals.useSeededRandom && _globals.randomFunction) {
+            return _globals.randomFunction();
+        } else {
+            return Math.random();
+        }
+    }
+    _globals.getSeededRandom = getSeededRandom;
+    
+    function setRandomSeed(seed) {
+        console.log("🔄 Changing random seed to:", seed);
+        console.log("🔄 Previous seed was:", _globals.randomSeed);
+        
+        // Initialize the new seed
+        initializeRandomSeed(seed);
+        
+        // Update global Math.random override
+        enableGlobalRandomOverride();
+        
+        // Clear any cached random state
+        _globals.faceTextureMapping = {};
+        
+        // Re-run texture assignment if we have textures and a model
+        if (_globals.textureLibrary.length > 0 && _globals.model) {
+            console.log("🔄 Regenerating ALL texture assignments with new seed");
+            console.log("🔄 Texture library has", _globals.textureLibrary.length, "textures");
+            
+            // Always re-assign textures when seed changes, regardless of randomTextures setting
+            assignRandomTextures();
+            
+            // Update the material to reflect new assignments
+            if (_globals.model.setMeshMaterial) {
+                console.log("🔄 Updating mesh material with new texture assignments");
+                _globals.model.setMeshMaterial();
+            }
+        } else {
+            console.log("⚠️ Cannot regenerate texture assignments:", 
+                      "textures=" + _globals.textureLibrary.length, 
+                      "model=" + !!_globals.model);
+        }
+        
+        console.log("✅ Random seed change completed. New seed:", _globals.randomSeed);
+    }
+    _globals.setRandomSeed = setRandomSeed;
+
+    // Initialize the random seed when globals are created
+    initializeRandomSeed();
+    
+    // Global Math.random override for complete deterministic control
+    var originalMathRandom = Math.random;
+    
+    function enableGlobalRandomOverride() {
+        if (_globals.useSeededRandom && _globals.randomFunction) {
+            console.log("🔒 Overriding Math.random with seeded function");
+            Math.random = _globals.getSeededRandom;
+        } else {
+            console.log("🔓 Using original Math.random");
+            Math.random = originalMathRandom;
+        }
+    }
+    
+    function disableGlobalRandomOverride() {
+        console.log("🔄 Restoring original Math.random");
+        Math.random = originalMathRandom;
+    }
+    
+    _globals.enableGlobalRandomOverride = enableGlobalRandomOverride;
+    _globals.disableGlobalRandomOverride = disableGlobalRandomOverride;
+    _globals.originalMathRandom = originalMathRandom;
+    
+    // Lighting control functions
+    function setLightIntensity(lightName, intensity) {
+        if (_globals.lighting[lightName] && typeof intensity === 'number') {
+            _globals.lighting[lightName].intensity = Math.max(0, Math.min(10, intensity)); // Clamp between 0 and 10
+            console.log("🔧 Set", lightName, "intensity to", _globals.lighting[lightName].intensity);
+            
+            // Update the 3D view if available
+            if (_globals.threeView && _globals.threeView.updateLighting) {
+                _globals.threeView.updateLighting();
+            }
+        } else {
+            console.warn("Invalid light name or intensity value:", lightName, intensity);
+        }
+    }
+    _globals.setLightIntensity = setLightIntensity;
+    
+    function setLightPosition(lightName, x, y, z) {
+        if (_globals.lighting[lightName] && _globals.lighting[lightName].position) {
+            _globals.lighting[lightName].position.x = x || 0;
+            _globals.lighting[lightName].position.y = y || 0;
+            _globals.lighting[lightName].position.z = z || 0;
+            console.log("🔧 Set", lightName, "position to", _globals.lighting[lightName].position);
+            
+            // Update the 3D view if available
+            if (_globals.threeView && _globals.threeView.updateLighting) {
+                _globals.threeView.updateLighting();
+            }
+        } else {
+            console.warn("Invalid light name:", lightName);
+        }
+    }
+    _globals.setLightPosition = setLightPosition;
+    
+    function adjustFrontLighting(intensity) {
+        console.log("🔧 Adjusting front lighting to intensity:", intensity);
+        setLightIntensity('frontMain', intensity);
+        setLightIntensity('frontDetail1', intensity * 0.875); // 0.7/0.8 = 0.875
+        setLightIntensity('frontDetail2', intensity * 0.5);   // 0.4/0.8 = 0.5
+    }
+    _globals.adjustFrontLighting = adjustFrontLighting;
+    
+    function resetLightingToDefaults() {
+        console.log("🔄 Resetting lighting to default values");
+        
+        _globals.lighting.frontMain.intensity = 0.8;
+        _globals.lighting.backLight.intensity = 0.3;
+        _globals.lighting.sideLeft.intensity = 0.6;
+        _globals.lighting.sideRight.intensity = 0.6;
+        _globals.lighting.frontDetail1.intensity = 0.7;
+        _globals.lighting.frontDetail2.intensity = 0.4;
+        _globals.lighting.ambient.intensity = 0.25;
+        
+        // Update the 3D view if available
+        if (_globals.threeView && _globals.threeView.updateLighting) {
+            _globals.threeView.updateLighting();
+        }
+    }
+    _globals.resetLightingToDefaults = resetLightingToDefaults;
+    
+    function getLightingInfo() {
+        console.log("💡 Current lighting settings:");
+        for (var lightName in _globals.lighting) {
+            var light = _globals.lighting[lightName];
+            if (light.position) {
+                console.log("  " + lightName + ": intensity=" + light.intensity + 
+                          ", position=(" + light.position.x + "," + light.position.y + "," + light.position.z + ")");
+            } else {
+                console.log("  " + lightName + ": intensity=" + light.intensity);
+            }
+        }
+        return _globals.lighting;
+    }
+    _globals.getLightingInfo = getLightingInfo;
+    
+    // Enable global override by default
+    enableGlobalRandomOverride();
 
     console.log("initGlobals function completed successfully");
     return _globals;

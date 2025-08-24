@@ -623,7 +623,20 @@ function initControls(globals){
                     if (globals.model && textures.length > 1) {
                         console.log("Multiple textures detected, forcing random assignment and material update");
                         globals.assignRandomTextures();
+                        
+                        // Create texture atlas for multiple textures
+                        var atlas = globals.createTextureAtlas();
+                        if (atlas) {
+                            globals.faceTexture = atlas;
+                            console.log("✅ Texture atlas created and assigned");
+                        }
+                        
                         globals.model.setMeshMaterial();
+                    } else if (globals.model && textures.length === 1) {
+                        // Single texture case
+                        globals.faceTexture = textures[0];
+                        globals.model.setMeshMaterial();
+                        console.log("✅ Single texture assigned");
                     }
                     
                     // Show success message

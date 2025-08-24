@@ -103,26 +103,41 @@ function initModel(globals){
                 setGeoUpdates();
             }
         } else if (globals.colorMode == "texture" && (globals.faceTexture || globals.textureLibrary.length > 0)) {
+            console.log("🎨 Setting mesh material to texture mode");
+            console.log("📋 Material context:");
+            console.log("  - textureLibrary size:", globals.textureLibrary.length);
+            console.log("  - faceTexture exists:", !!globals.faceTexture);
+            console.log("  - faceTextureMapping size:", globals.faceTextureMapping ? Object.keys(globals.faceTextureMapping).length : 0);
+            console.log("  - textureAtlas exists:", !!globals.textureAtlas);
+            
             var textureToUse = globals.faceTexture;
             
             // Enable multi-texture support with atlas
             if (globals.textureLibrary.length > 1 && globals.faceTextureMapping && Object.keys(globals.faceTextureMapping).length > 0) {
-                console.log("Creating texture atlas for", globals.textureLibrary.length, "textures");
+                console.log("🔄 Creating texture atlas for", globals.textureLibrary.length, "textures");
                 textureToUse = globals.createTextureAtlas();
                 if (textureToUse) {
                     globals.faceTexture = textureToUse;
-                    console.log("Texture atlas created successfully");
+                    console.log("✅ Texture atlas created successfully");
+                    console.log("📊 Atlas dimensions:", textureToUse.image.width + "x" + textureToUse.image.height);
                 } else {
-                    console.warn("Failed to create texture atlas, using first texture");
+                    console.warn("❌ Failed to create texture atlas, using first texture");
                     textureToUse = globals.textureLibrary[0];
                 }
             } else if (!textureToUse && globals.textureLibrary.length > 0) {
+                console.log("📝 Using first texture from library");
                 textureToUse = globals.textureLibrary[0];
                 globals.faceTexture = textureToUse;
             }
             
             if (textureToUse) {
-                console.log("Setting texture material with texture:", textureToUse.name || "atlas");
+                console.log("🔨 Creating texture material");
+                console.log("📝 Texture details:");
+                console.log("  - Name:", textureToUse.name || "atlas");
+                console.log("  - Image dimensions:", textureToUse.image ? textureToUse.image.width + "x" + textureToUse.image.height : "N/A");
+                console.log("  - Format:", textureToUse.format);
+                console.log("  - Type:", textureToUse.type);
+                
                 // Enhanced texture material with subtle reflective properties
                 material = new THREE.MeshPhongMaterial({
                     map: textureToUse,
@@ -138,12 +153,16 @@ function initModel(globals){
                     transparent: false,    // No transparency to keep colors vivid
                     opacity: 1.0
                 });
+                
+                console.log("✅ Texture material created successfully");
                 backside.visible = false;
+                
                 // Update UV coordinates for face-based texture mapping
+                console.log("🔄 Updating UV coordinates for texture mapping");
                 updateFaceBasedUVs();
-                console.log("Texture material applied successfully");
+                console.log("✅ Texture material applied successfully");
             } else {
-                console.warn("Texture mode selected but no texture available, falling back to color mode");
+                console.warn("⚠️ Texture mode selected but no texture available, falling back to color mode");
                 globals.colorMode = "color";
                 // Fall through to color mode
                 material = new THREE.MeshPhongMaterial({
@@ -207,8 +226,20 @@ function initModel(globals){
             material2.color.setStyle( "#" + globals.color2);
             backside.visible = true;
         }
+        
+        console.log("🔗 Applying materials to mesh objects");
+        console.log("📋 Material assignment:");
+        console.log("  - frontside material type:", material.type);
+        console.log("  - frontside has texture map:", !!material.map);
+        if (material.map) {
+            console.log("  - texture dimensions:", material.map.image ? material.map.image.width + "x" + material.map.image.height : "N/A");
+        }
+        console.log("  - backside material type:", material2.type);
+        
         frontside.material = material;
         backside.material = material2;
+        
+        console.log("✅ Materials successfully applied to mesh");
     }
 
     function updateEdgeVisibility(){
@@ -331,11 +362,15 @@ function initModel(globals){
             console.log("🔥 Using texture atlas mapping with layout:", globals.atlasLayout);
             console.log("🎯 Face mappings available:", Object.keys(globals.faceTextureMapping).length, "faces");
             console.log("📚 Texture library size:", globals.textureLibrary.length);
+            console.log("🗺️ Atlas layout - Grid:", globals.atlasLayout.texturesPerRow + "x" + globals.atlasLayout.texturesPerCol);
         } else {
             console.log("❌ Atlas not used. Reasons:");
             console.log("- Multiple textures?", globals.textureLibrary.length > 1);
             console.log("- Face mapping exists?", globals.faceTextureMapping && Object.keys(globals.faceTextureMapping).length > 0);
             console.log("- Atlas layout exists?", !!globals.atlasLayout);
+            if (globals.textureLibrary.length > 1) {
+                console.warn("⚠️ Multiple textures loaded but atlas not being used - this may cause display issues!");
+            }
         }
         
         // For each face, map vertices to appropriate texture region
@@ -359,7 +394,12 @@ function initModel(globals){
             var textureScaleX = 1;
             var textureScaleY = 1;
             
+            // Enhanced texture mapping: Create virtual grid even for single textures
+            var virtualGridSize = Math.max(2, Math.ceil(Math.sqrt(Math.min(faces.length / 20, 16)))); // 2x2 to 4x4 grid based on face count
+            var useSingleTextureGrid = globals.textureLibrary.length <= 2; // Use grid for single or dual textures
+            
             if (useAtlas && globals.faceTextureMapping[i] !== undefined) {
+                // Multi-texture atlas mapping
                 textureIndex = globals.faceTextureMapping[i];
                 var layout = globals.atlasLayout;
                 
@@ -380,6 +420,22 @@ function initModel(globals){
                 if (i < 5) { // Log first few faces for debugging
                     console.log("🎨 Face", i, "→ Texture", textureIndex, "at atlas grid[" + col + "," + row + "] offset[" + textureOffsetX.toFixed(3) + "," + textureOffsetY.toFixed(3) + "] scale[" + textureScaleX.toFixed(3) + "," + textureScaleY.toFixed(3) + "]");
                     console.log("   Grid size:", texturesPerRow + "x" + texturesPerCol);
+                }
+            } else if (useSingleTextureGrid) {
+                // Virtual grid mapping for single/few textures - each face gets different part of texture
+                var faceGridIndex = i % (virtualGridSize * virtualGridSize); // Cycle through grid positions
+                var gridRow = Math.floor(faceGridIndex / virtualGridSize);
+                var gridCol = faceGridIndex % virtualGridSize;
+                
+                // Calculate UV offsets and scale for this grid cell
+                textureScaleX = 1 / virtualGridSize;
+                textureScaleY = 1 / virtualGridSize;
+                textureOffsetX = gridCol * textureScaleX;
+                textureOffsetY = gridRow * textureScaleY;
+                
+                if (i < 10) { // Log first few faces for debugging
+                    console.log("🔲 Face", i, "→ Virtual grid[" + gridCol + "," + gridRow + "] (index " + faceGridIndex + ") offset[" + textureOffsetX.toFixed(3) + "," + textureOffsetY.toFixed(3) + "] scale[" + textureScaleX.toFixed(3) + "," + textureScaleY.toFixed(3) + "]");
+                    console.log("   Virtual grid size:", virtualGridSize + "x" + virtualGridSize);
                 }
             }
             
@@ -524,9 +580,11 @@ function initModel(globals){
         }
         
         var rangeX = maxX - minX || 1;
-        var rangeY = maxY - minY || 1;
+        var rangeY = Math.max(maxY - minY, maxZ - minZ) || 1; // Use Z range if Y range is flat
+        var actualMinY = (maxY - minY) > (maxZ - minZ) ? minY : minZ;
+        var actualMaxY = (maxY - minY) > (maxZ - minZ) ? maxY : maxZ;
         
-        console.log("Geometry bounds:", {minX, maxX, minY, maxY, rangeX, rangeY});
+        console.log("Geometry bounds:", {minX, maxX, minY, maxY, minZ, maxZ, rangeX, rangeY, actualMinY, actualMaxY});
         
         // Check if we're using texture atlas
         var useAtlas = globals.textureLibrary.length > 1 && 
@@ -534,31 +592,87 @@ function initModel(globals){
                        Object.keys(globals.faceTextureMapping).length > 0 &&
                        globals.atlasLayout;
         
+        // Virtual grid system for single/few textures
+        var virtualGridSize = Math.max(2, Math.ceil(Math.sqrt(Math.min(vertexCount / 60, 16)))); // 2x2 to 4x4 grid
+        var useSingleTextureGrid = globals.textureLibrary.length <= 2; // Use grid for single or dual textures
+        
         if (useAtlas) {
             console.log("🔥 Using texture atlas for basic UV mapping");
+            console.log("📋 Atlas layout info:", {
+                dimensions: globals.atlasLayout.width + "x" + globals.atlasLayout.height,
+                regions: globals.atlasLayout.regions.length,
+                textureMapping: Object.keys(globals.atlasLayout.textureIndexMapping).length,
+                faceMapping: Object.keys(globals.faceTextureMapping).length
+            });
+        } else if (useSingleTextureGrid) {
+            console.log("🔲 Using virtual grid (" + virtualGridSize + "x" + virtualGridSize + ") for single texture variation");
         }
         
         // Create UV coordinates for each vertex
         for (var i = 0; i < vertexCount; i++) {
             var x = positions[i * 3];
             var y = positions[i * 3 + 1];
+            var z = positions[i * 3 + 2];
             
             // Normalize to [0,1] range
             var u = (x - minX) / rangeX;
-            var v = (y - minY) / rangeY;
+            var v = ((maxY - minY) > (maxZ - minZ) ? y - actualMinY : z - actualMinY) / rangeY;
             
             // Apply atlas mapping if multiple textures
             if (useAtlas) {
                 // Determine which face this vertex belongs to (simplified approach)
                 var faceIndex = Math.floor(i / 3); // Assuming triangles
-                var textureIndex = globals.faceTextureMapping[faceIndex] || 0;
+                var originalTextureIndex = globals.faceTextureMapping[faceIndex] || 0;
                 
-                if (globals.atlasLayout && globals.atlasLayout.regions && globals.atlasLayout.regions[textureIndex]) {
-                    var region = globals.atlasLayout.regions[textureIndex];
+                // Get atlas position for this texture
+                var atlasPosition = globals.atlasLayout.textureIndexMapping[originalTextureIndex];
+                
+                if (typeof atlasPosition !== 'undefined' && globals.atlasLayout.regions[atlasPosition]) {
+                    var region = globals.atlasLayout.regions[atlasPosition];
                     
                     // Map UV to atlas region
                     u = region.x / globals.atlasLayout.width + (u * region.width / globals.atlasLayout.width);
                     v = region.y / globals.atlasLayout.height + (v * region.height / globals.atlasLayout.height);
+                    
+                    // Debug logging for first few vertices
+                    if (i < 12 && i % 3 === 0) {
+                        console.log("🔥 Vertex", i, "Face", faceIndex, "→ OriginalTexture", originalTextureIndex, 
+                                  "AtlasPos", atlasPosition, "Region[" + region.x + "," + region.y + "], UV[" + u.toFixed(3) + "," + v.toFixed(3) + "]",
+                                  "BaseUV[" + ((u - region.x / globals.atlasLayout.width) / (region.width / globals.atlasLayout.width)).toFixed(3) + "," + 
+                                  ((v - region.y / globals.atlasLayout.height) / (region.height / globals.atlasLayout.height)).toFixed(3) + "]",
+                                  "Position[" + x.toFixed(3) + "," + y.toFixed(3) + "," + z.toFixed(3) + "]");
+                    }
+                } else {
+                    // Fallback to first region if mapping not found
+                    if (globals.atlasLayout.regions.length > 0) {
+                        var region = globals.atlasLayout.regions[0];
+                        u = region.x / globals.atlasLayout.width + (u * region.width / globals.atlasLayout.width);
+                        v = region.y / globals.atlasLayout.height + (v * region.height / globals.atlasLayout.height);
+                        
+                        if (i < 12 && i % 3 === 0) {
+                            console.warn("⚠️ Vertex", i, "Face", faceIndex, "using fallback region for texture", originalTextureIndex,
+                                       "Position[" + x.toFixed(3) + "," + y.toFixed(3) + "," + z.toFixed(3) + "]");
+                        }
+                    }
+                }
+            } else if (useSingleTextureGrid) {
+                // Virtual grid mapping for single texture - create variation
+                var vertexGridIndex = i % (virtualGridSize * virtualGridSize); // Cycle through grid positions
+                var gridRow = Math.floor(vertexGridIndex / virtualGridSize);
+                var gridCol = vertexGridIndex % virtualGridSize;
+                
+                // Calculate UV scale and offset for this grid cell
+                var gridScaleX = 1 / virtualGridSize;
+                var gridScaleY = 1 / virtualGridSize;
+                var gridOffsetX = gridCol * gridScaleX;
+                var gridOffsetY = gridRow * gridScaleY;
+                
+                // Map UV to grid cell
+                u = gridOffsetX + (u * gridScaleX);
+                v = gridOffsetY + (v * gridScaleY);
+                
+                if (i < 12 && i % 3 === 0) { // Log every third vertex (one per triangle) for first few
+                    console.log("🔲 Vertex", i, "→ Grid[" + gridCol + "," + gridRow + "] UV[" + u.toFixed(3) + "," + v.toFixed(3) + "]");
                 }
             }
             
@@ -852,6 +966,21 @@ function initModel(globals){
         geometry.computeBoundingBox();
         return geometry.boundingBox.max.clone().sub(geometry.boundingBox.min);
     }
+    
+    function updateUVMapping() {
+        console.log("🔄 updateUVMapping called - determining which mapping method to use");
+        
+        // Check if we have fold data for face-based mapping
+        if (globals.fold && globals.fold.faces_vertices && globals.fold.vertices_coords) {
+            console.log("📐 Using face-based UV mapping");
+            updateFaceBasedUVs();
+        } else if (geometry && geometry.attributes && geometry.attributes.position) {
+            console.log("📦 Using basic geometry UV mapping");
+            createBasicUVMapping();
+        } else {
+            console.warn("❌ Cannot update UV mapping: no geometry data available");
+        }
+    }
 
     return {
         pause: pause,
@@ -876,6 +1005,7 @@ function initModel(globals){
         setMeshMaterial: setMeshMaterial,
         updateEdgeVisibility: updateEdgeVisibility,
         updateMeshVisibility: updateMeshVisibility,
+        updateUVMapping: updateUVMapping,
 
         getDimensions: getDimensions//for save stl
     }
