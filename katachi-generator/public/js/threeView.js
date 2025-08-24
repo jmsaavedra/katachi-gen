@@ -33,7 +33,7 @@ function initThreeView(globals) {
         renderer.setPixelRatio( window.devicePixelRatio );
         renderer.setSize(window.innerWidth, window.innerHeight);
         
-        // Set completely transparent background to show CSS gradient
+        // Set completely transparent background
         renderer.setClearColor(0x000000, 0);
         
         container.append(renderer.domElement);
@@ -42,7 +42,7 @@ function initThreeView(globals) {
         renderer.domElement.style.background = 'transparent';
         renderer.domElement.style.backgroundColor = 'transparent';
 
-        // Ensure no scene background to show CSS gradient through
+        // Ensure no scene background for complete transparency
         scene.background = null;
         
         // Rotate object 90 degrees around X-axis so surface faces camera
@@ -161,6 +161,22 @@ function initThreeView(globals) {
         controls.reset(new THREE.Vector3(1,1,1));
     }
 
+    function generateRandomRotationSpeeds() {
+        // Generate random rotation speeds with varied directions and magnitudes
+        var baseSpeed = 0.003;
+        var speedVariation = 0.007;
+        
+        globals.multiAxisRotation.x = (Math.random() - 0.5) * 2 * (baseSpeed + Math.random() * speedVariation);
+        globals.multiAxisRotation.y = (Math.random() - 0.5) * 2 * (baseSpeed + Math.random() * speedVariation);
+        globals.multiAxisRotation.z = (Math.random() - 0.5) * 2 * (baseSpeed + Math.random() * speedVariation);
+        
+        console.log('🎲 New random rotation speeds:', {
+            x: globals.multiAxisRotation.x.toFixed(4),
+            y: globals.multiAxisRotation.y.toFixed(4),
+            z: globals.multiAxisRotation.z.toFixed(4)
+        });
+    }
+
     function startAnimation(){
         console.log("starting animation");
         renderer.animate(_loop);
@@ -201,6 +217,108 @@ function initThreeView(globals) {
     }
 
     function _loop(){
+        // Handle multi-axis auto rotation
+        if (globals.autoRotateEnabled) {
+            var currentTime = performance.now();
+            if (globals.autoRotateStartTime === null) {
+                globals.autoRotateStartTime = currentTime;
+                globals.lastRotationChangeTime = currentTime;
+                // Generate initial random rotation speeds
+                if (globals.randomRotationEnabled) {
+                    generateRandomRotationSpeeds();
+                }
+            }
+            
+            var elapsedTime = currentTime - globals.autoRotateStartTime;
+            if (elapsedTime >= globals.autoRotateWaitTime) {
+                // Check if it's time to change rotation direction
+                if (globals.randomRotationEnabled && globals.lastRotationChangeTime) {
+                    var timeSinceLastChange = currentTime - globals.lastRotationChangeTime;
+                    if (timeSinceLastChange >= globals.rotationChangeInterval) {
+                        generateRandomRotationSpeeds();
+                        globals.lastRotationChangeTime = currentTime;
+                    }
+                }
+                
+                // Start multi-axis rotation after wait time
+                modelWrapper.rotateX(globals.multiAxisRotation.x);
+                modelWrapper.rotateY(globals.multiAxisRotation.y);
+                modelWrapper.rotateZ(globals.multiAxisRotation.z);
+            }
+        }
+        
+        // Handle slider auto animation
+        if (globals.sliderAutoAnimationEnabled) {
+            var currentTime = performance.now();
+            
+            if (globals.sliderAnimationState === 'animating') {
+                if (globals.sliderAnimationStartTime === null) {
+                    globals.sliderAnimationStartTime = currentTime;
+                }
+                
+                var elapsedTime = currentTime - globals.sliderAnimationStartTime;
+                var progress = Math.min(elapsedTime / globals.sliderAnimationDuration, 1);
+                
+                // Smooth easing function (ease-in-out)
+                var easedProgress = 0.5 - Math.cos(progress * Math.PI) / 2;
+                
+                var currentValue = globals.sliderAnimationStartValue + 
+                    (globals.sliderAnimationEndValue - globals.sliderAnimationStartValue) * easedProgress;
+                
+                // Update the folding value
+                var actualVal = (currentValue / 100) * (globals.currentPatternMaxFolding / 100);
+                globals.creasePercent = actualVal;
+                globals.shouldChangeCreasePercent = true;
+                
+                // Update UI
+                if (globals.controls && globals.controls.updateCreasePercent) {
+                    globals.controls.updateCreasePercent();
+                }
+                
+                // Check if animation phase is complete
+                if (progress >= 1) {
+                    console.log('📊 Slider animation phase completed, starting pause');
+                    globals.sliderAnimationState = 'pausing';
+                    globals.sliderAnimationPauseStartTime = currentTime;
+                    globals.sliderAnimationStartTime = null;
+                }
+            } else if (globals.sliderAnimationState === 'pausing') {
+                if (globals.sliderAnimationPauseStartTime === null) {
+                    globals.sliderAnimationPauseStartTime = currentTime;
+                }
+                
+                var pauseElapsed = currentTime - globals.sliderAnimationPauseStartTime;
+                
+                // Check if pause is complete
+                if (pauseElapsed >= globals.sliderAnimationPauseTime) {
+                    console.log('⏰ Pause completed, reversing animation direction');
+                    
+                    if (globals.sliderAnimationLoop) {
+                        // Reverse direction and values for next animation
+                        var temp = globals.sliderAnimationStartValue;
+                        globals.sliderAnimationStartValue = globals.sliderAnimationEndValue;
+                        globals.sliderAnimationEndValue = temp;
+                        globals.sliderAnimationDirection *= -1;
+                        
+                        // Reset to animating state
+                        globals.sliderAnimationState = 'animating';
+                        globals.sliderAnimationPauseStartTime = null;
+                        globals.sliderAnimationStartTime = null;
+                        
+                        console.log('🔄 Starting next animation phase: ' + 
+                                  globals.sliderAnimationStartValue + ' → ' + 
+                                  globals.sliderAnimationEndValue);
+                    } else {
+                        // Stop looping
+                        console.log('⏹️ Slider animation loop completed');
+                        globals.sliderAutoAnimationEnabled = false;
+                        globals.sliderAnimationStartTime = null;
+                        globals.sliderAnimationPauseStartTime = null;
+                    }
+                }
+            }
+        }
+        
         if (globals.rotateModel !== null){
             if (globals.rotateModel == "x") modelWrapper.rotateX(globals.rotationSpeed);
             if (globals.rotateModel == "y") modelWrapper.rotateY(globals.rotationSpeed);
@@ -287,8 +405,11 @@ function initThreeView(globals) {
     }
 
     function setBackgroundColor(color){
-        if (color === undefined) color = globals.backgroundColor;
-        scene.background.setStyle( "#" + color);
+        // Background is set to transparent - no background color changes allowed
+        console.log("🔍 Background color change ignored - using transparent background");
+        return;
+        // if (color === undefined) color = globals.backgroundColor;
+        // scene.background.setStyle( "#" + color);
     }
     
     // Function to update lighting based on global settings
@@ -418,6 +539,64 @@ function initThreeView(globals) {
         resetModel: resetModel,//reset model orientation
         resetCamera:resetCamera,
         setBackgroundColor: setBackgroundColor,
+        
+        // Auto rotation animation functions
+        startAutoRotation: function(randomRotation, changeInterval) {
+            randomRotation = randomRotation !== undefined ? randomRotation : true;
+            changeInterval = changeInterval !== undefined ? changeInterval : 8000;
+            
+            console.log("🔄 Starting auto rotation animation" + 
+                       (randomRotation ? " with random directions (change every " + changeInterval + "ms)" : ""));
+            
+            globals.autoRotateEnabled = true;
+            globals.autoRotateStartTime = null; // Will be set on first loop
+            globals.randomRotationEnabled = randomRotation;
+            globals.rotationChangeInterval = changeInterval;
+            globals.lastRotationChangeTime = null;
+        },
+        stopAutoRotation: function() {
+            console.log("⏹️ Stopping auto rotation animation");
+            globals.autoRotateEnabled = false;
+            globals.autoRotateStartTime = null;
+            globals.lastRotationChangeTime = null;
+        },
+        
+        // Slider auto animation functions
+        startSliderAnimation: function(startValue, endValue, duration, loop, pauseTime) {
+            startValue = startValue !== undefined ? startValue : 0;
+            endValue = endValue !== undefined ? endValue : 100;
+            duration = duration !== undefined ? duration : 4000;
+            loop = loop !== undefined ? loop : true;
+            pauseTime = pauseTime !== undefined ? pauseTime : 5000;
+            
+            console.log("📊 Starting slider animation from " + startValue + " to " + endValue + 
+                       " over " + duration + "ms" + (loop ? " (looping with " + pauseTime + "ms pauses)" : ""));
+            
+            globals.sliderAutoAnimationEnabled = true;
+            globals.sliderAnimationStartTime = null;
+            globals.sliderAnimationStartValue = startValue;
+            globals.sliderAnimationEndValue = endValue;
+            globals.sliderAnimationDuration = duration;
+            globals.sliderAnimationLoop = loop;
+            globals.sliderAnimationPauseTime = pauseTime;
+            globals.sliderAnimationState = 'animating';
+            globals.sliderAnimationPauseStartTime = null;
+            globals.sliderAnimationDirection = startValue < endValue ? 1 : -1;
+        },
+        stopSliderAnimation: function() {
+            console.log("⏹️ Stopping slider animation");
+            globals.sliderAutoAnimationEnabled = false;
+            globals.sliderAnimationStartTime = null;
+            globals.sliderAnimationPauseStartTime = null;
+            globals.sliderAnimationState = 'animating';
+        },
+        
+        // Random rotation control functions
+        generateRandomRotationSpeeds: generateRandomRotationSpeeds,
+        setRandomRotationInterval: function(interval) {
+            globals.rotationChangeInterval = interval;
+            console.log("🎲 Set random rotation change interval to " + interval + "ms");
+        },
         
         // Lighting control functions
         updateLighting: updateLighting,

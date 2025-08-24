@@ -67,11 +67,17 @@ $(function() {
 
     // Load demo model: waterbomb unless model specified in URL via ?model=FILE
     // where FILE is the data-url attribute of an <a class="demo">.
-    var model = 'Tessellations/huffmanWaterbomb.svg';
-    var match = /[\\?&]model=([^&#]*)/.exec(location.search);
-    if (match) {
-        model = match[1];
+    // Skip auto-loading if editMode is disabled (NFT processing mode)
+    if (window.editMode !== false) {
+        console.log('✏️ Edit mode enabled - loading default model');
+        var model = 'Tessellations/huffmanWaterbomb.svg';
+        var match = /[\\?&]model=([^&#]*)/.exec(location.search);
+        if (match) {
+            model = match[1];
+        }
+        model = model.replace(/'/g, ''); // avoid messing up query
+        $(".demo[data-url='"+model+"']").click();
+    } else {
+        console.log('🚫 Edit mode disabled - skipping default model load for NFT processing');
     }
-    model = model.replace(/'/g, ''); // avoid messing up query
-    $(".demo[data-url='"+model+"']").click();
 });

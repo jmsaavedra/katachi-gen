@@ -468,17 +468,23 @@ function initControls(globals){
     });
 
     var creasePercentSlider = setSliderInput("#creasePercent", globals.creasePercent*100, -100, 100, 1, function(val){
-        globals.creasePercent = val/100;
+        // Map slider value (0-100) to actual folding value (0-currentPatternMaxFolding)
+        var actualVal = (val / 100) * (globals.currentPatternMaxFolding / 100);
+        globals.creasePercent = actualVal;
         globals.shouldChangeCreasePercent = true;
         updateCreasePercent();
     });
     var creasePercentNavSlider = setSlider("#creasePercentNav>div", globals.creasePercent*100, -100, 100, 1, function(val){
-        globals.creasePercent = val/100;
+        // Map slider value (0-100) to actual folding value (0-currentPatternMaxFolding)
+        var actualVal = (val / 100) * (globals.currentPatternMaxFolding / 100);
+        globals.creasePercent = actualVal;
         globals.shouldChangeCreasePercent = true;
         updateCreasePercent();
     });
     var creasePercentBottomSlider = setSlider("#creasePercentBottom>div", globals.creasePercent*100, 0, 100, 1, function(val){
-        globals.creasePercent = val/100;
+        // Map slider value (0-100) to actual folding value (0-currentPatternMaxFolding)
+        var actualVal = (val / 100) * (globals.currentPatternMaxFolding / 100);
+        globals.creasePercent = actualVal;
         globals.shouldChangeCreasePercent = true;
         updateCreasePercent()
     });
@@ -500,15 +506,47 @@ function initControls(globals){
     });
 
     function updateCreasePercent(){
-        var val = (globals.creasePercent*100);
-        creasePercentSlider.slider('value', val);
-        creasePercentNavSlider.slider('value', val);
-        creasePercentBottomSlider.slider('value', val);
-        $('#currentFoldPercent').val(val.toFixed(0));
-        $('#creasePercent>input').val(val.toFixed(0));
-        $("#foldPercentSimple").html(val.toFixed(0));
+        // Convert actual folding value back to display percentage (0-100)
+        var displayVal = (globals.creasePercent / (globals.currentPatternMaxFolding / 100)) * 100;
+        creasePercentSlider.slider('value', displayVal);
+        creasePercentNavSlider.slider('value', displayVal);
+        creasePercentBottomSlider.slider('value', displayVal);
+        $('#currentFoldPercent').val(displayVal.toFixed(0));
+        $('#creasePercent>input').val(displayVal.toFixed(0));
+        $("#foldPercentSimple").html(displayVal.toFixed(0));
     }
     updateCreasePercent();
+
+    // Check if slider controls should auto-animate when they become visible
+    setTimeout(function() {
+        if ($("#creasePercent").is(':visible') && globals.threeView && globals.threeView.startSliderAnimation) {
+            console.log('🎮 Slider controls detected as visible - considering auto animation');
+            // Only start if not already animating and in appropriate mode
+            if (!globals.sliderAutoAnimationEnabled && window.editMode !== false) {
+                console.log('🎮 Starting immediate slider auto animation');
+                globals.threeView.startSliderAnimation(0, 100, 4000, true, 5000); // 4s animation, loop enabled, 5s pause
+            }
+        }
+    }, 1000); // Delay to ensure UI is fully rendered
+
+    function updateFoldingSliderMax(){
+        var currentMax = globals.currentPatternMaxFolding;
+        
+        // Update the actual slider maximum values but keep UI display as 0-100
+        creasePercentSlider.slider('option', 'max', currentMax);
+        creasePercentNavSlider.slider('option', 'max', currentMax);
+        creasePercentBottomSlider.slider('option', 'max', currentMax);
+        
+        // Adjust current value if it exceeds the new maximum
+        if (globals.creasePercent * 100 > currentMax) {
+            globals.creasePercent = currentMax / 100;
+            globals.shouldChangeCreasePercent = true;
+            updateCreasePercent();
+        }
+    }
+    
+    // Make function globally available
+    window.updateFoldingSliderMax = updateFoldingSliderMax;
 
     function setDeltaT(val){
         $("#deltaT").html(val.toFixed(4));
@@ -1064,7 +1102,15 @@ function initControls(globals){
     return {
         setDeltaT: setDeltaT,
         updateCreasePercent: updateCreasePercent,
-        setSliderInputVal: setSliderInputVal
+        setSliderInputVal: setSliderInputVal,
+        
+        // Start slider animation when controls become visible
+        startSliderAutoAnimation: function() {
+            if (globals.threeView && globals.threeView.startSliderAnimation) {
+                console.log('🎮 Controls visible - starting slider auto animation');
+                globals.threeView.startSliderAnimation(0, 100, 4000, true, 5000); // 4s animation, loop enabled, 5s pause
+            }
+        }
     }
 }
 
