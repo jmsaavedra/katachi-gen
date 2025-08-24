@@ -135,7 +135,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
           <div className="space-y-4 pt-4">
             <label className="text-base font-bold block text-center">
               What does collecting art mean to you?<br />
-              What's your favorite thing about collecting on Shape?
+              What&apos;s your favorite thing about collecting on Shape?
             </label>
             <Textarea
               placeholder='e.g., "I love feeling connected to such a creative community." or "i like turtles."'
