@@ -61,17 +61,10 @@ const server = http.createServer(async (req, res) => {
 
     // Get URL and method
     const parsedUrl = url.parse(req.url, true);
-<<<<<<< HEAD
-    const pathname = parsedUrl.pathname;
-    const method = req.method;
-
-    console.log(`${method} ${pathname}`);
-=======
     const urlPath = parsedUrl.pathname;
     const method = req.method;
 
     console.log(`${method} ${urlPath}`);
->>>>>>> katachi-generator-sembo
 
     // Handle POST requests
     if (method === 'POST') {
@@ -183,21 +176,12 @@ const server = http.createServer(async (req, res) => {
     // Handle GET requests
     else if (method === 'GET') {
         // Check if wallet info is requested
-<<<<<<< HEAD
-        if (pathname === '/wallet-info') {
+        if (urlPath === '/wallet-info') {
             try {
                 // Try to get wallet info if wallet is available
                 const walletKey = loadArweaveWallet();
                 if (walletKey) {
                     const walletAddress = await getWalletAddress();
-=======
-        if (urlPath === '/wallet-info') {
-            try {
-                // Try to get wallet info if wallet.json exists
-                const walletPath = arweaveWalletPath;
-                if (fs.existsSync(walletPath)) {
-                    const walletAddress = await getWalletAddress(walletPath);
->>>>>>> katachi-generator-sembo
                     const balance = await getWalletBalance(walletAddress);
                     
                     res.setHeader('Content-Type', 'application/json');
@@ -226,11 +210,7 @@ const server = http.createServer(async (req, res) => {
         } 
         // Serve static files from public directory
         else {
-<<<<<<< HEAD
-            await serveStaticFile(req, res, pathname);
-=======
             await serveStaticFile(req, res, urlPath);
->>>>>>> katachi-generator-sembo
         }
     }
     // Handle unsupported methods
