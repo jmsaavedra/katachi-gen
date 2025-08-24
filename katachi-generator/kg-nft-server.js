@@ -58,10 +58,10 @@ const server = http.createServer(async (req, res) => {
 
     // Get URL and method
     const parsedUrl = url.parse(req.url, true);
-    const path = parsedUrl.pathname;
+    const pathname = parsedUrl.pathname;
     const method = req.method;
 
-    console.log(`${method} ${path}`);
+    console.log(`${method} ${pathname}`);
 
     // Handle POST requests
     if (method === 'POST') {
@@ -165,7 +165,7 @@ const server = http.createServer(async (req, res) => {
     // Handle GET requests
     else if (method === 'GET') {
         // Check if wallet info is requested
-        if (path === '/wallet-info') {
+        if (pathname === '/wallet-info') {
             try {
                 // Try to get wallet info if wallet is available
                 const walletKey = loadArweaveWallet();
@@ -199,7 +199,7 @@ const server = http.createServer(async (req, res) => {
         } 
         // Serve static files from public directory
         else {
-            await serveStaticFile(req, res, path);
+            await serveStaticFile(req, res, pathname);
         }
     }
     // Handle unsupported methods
