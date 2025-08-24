@@ -36,9 +36,39 @@ export async function POST(request: NextRequest) {
     const data = await response.json();
     console.log('Katachi generator response:', {
       success: data.success,
-      txId: data.txId,
-      hasThumbnail: !!data.thumbnail
+      thumbnailId: data.thumbnailId,
+      htmlId: data.htmlId,
+      hasThumbnail: !!data.thumbnailId
     });
+
+    // Create complete token metadata for minting
+    if (data.success && data.thumbnailId && data.htmlId) {
+      const tokenMetadata = {
+        name: `Katachi Gen #${data.thumbnailId?.slice(-8) || 'Unknown'}`,
+        description: `Unique origami pattern generated from curated NFTs. This interactive 3D artwork represents your on-chain journey on Shape Network.`,
+        image: data.thumbnailUrl || `https://arweave.net/${data.thumbnailId}`,
+        animation_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,
+        external_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,
+        attributes: [
+          { trait_type: 'Pattern Type', value: 'Origami' },
+          { trait_type: 'Sentiment Filter', value: body.sentiment || 'Applied' },
+          { trait_type: 'Wallet Address', value: body.walletAddress },
+          { trait_type: 'Seed', value: body.seed2 || '0' }
+        ],
+        properties: {
+          category: 'art',
+          creators: [{ address: body.walletAddress, share: 100 }]
+        },
+        arweave: {
+          thumbnailId: data.thumbnailId,
+          htmlId: data.htmlId,
+          thumbnailUrl: data.thumbnailUrl,
+          htmlUrl: data.htmlUrl
+        }
+      };
+
+      console.log('Token Ready for minting:', JSON.stringify(tokenMetadata, null, 2));
+    }
 
     return NextResponse.json(data);
   } catch (error) {
