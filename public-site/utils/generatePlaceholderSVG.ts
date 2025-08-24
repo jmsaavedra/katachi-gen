@@ -63,7 +63,24 @@ const BASE_COLORS = [
   '#84CC16', // Lime
 ];
 
-function generateRandomOrigamiSVG(colors: string[], foldLines: number, patternType: string, complexity: string, nftCount: number, collections: number, sentimentFilter?: string): string {
+// Simple seeded random number generator
+function seededRandom(seed: string): () => number {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    const char = seed.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  
+  let current = Math.abs(hash);
+  
+  return function() {
+    current = (current * 16807) % 2147483647;
+    return (current - 1) / 2147483646;
+  };
+}
+
+function generateRandomOrigamiSVG(colors: string[], foldLines: number, patternType: string, complexity: string, nftCount: number, collections: number, rng: () => number, sentimentFilter?: string): string {
   const size = 400;
   const centerX = size / 2;
   const centerY = size / 2;
@@ -74,8 +91,8 @@ function generateRandomOrigamiSVG(colors: string[], foldLines: number, patternTy
   // Generate radial fold lines (typical of origami) - use the exact foldLines count
   for (let i = 0; i < foldLines; i++) {
     const angle = (i / foldLines) * 2 * Math.PI;
-    const innerRadius = 40 + Math.random() * 60;
-    const outerRadius = 150 + Math.random() * 100;
+    const innerRadius = 40 + rng() * 60;
+    const outerRadius = 150 + rng() * 100;
     
     const x1 = centerX + Math.cos(angle) * innerRadius;
     const y1 = centerY + Math.sin(angle) * innerRadius;
@@ -92,10 +109,10 @@ function generateRandomOrigamiSVG(colors: string[], foldLines: number, patternTy
   
   for (let i = 0; i < shapeCount; i++) {
     const angle = (i / shapeCount) * 2 * Math.PI;
-    const radius = 80 + Math.random() * 60;
+    const radius = 80 + rng() * 60;
     const x = centerX + Math.cos(angle) * radius;
     const y = centerY + Math.sin(angle) * radius;
-    const shapeSize = 20 + Math.random() * 30;
+    const shapeSize = 20 + rng() * 30;
     const color = colors[i % colors.length];
     
     if (i % 3 === 0) {
@@ -169,20 +186,31 @@ function generateRandomOrigamiSVG(colors: string[], foldLines: number, patternTy
 }
 
 export function generatePlaceholderPattern(data: PatternData): GeneratedPattern {
+  // Create deterministic seed but include NFT number for variation
+  const seedString = `${data.walletAddress}-${data.nftCount}-${data.collections}-${data.sentimentFilter || 'no-sentiment'}-${data.nftNumber || Math.floor(Math.random() * 10000)}`;
+  const rng = seededRandom(seedString);
+  
   // Determine complexity based on NFT collection data
   const complexity = data.nftCount > 20 ? 'High' : data.nftCount > 8 ? 'Medium' : 'Basic';
   const complexityValue = complexity === 'High' ? 3 : complexity === 'Medium' ? 2 : 1;
   
-  // Select colors based on collection diversity
-  const colorCount = Math.min(Math.max(data.collections, 2), 6);
-  const colors = BASE_COLORS.slice(0, colorCount);
+  // Select colors based on collection diversity, but use seeded randomness for order
+  const baseColorCount = Math.min(Math.max(data.collections, 2), 6);
+  const shuffledColors = [...BASE_COLORS];
+  // Fisher-Yates shuffle with seeded random
+  for (let i = shuffledColors.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [shuffledColors[i], shuffledColors[j]] = [shuffledColors[j], shuffledColors[i]];
+  }
+  const colors = shuffledColors.slice(0, baseColorCount);
   
-  // Random pattern selection
-  const patternType = ORIGAMI_PATTERNS[Math.floor(Math.random() * ORIGAMI_PATTERNS.length)];
-  const foldLines = 12 + complexityValue * 6 + Math.floor(Math.random() * 8);
+  // Seeded pattern selection
+  const patternIndex = Math.floor(rng() * ORIGAMI_PATTERNS.length);
+  const patternType = ORIGAMI_PATTERNS[patternIndex];
+  const foldLines = 12 + complexityValue * 6 + Math.floor(rng() * 8);
   
   // Generate SVG with trait information
-  const svgContent = generateRandomOrigamiSVG(colors, foldLines, patternType, complexity, data.nftCount, data.collections, data.sentimentFilter);
+  const svgContent = generateRandomOrigamiSVG(colors, foldLines, patternType, complexity, data.nftCount, data.collections, rng, data.sentimentFilter);
   
   // Use the provided NFT number or use a placeholder for preview
   const nftNumber = data.nftNumber || 'TBD';
