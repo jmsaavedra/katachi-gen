@@ -149,3 +149,20 @@ export type MarketStatsOutput = {
   owners: number | null;
   note?: string;
 };
+
+export type InterpretedNFTsOutput = {
+  ownerAddress: Address;
+  sentiment: string;
+  interpretation: string;
+  requestedCount: number;
+  selectedNfts: Array<{
+    tokenId: string;
+    contractAddress: Address;
+    name: string | null;
+    imageUrl: string | null;
+    reason: string;
+    matchScore: number;
+  }>;
+  themes: string[];
+  timestamp: string;
+};
