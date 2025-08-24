@@ -50,8 +50,36 @@ Your NFT features:
 katachi-gen/
 ├── mcp-server/          # Shape MCP server implementation
 ├── generator/          # Origami pattern generation engine
-└── public/            # Frontend application
+├── public-site/        # Next.js frontend application
+└── public/            # Static assets
 ```
+
+## AI-Powered Collection Reflection
+
+Beyond the core origami generation, Katachi Gen features an advanced **Collection Reflection** system that uses AI to understand collectors' emotional connections to their NFTs.
+
+### How It Works
+
+**User Experience:**
+1. Connected wallets can share their feelings about collecting on Shape Network
+2. The AI analyzes their sentiment and curates 5-15 NFTs from their collection that best match their emotional expression
+3. Each selected NFT includes detailed match explanations and confidence scores
+
+**AI Sentiment Analysis:**
+- **Emotional Theme Detection**: Recognizes 10 core emotions (joy, pride, community, creativity, peace, nostalgia, adventure, wealth, nature, technology)
+- **Advanced Scoring**: Multi-layered algorithm analyzing text matches, thematic connections, and visual characteristics
+- **Smart Curation**: Ensures collection diversity by limiting to 1 NFT per collection address
+- **Transparent Results**: Detailed breakdowns show why each NFT matched the user's sentiment
+
+**Technical Implementation:**
+- **MCP Server Integration**: `interpretCollectionSentiment` tool processes sentiment against NFT metadata
+- **Comprehensive Analysis**: Scores NFTs based on name matches (+3 pts), description matches (+2 pts), collection matches (+1 pt), and thematic connections
+- **Visual Matching**: Experimental color and mood analysis (currently metadata-based)
+- **Performance Optimized**: Analyzes up to 500 NFTs with Redis caching for sub-second responses
+
+This creates a deeply personal connection between collectors and their digital art, transforming NFT browsing into an emotional journey of self-discovery.
+
+> For detailed technical specifications of the sentiment analysis algorithm, see [mcp-server/README.md](./mcp-server/README.md#interpretcollectionsentiment)
 
 ## Minting Eligibility
 
@@ -77,6 +105,31 @@ Built with ❤️ by:
 
 - [Shapecraft2 Hackathon](https://shape.network/shapecraft)
 - [Shape Network](https://shape.network)
+
+## TODO & Future Enhancements
+
+### 🎨 Enhanced Visual Analysis (High Priority)
+- **Goal**: Implement real computer vision for NFT artwork analysis
+- **Current Limitation**: System only performs text-based matching on NFT metadata
+- **Desired Enhancement**: Google Vision API or OpenAI Vision integration for object/color detection
+- **Impact**: Users mentioning "apples", "cats", etc. would get NFTs with actual visual matches
+
+### 🔄 NFT Metadata Enrichment
+- Cache and enrich NFT metadata with additional data sources
+- Integrate with NFT marketplace APIs for rarity/value data
+- Enhanced collection analytics and insights
+
+### 📊 Advanced Analytics Dashboard  
+- Historical sentiment analysis trends for collectors
+- Collection growth insights and personal behavior patterns
+- Cross-wallet collection analysis and recommendations
+
+### 🤖 Smart Collection Recommendations
+- AI-powered suggestions for new NFTs based on collection sentiment
+- Cross-collection theme analysis and pattern recognition
+- Marketplace integration for intelligent purchase recommendations
+
+> See [TODO.md](./TODO.md) for detailed implementation plans and technical specifications.
 
 ---
 

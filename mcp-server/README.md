@@ -45,6 +45,99 @@ Example prompts:
 - "get the first 50 NFTs for wallet 0xabcd...123"
 - "get the next page of NFTs using pageKey xyz..."
 
+#### `interpretCollectionSentiment`
+
+AI-powered NFT curation that matches collector sentiment to their owned NFTs. Users express their emotional connection to collecting, and the system returns 5-15 NFTs that best match their feelings through advanced scoring algorithms.
+
+Example prompts:
+- "I feel connected to nature when I collect - show me 10 NFTs that match this sentiment"
+- "Collecting makes me feel creative and inspired - find 5 pieces from my collection"
+
+**How the Sentiment Interpretation Algorithm Works:**
+
+The system uses a multi-layered scoring approach to match user sentiment with NFT metadata:
+
+**1. Emotional Theme Detection (Lines 72-83)**
+- Recognizes 10 core emotional categories with keyword triggers:
+  - **Joy**: happy, excited, joyful, delighted, thrilled, elated, cheerful, bright, fun, playful
+  - **Pride**: proud, accomplished, achievement, success, confident, strong, powerful, winner
+  - **Community**: together, community, friends, family, connected, belong, unity, collective, group
+  - **Creativity**: creative, artistic, inspired, innovative, unique, original, imaginative, expressive
+  - **Peace**: calm, peaceful, serene, tranquil, relaxed, zen, meditative, quiet, still
+  - **Nostalgia**: memory, remember, nostalgic, past, childhood, vintage, classic, timeless, old
+  - **Adventure**: adventure, explore, discover, journey, quest, travel, new, exciting, bold
+  - **Wealth**: rich, wealthy, valuable, precious, treasure, gold, diamond, luxury, premium
+  - **Nature**: nature, earth, forest, ocean, mountain, sky, flower, animal, natural, organic
+  - **Technology**: tech, digital, cyber, future, ai, robot, code, pixel, virtual, meta
+
+**2. Visual Characteristic Mapping (Lines 86-108)**
+- Maps emotional tones to visual styles and 11 color categories
+- **Bright**: yellow, orange, pink, neon, light, bright, vivid, glow
+- **Dark**: black, dark, shadow, night, gothic, noir, mysterious
+- **Color Detection**: Comprehensive keyword mapping for red, blue, green, yellow, purple, orange, pink, white, black, gray, brown
+
+**3. NFT Scoring Algorithm (Lines 187-300)**
+
+Each NFT receives a composite score based on multiple factors:
+
+**Text Matching (Highest Priority)**
+- Direct word matches between user sentiment and NFT metadata
+- **NFT Name Match**: +3 points per word (e.g., "happy" in user input matches "Happy Cat #123")
+- **NFT Description Match**: +2 points per word
+- **Collection Name Match**: +1 point per word
+- Only processes words longer than 3 characters to avoid noise
+
+**Theme Matching (Medium Priority)**
+- Detected themes are cross-referenced with NFT metadata
+- **Name Theme Match**: +2 points (e.g., "nature" theme matches "Forest Spirit" NFT)
+- **Description Theme Match**: +1 point
+- Tracks specific keyword matches for detailed explanations
+
+**Visual/Mood Matching (Lower Priority)**
+- **Positive Sentiment + Bright Visuals**: +1 point (happy/excited + bright/colorful NFT names)
+- **Calm Sentiment + Minimal Style**: +1 point (peaceful + minimal/simple NFT characteristics)
+
+**Color Analysis (Experimental)**
+- Extracts color mentions from sentiment text
+- Attempts to match with NFT image URLs/filenames (heuristic-based)
+- **Color Match**: +1-2 points plus detailed reasoning
+- **Note**: Currently limited to URL/filename analysis, not actual image pixel analysis
+
+**Collection Diversity Bonus**
+- **Multiple Ownership**: +0.5 points if user owns multiple NFTs from same collection
+- **Randomization Factor**: +0-0.5 random points to ensure variety when scores are similar
+
+**4. Selection Process**
+1. **Score All NFTs**: Every owned NFT (up to 500 for performance) gets scored against sentiment
+2. **Sort by Score**: Highest scoring NFTs bubble to the top
+3. **Unique Collections**: Maximum 1 NFT per collection address to ensure diversity
+4. **Return Top N**: User-specified count (5, 10, or 15 NFTs)
+
+**5. Match Details Output**
+Each selected NFT includes comprehensive match analysis:
+- **Overall Match Score**: Numerical score (0-10+ scale)
+- **Reason**: Human-readable explanation of why it matched
+- **Detailed Breakdown**:
+  - 📝 **Text Matches**: Specific word matches in name/description/collection
+  - 🎭 **Theme Matches**: Emotional theme connections with keywords
+  - 🎨 **Visual Matches**: Color and mood-based aesthetic analysis
+  - **Collection Info**: Context about the NFT's collection
+
+**Current Limitations:**
+- Visual analysis is text-based (URL/filename parsing) rather than actual image pixel analysis
+- Cannot detect objects in artwork (e.g., "apple" mentioned but can't see actual apples in images)
+- Color detection relies on metadata/filenames rather than true color analysis
+
+**Example Scoring:**
+User Input: *"Collecting makes me feel peaceful and connected to nature"*
+- NFT "Zen Garden #42" with green trees in description:
+  - Text match "peaceful": +3 points
+  - Theme match "nature": +2 points  
+  - Description match "connected": +2 points
+  - **Total: 7+ points**
+
+The system provides transparent, explainable AI curation that goes far beyond simple keyword matching to understand emotional context and aesthetic preferences.
+
 ### Gasback Tools (`/tools/gasback/`)
 
 #### `getShapeCreatorAnalytics`
