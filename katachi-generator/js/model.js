@@ -134,7 +134,7 @@ function initModel(globals){
                 material = new THREE.MeshPhongMaterial({
                     map: textureToUse,
                     flatShading: true,
-                    side: THREE.DoubleSide,
+                    side: THREE.FrontSide,  // 表面のみにテクスチャーを適用
                     polygonOffset: true,
                     polygonOffsetFactor: polygonOffset,
                     polygonOffsetUnits: 1,
@@ -146,8 +146,24 @@ function initModel(globals){
                     opacity: 1.0
                 });
                 
+                // 裏面用の白いマテリアルを作成
+                material2 = new THREE.MeshPhongMaterial({
+                    color: 0xffffff,       // 白色
+                    flatShading: true,
+                    side: THREE.BackSide,  // 裏面のみ
+                    polygonOffset: true,
+                    polygonOffsetFactor: polygonOffset,
+                    polygonOffsetUnits: 1,
+                    shininess: 25,
+                    specular: 0x222222,
+                    reflectivity: 0.15,
+                    transparent: false,
+                    opacity: 1.0
+                });
+                
                 console.log("✅ Texture material created successfully");
-                backside.visible = false;
+                console.log("🎨 裏面マテリアルを白色に設定");
+                backside.visible = true;  // 裏面を表示
                 
                 // Check if this is a cell-generated texture that needs simple UV mapping
                 console.log("🔍 Checking UV mapping condition:");
@@ -195,7 +211,13 @@ function initModel(globals){
                     opacity: 1.0
                 });
                 material.color.setStyle( "#" + globals.color1);
-                material2.color.setStyle( "#" + globals.color2);
+                // テクスチャーモードの場合は裏面を白に設定
+                if (globals.colorMode === "texture") {
+                    material2.color.setStyle("#ffffff"); // 白色
+                    console.log("🎨 テクスチャーモード: 裏面マテリアルを白色に設定");
+                } else {
+                    material2.color.setStyle( "#" + globals.color2);
+                }
                 backside.visible = true;
             }
         } else {
@@ -226,7 +248,13 @@ function initModel(globals){
                 opacity: 1.0
             });
             material.color.setStyle( "#" + globals.color1);
-            material2.color.setStyle( "#" + globals.color2);
+            // テクスチャーモードの場合は裏面を白に設定
+            if (globals.colorMode === "texture") {
+                material2.color.setStyle("#ffffff"); // 白色
+                console.log("🎨 テクスチャーモード: 裏面マテリアルを白色に設定");
+            } else {
+                material2.color.setStyle( "#" + globals.color2);
+            }
             backside.visible = true;
         }
         
