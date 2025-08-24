@@ -9,7 +9,7 @@
 ## 🎯 [Mint Your Katachi Gen NFT at katachi-gen.com](https://katachi-gen.com)
 
 [![Mint Now](https://img.shields.io/badge/MINT%20NOW-katachi--gen.com-blue?style=for-the-badge&logo=ethereum&logoColor=white)](https://katachi-gen.com)
-[![Shape Network](https://img.shields.io/badge/Shape%20Network-Mainnet%20Live-green?style=for-the-badge)](https://shapescan.xyz/address/0x9fba90186403d1c5e3e1971536862cf4ebb0f766)
+[![Shape Network](https://img.shields.io/badge/Shape%20Network-Mainnet%20Live-green?style=for-the-badge)](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1)
 
 **Live on Shape Mainnet** • Transform your on-chain journey into unique origami art
 
@@ -99,7 +99,7 @@ This creates a deeply personal connection between collectors and their digital a
 ### Deployed Contracts
 Katachi Gen is deployed on both Shape mainnet and testnet:
 
-- **Shape Mainnet**: [`0x9fba90186403d1c5e3e1971536862cf4ebb0f766`](https://shapescan.xyz/address/0x9fba90186403d1c5e3e1971536862cf4ebb0f766)
+- **Shape Mainnet**: [`0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1`](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1)
 - **Shape Sepolia Testnet**: [`0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85`](https://sepolia.shapescan.xyz/address/0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85)
 - **Token Standard**: ERC-721
 - **Token Symbol**: KGEN
@@ -141,7 +141,7 @@ Built with ❤️ by:
 ## Links
 
 - [Smart Contract Repository](https://github.com/jmsaavedra/katachi-gen-721-contract) - ERC-721 contract source code
-- [View on Shape Mainnet](https://shapescan.xyz/address/0x9fba90186403d1c5e3e1971536862cf4ebb0f766) - Live contract on Shape
+- [View on Shape Mainnet](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1) - Live contract on Shape
 - [View on Shape Testnet](https://sepolia.shapescan.xyz/address/0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85) - Test deployment
 - [Shapecraft2 Hackathon](https://shape.network/shapecraft)
 - [Shape Network](https://shape.network)

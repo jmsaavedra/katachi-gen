@@ -12,6 +12,6 @@ export const addresses: Record<string, Record<number, Address>> = {
   },
   nftMinter: {
     [shapeSepolia.id]: (process.env.KATACHI_CONTRACT_TESTNET || '0x06740C004c98afA7f9F5C38C00B8DAF9c33ABFB3') as Address,
-    [shape.id]: (process.env.KATACHI_CONTRACT_MAINNET || '0x9fba90186403d1c5e3e1971536862cf4ebb0f766') as Address,
+    [shape.id]: (process.env.KATACHI_CONTRACT_MAINNET || '0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1') as Address,
   },
 };
