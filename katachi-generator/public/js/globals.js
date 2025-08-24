@@ -11,12 +11,16 @@ function initGlobals(){
 
         navMode: "simulation",
         scale: 1,
+        editMode: true, // Default to edit mode enabled, can be overridden
+        isNFTProcessing: false, // Flag to indicate NFT processing context
+        hideUntilTextured: false, // Flag to hide origami object until textures are applied
 
         //view
         colorMode: "color",
         calcFaceStrain: false,
-        color1: "ec008b",
+        color1: "ffffff", // Changed from ec008b (pink) to white for transparency
         color2: "dddddd",
+        defaultOpacity: 0.0, // Default opacity for non-textured surfaces (0.0 = transparent)
         edgesVisible: true,
         mtnsVisible: true,
         valleysVisible: true,
@@ -98,6 +102,8 @@ function initGlobals(){
 
         //compliant sim settings
         creasePercent: 0,  // Start flat (0% folded)
+        maxFoldingPercent: 100, // Maximum folding percentage (default 100%)
+        currentPatternMaxFolding: 100, // Current pattern's max folding value
         axialStiffness: 20,
         creaseStiffness: 0.7,
         panelStiffness: 0.7,
@@ -166,6 +172,15 @@ function initGlobals(){
         $("#creasePercentBottom>div").slider({value:percent});
     }
     _globals.setCreasePercent = setCreasePercent;
+
+    function setMaxFolding(maxFoldingValue){
+        _globals.currentPatternMaxFolding = maxFoldingValue;
+        // Update all folding sliders to use the new maximum
+        if (typeof updateFoldingSliderMax === 'function') {
+            updateFoldingSliderMax();
+        }
+    }
+    _globals.setMaxFolding = setMaxFolding;
 
     function warn(msg){
         if (($("#warningMessage").html()) != "") $("#warningMessage").append("<br/><hr>" + msg);
@@ -1314,6 +1329,33 @@ function initGlobals(){
         return _globals.lighting;
     }
     _globals.getLightingInfo = getLightingInfo;
+    
+    // Pattern loading state management
+    _globals.patternLoadingCallbacks = [];
+    
+    function onPatternLoaded(callback) {
+        if (typeof callback === 'function') {
+            _globals.patternLoadingCallbacks.push(callback);
+            console.log('📋 Pattern loading callback registered, total callbacks:', _globals.patternLoadingCallbacks.length);
+        }
+    }
+    _globals.onPatternLoaded = onPatternLoaded;
+    
+    function notifyPatternLoaded(patternInfo) {
+        console.log('🔔 Notifying pattern loaded:', patternInfo);
+        var callbacks = _globals.patternLoadingCallbacks.slice(); // Copy array
+        _globals.patternLoadingCallbacks = []; // Clear callbacks
+        
+        callbacks.forEach(function(callback, index) {
+            try {
+                console.log('📞 Calling pattern loading callback', index);
+                callback(patternInfo);
+            } catch (error) {
+                console.error('❌ Error in pattern loading callback', index, ':', error);
+            }
+        });
+    }
+    _globals.notifyPatternLoaded = notifyPatternLoaded;
     
     // Enable global override by default
     enableGlobalRandomOverride();

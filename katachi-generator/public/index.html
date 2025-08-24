@@ -22,10 +22,48 @@
     </script>
 
     <script>
+        const origamiPatterns = [
+            {url:"https://exonemo.com/test/katachi-gen/svgs/airplane.svg", maxFolding:95},
+            {url:"https://exonemo.com/test/katachi-gen/svgs/huffmanWaterbomb.svg", maxFolding:100},
+            {url:"https://exonemo.com/test/katachi-gen/svgs/hypar.svg", maxFolding:70},
+            {url:"https://exonemo.com/test/katachi-gen/svgs/pinwheelBase.svg", maxFolding:80},
+            {url:"https://exonemo.com/test/katachi-gen/svgs/traditionalCrane.svg", maxFolding:97},
+            {url:"https://exonemo.com/test/katachi-gen/svgs/FTpoly7.svg", maxFolding:85},
+        ]
         window.nftRenderComplete = false;
+        const editMode = false;
+        window.editMode = editMode; // Make editMode accessible from other scripts
         // This will be replaced with actual data
-        const data = `{dataJson}`;
+        const nftData = `{dataJson}`;
+//         const nftData = JSON.parse(`
+// {
+//     "walletAddress":"0x1234567890abcdef",
+//     "seed2":"${Math.random()}",
+//     "images":[
+//         {"url":"https://exonemo.com/test/katachi-gen/images/aventurine.avif"},
+//         {"url":"https://exonemo.com/test/katachi-gen/images/infinitegarden.webp"},
+//         {"url":"https://exonemo.com/test/katachi-gen/images/gmmoney-die.webp"},
+//         {"url":"https://exonemo.com/test/katachi-gen/images/ocote-tekno.gif"},
+//         {"url":"https://exonemo.com/test/katachi-gen/images/karborn.webp"}
+//     ]
+// }
+//         `);
     </script>
+
+    <style>
+        /* Styles for non-edit mode */
+        .edit-mode-disabled #globalNav {
+            display: none !important;
+        }
+        
+        .edit-mode-disabled body {
+            padding-top: 0 !important; /* Remove top padding when nav is hidden */
+        }
+        
+        .edit-mode-disabled .main-content {
+            margin-top: 0 !important; /* Adjust main content position */
+        }
+    </style>
 
     <script id="vertexShader" type="x-shader/x-vertex">
         attribute vec2 a_position;
@@ -795,86 +833,6 @@
 </head>
 <body>
 
-<div class="modal fade" id="aboutModal" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-body">
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                  <span aria-hidden="true">&times;</span>
-                </button>
-                <p>
-                <b>ORIGAMI SIMULATOR</b><br/>
-
-                    <img style="width: 100%; max-width:500px" src="assets/doc/crane.gif" />
-
-                    This app allows you to simulate how any origami crease pattern will fold.  It may look a little different
-                    from what you typically think of as "origami" - rather than folding paper in a set of sequential steps,
-                    this simulation attempts to fold every crease simultaneously. It does this by iteratively solving for small displacements in the geometry of an initially flat sheet due to forces
-                    exerted by creases.
-                    You can read more about it in our paper:
-                    <ul>
-                    <li><a target="_blank" href="http://erikdemaine.org/papers/OrigamiSimulator_Origami7/">Fast, Interactive Origami Simulation using GPU Computation</a> by Amanda Ghassaei, Erik Demaine, and Neil Gershenfeld (7OSME)
-                    </ul>
-
-                    All simulation methods were written from scratch and are executed in parallel in several GPU fragment shaders for fast performance.
-                    The solver extends work from the following sources:
-                    <ul>
-                    <li><a target="_blank" href="http://www3.eng.cam.ac.uk/~sdg/preprint/5OSME.pdf">Origami Folding: A Structural Engineering Approach</a> by Mark Schenk and Simon D. Guest<br/>
-                    <li><a target="_blank" href="http://www.tsg.ne.jp/TT/cg/TachiFreeformOrigami2010.pdf">Freeform Variations of Origami</a> by Tomohiro Tachi<br/>
-                    </ul>
-                    <p>
-                    This app also uses the methods described in <a href="http://www.cgg.cs.tsukuba.ac.jp/projects/2020/RulingAwareTriangulation/index.html" target="_blank">Simple Simulation of Curved Folds Based on Ruling-aware Triangulation</a> to import curved crease patterns and pre-process them in a way that realistically simulates the bending between the creases.
-                    </p>
-
-                    <p>
-                    Originally built by <a href="https://amandaghassaei.com/" target="_blank">Amanda Ghassaei</a> as a final project for <a href="http://courses.csail.mit.edu/6.849/spring17/" target="_blank">Geometric Folding Algorithms</a>.
-                    Other contributors include <a href="http://www.cgg.cs.tsukuba.ac.jp/~sasaki_k/" target="_blank">Sasaki Kosuke</a>, <a href="http://erikdemaine.org/" target="_blank">Erik Demaine</a>, and <a href="https://github.com/amandaghassaei/OrigamiSimulator/graphs/contributors" target="_blank">others</a>.
-                    Code available on <a href="https://github.com/amandaghassaei/OrigamiSimulator" target="_blank">Github</a>.  If you have interesting crease patterns that would
-                    make good demo files, please send them to me (Amanda) so I can add them to the <b>Examples</b> menu.  My email address is on my website.  Thanks!<br/>
-                </p><br/>
-                    <b>Instructions:</b><br/><br/>
-                    <img style="width: 100%; max-width:600px" src="assets/doc/demoui.gif" /><br/>
-
-                    <ul>
-                        <li>Slide the <b>Fold Percent</b> slider to control the degree of folding of the pattern (100% is fully folded, 0% is unfolded,
-                            and -100% is fully folded with the opposite mountain/valley assignments).</li>
-                        <li>Drag to rotate the model, scroll to zoom.</li>
-                        <li>Import other patterns under the <b>Examples</b> menu.</li>
-                        <li>Upload your own crease patterns in SVG or <a href="https://github.com/edemaine/fold" target="_blank">FOLD</a> formats, following <a href="#" class="goToImportInstructions">these instructions</a>.</li>
-                        <li>Export FOLD files or 3D models ( STL or OBJ ) of the folded state of your design ( <b>File > Save Simulation as...</b> ).</li>
-                    </ul>
-                        <img style="width: 100%;" src="assets/doc/strain.jpg" />
-                    <ul>
-                        <li>Visualize the internal strain of the origami as it folds using the <b>Strain Visualization</b> in the left menu of the <b>Advanced Options</b>.</li>
-                    </ul>
-                        <img style="width: 100%; max-width:600px" src="assets/doc/huffmanvr.jpg" /><br/>
-                    <ul>
-                        <li>If you are working from a computer connected to a VR headset and hand controllers, follow <a href="#" id="goToViveInstructions">these instructions</a>
-                            to use this app in an interactive virtual reality mode. (sorry I think this may be deprecated now!)</li>
-                    </ul>
-
-                    <br/>
-                    <b>External Libraries:</b><br/><br/>
-                    <ul>
-                        <li>All rendering and 3D interaction done with <a target="_blank" href="https://threejs.org/">three.js</a></li>
-                        <li><a href="https://github.com/fontello/svgpath" target="_blank">svgpath</a> and <a href="https://www.npmjs.com/package/path-data-polyfill" target="_blank">path-data-polyfill</a> helps with SVG path parsing</li>
-                        <li><a href="https://github.com/edemaine/fold" target="_blank">FOLD</a> is used as the internal data structure, methods from the
-                            <a href="https://github.com/edemaine/fold/blob/master/doc/api.md" target="_blank">FOLD API</a> used for SVG parsing</li>
-                        <li>Arbitrary polygonal faces of imported geometry are triangulated using the <a target="_blank" href="https://github.com/mapbox/earcut">Earcut Library</a> and <a href="https://github.com/mikolalysenko/cdt2d" target="_blank"></a>cdt2d</a></li>
-                        <li><a href="http://www.numericjs.com/" target="_blank">numeric.js</a> for linear algebra operations</li>
-                        <li>GIF and WebM video export uses <a target="_blank" href="https://github.com/spite/ccapture.js/">CCapture</a></li>
-                    </ul>
-                <p>
-                    <br/>
-                    You can find additional information in <a href="http://erikdemaine.org/papers/OrigamiSimulator_Origami7/" target="_blank">our 7OSME paper</a> and <a href="http://www.amandaghassaei.com/projects/origami_simulator/" target="_blank">project website</a>.
-                    If you have feedback about features you want to see in this app, please see <a href="https://github.com/amandaghassaei/OrigamiSimulator/discussions/41" target="_blank">this thread</a>.
-                    <br/>
-                    <br/>
-                </p>
-            </div>
-        </div><!-- /.modal-content -->
-    </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
 <nav id="globalNav" class="navbar navbar-inverse navbar-embossed" role="navigation">
     <div class="navbar-header">
         <a id="logo" class="navbar-brand" target="_blank" href="https://amandaghassaei.com/">
@@ -1218,38 +1176,41 @@
     <div class="extraSpace"></div>
 </div>
 <div id="svgViewer"></div>
-<div id="helper">Load more origami patterns here!</div>
-<div id="feedbackNotification"><span>Help Us Improve Origami Simulator</span> <span>&#x279C;</span></div>
-<div id="controlsBottom">
-    <div id="viewToggle" class="bigToggle">
+
+<div id="controlsBottom" style="display: flex; align-items: center; justify-content: center; width: 100%;">
+    <!-- <div id="viewToggle" class="bigToggle">
         <div>
             <a href="#" id="colorToggle"><div class="active"><img src="assets/hyparColorSmall.png"/><span>Material</span></div></a><div class="separator"></div><a href="#" id="strainToggle"><div><img src="assets/hyparStrainSmall.png"/><span>Strain</span></div></a>
         </div>
         View Mode
-    </div>
-    <div id="bottomSliderContainer">
+    </div> -->
+    <div id="bottomSliderContainer" style="display: flex; align-items: center;">
         <div class="sliderInput" id="creasePercentBottom">
             <div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
         </div>
         <a href="#" id="flatIndicator" class="sliderEndPt smallTxt">
             <!--<img src="assets/flatcraneSmall.png"/>-->
-            <span class="sliderEndPtLabel">Flat</span>
-            <span class="fui-triangle-down"></span>
+            <!-- <span class="sliderEndPtLabel">Flat</span> -->
+            <!-- <span class="fui-triangle-down"></span> -->
         </a>
         <a href="#" id="foldedIndicator" class="sliderEndPt smallTxt">
             <!--<img src="assets/foldedCraneSmall.png"/>-->
-            <span class="sliderEndPtLabel">Folded</span>
-            <span class="fui-triangle-down"></span>
+            <!-- <span class="sliderEndPtLabel">Folded</span> -->
+            <!-- <span class="fui-triangle-down"></span> -->
         </a>
-        <span>Fold Percent: <span id="foldPercentSimple"></span>%</span>
+        <span><span id="foldPercentSimple"></span>%</span>
     </div>
-    <div id="controlsToggle" class="bigToggle">
+    <div id="bottomButtonContainer" style="display: flex; gap: 20px; margin-left: 40px; align-items: center;">
+        <a href="#" id="pdfButton" style="color: #ffffff; text-decoration: none; font-size: 14px; cursor: pointer; font-weight: 500;">PDF</a>
+        <a href="#" id="printButton" style="color: #ffffff; text-decoration: none; font-size: 14px; cursor: pointer; font-weight: 500;">PRINT</a>
+    </div>
+    <!-- <div id="controlsToggle" class="bigToggle">
         <div>
             <a href="#" id="orbitToggle"><div class="active"><img class="preserveAspect" src="assets/rotateSmall.png"/><span>Rotate</span></div></a><div class="separator"></div><a href="#" id="grabToggle"><div><img class="preserveAspect" src="assets/grabSmall.png"/><span>Grab</span></div></a>
         </div>
         Control Mode
     </div>
-    <a href="#" id="resetBottom" class="btn btn-lg btn-default">Reset</a>
+    <a href="#" id="resetBottom" class="btn btn-lg btn-default">Reset</a> -->
 </div>
 <div id="controlsLeft" class="flipped">
     <div>
@@ -2083,7 +2044,18 @@
 <script>
     // Random Seed Control Functions
     function applyRandomSeed() {
+        // Early check for globals availability
+        if (typeof globals === 'undefined' || !globals || !globals.setRandomSeed) {
+            console.warn('🚨 Globals not yet available for random seed application');
+            return false;
+        }
+        
         var seedInput = document.getElementById('randomSeed');
+        if (!seedInput) {
+            console.warn('🚨 Random seed input element not found');
+            return false;
+        }
+        
         var seed = seedInput.value.trim();
         
         if (!seed) {
@@ -2144,13 +2116,132 @@
     
     function resetRandomSeed() {
         var seedInput = document.getElementById('randomSeed');
-        seedInput.value = 'origami-simulator-2024';
-        applyRandomSeed();
+        if (seedInput) {
+            seedInput.value = 'origami-simulator-2024';
+            applyRandomSeed();
+        }
     }
     
     // Initialize random seed when page loads
     document.addEventListener('DOMContentLoaded', function() {
+        // Handle editMode functionality
+        if (typeof editMode !== 'undefined' && editMode === false) {
+            console.log('🚫 Edit mode disabled - hiding navigation and suppressing alerts');
+            
+            // Add CSS class to body for styling
+            document.body.classList.add('edit-mode-disabled');
+            
+            // Hide navigation bar
+            var navBar = document.getElementById('globalNav');
+            if (navBar) {
+                navBar.style.display = 'none';
+                console.log('✅ Navigation bar hidden');
+            }
+            
+            // Initially hide all controls
+            var controlsBottom = document.getElementById('controlsBottom');
+            if (controlsBottom) {
+                controlsBottom.style.display = 'none';
+                console.log('✅ Bottom controls initially hidden');
+            }
+            
+            // Function to show controls after rendering is complete
+            window.showControlsAfterRender = function() {
+                console.log('🎬 Starting control visibility sequence...');
+                window.nftRenderComplete = true;
+                console.log('✅ Set window.nftRenderComplete = true');
+                
+                setTimeout(function() {
+                    var controlsBottom = document.getElementById('controlsBottom');
+                    if (controlsBottom) {
+                        controlsBottom.style.display = 'flex';
+                        console.log('✅ Bottom controls shown after 2 second delay');
+                    }
+                }, 2000); // 2 second delay (reduced from 5 seconds)
+            };
+            
+            // Suppress alerts by overriding alert function
+            window.alert = function(message) {
+                console.log('🔇 Alert suppressed in non-edit mode:', message);
+            };
+            
+            // Suppress other alert-related functions
+            window.confirm = function(message) {
+                console.log('🔇 Confirm dialog suppressed in non-edit mode:', message);
+                return true; // Default to true for non-disruptive behavior
+            };
+            
+            window.prompt = function(message, defaultText) {
+                console.log('🔇 Prompt dialog suppressed in non-edit mode:', message);
+                return defaultText || '';
+            };
+            
+            // Optionally suppress console errors and warnings for cleaner presentation
+            var originalConsoleError = console.error;
+            var originalConsoleWarn = console.warn;
+            
+            console.error = function() {
+                // Still log errors but mark them as suppressed
+                var args = Array.prototype.slice.call(arguments);
+                args.unshift('🔇 [SUPPRESSED ERROR]:');
+                originalConsoleError.apply(console, args);
+            };
+            
+            console.warn = function() {
+                // Still log warnings but mark them as suppressed  
+                var args = Array.prototype.slice.call(arguments);
+                args.unshift('🔇 [SUPPRESSED WARNING]:');
+                originalConsoleWarn.apply(console, args);
+            };
+            
+            console.log('✅ Edit mode restrictions applied');
+            
+            // Set globals.editMode when globals is available
+            if (typeof globals !== 'undefined') {
+                globals.editMode = false;
+                console.log('🔧 Set globals.editMode = false');
+            } else {
+                // Wait for globals to be available and then set editMode
+                var checkGlobals = setInterval(function() {
+                    if (typeof globals !== 'undefined') {
+                        globals.editMode = false;
+                        console.log('🔧 Set globals.editMode = false (delayed)');
+                        clearInterval(checkGlobals);
+                    }
+                }, 100);
+            }
+        } else {
+            console.log('✏️  Edit mode enabled - full interface available');
+            
+            // Set globals.editMode when globals is available
+            if (typeof globals !== 'undefined') {
+                globals.editMode = true;
+                console.log('🔧 Set globals.editMode = true');
+            } else {
+                // Wait for globals to be available and then set editMode
+                var checkGlobals = setInterval(function() {
+                    if (typeof globals !== 'undefined') {
+                        globals.editMode = true;
+                        console.log('🔧 Set globals.editMode = true (delayed)');
+                        clearInterval(checkGlobals);
+                    }
+                }, 100);
+            }
+        }
+        
         console.log('🎲 Setting up random seed controls');
+        
+        // Sync window.nftData with local nftData if injected from server
+        if (typeof window.nftData !== 'undefined' && window.nftData) {
+            console.log('🔄 Syncing injected nftData from server');
+            window.nftData = window.nftData;
+        } else if (typeof nftData !== 'undefined') {
+            console.log('🔄 Using default nftData');
+            window.nftData = nftData;
+        } else {
+            console.log('⚠️  No nftData available');
+            window.nftData = null;
+        }
         
         // Set up enter key handler for seed input
         var seedInput = document.getElementById('randomSeed');
@@ -2161,6 +2252,339 @@
                 }
             });
         }
+
+        // Process nftData after a delay to ensure all scripts are loaded
+        setTimeout(function() {
+        // Process nftData if available
+        var dataToProcess = window.nftData;
+        if (dataToProcess) {
+            console.log('NFT Data detected:', dataToProcess);
+            
+            // Set NFT processing flag
+            if (typeof globals !== 'undefined') {
+                globals.isNFTProcessing = true;
+                console.log('🤖 Set globals.isNFTProcessing = true');
+                
+                // Hide origami object until textures are fully applied
+                if (globals.model && globals.model.hideOrigami) {
+                    globals.model.hideOrigami();
+                } else {
+                    // Wait for model to be available
+                    var hideWaitInterval = setInterval(function() {
+                        if (globals.model && globals.model.hideOrigami) {
+                            globals.model.hideOrigami();
+                            clearInterval(hideWaitInterval);
+                        }
+                    }, 100);
+                }
+            }
+            
+            // Add debug logging for origami patterns
+            console.log('ORIGAMI PATTERN DEBUG:');
+            console.log('- typeof origamiPatterns:', typeof origamiPatterns);
+            console.log('- origamiPatterns:', window.origamiPatterns || origamiPatterns);
+            console.log('- window.origamiPatterns exists:', 'origamiPatterns' in window);
+            
+            // First, randomly select and load an origami pattern
+            if (typeof origamiPatterns !== 'undefined' && origamiPatterns.length > 0) {
+                console.log('� Checking origamiPatterns variable:', typeof origamiPatterns, origamiPatterns);
+                console.log('�📋 Available origami patterns:', origamiPatterns.length);
+                
+                // Use wallet address as seed for pattern selection to ensure consistency
+                var patternSeed = dataToProcess.walletAddress + dataToProcess.seed2 || 'default-seed';
+                console.log('🌱 Using pattern seed:', patternSeed);
+                
+                var patternHash = 0;
+                for (var i = 0; i < patternSeed.length; i++) {
+                    patternHash = ((patternHash << 5) - patternHash + patternSeed.charCodeAt(i)) & 0xffffffff;
+                }
+                var patternIndex = Math.abs(patternHash) % origamiPatterns.length;
+                var selectedPattern = origamiPatterns[patternIndex];
+                
+                console.log('🎲 Pattern selection calculation:');
+                console.log('  - Hash value:', patternHash);
+                console.log('  - Calculated index:', patternIndex);
+                console.log('  - Selected pattern:', selectedPattern);
+                
+                console.log('� Selected origami pattern (index ' + patternIndex + '):', selectedPattern.url);
+                
+                // Load the selected origami pattern first
+                console.log('📥 Starting to fetch pattern from:', selectedPattern.url);
+                fetch(selectedPattern.url)
+                    .then(function(response) {
+                        if (!response.ok) {
+                            throw new Error('Failed to load pattern: ' + response.status);
+                        }
+                        return response.text();
+                    })
+                    .then(function(svgContent) {
+                        console.log('✅ Origami pattern loaded successfully, content length:', svgContent.length);
+                        
+                        // Parse and load the SVG pattern
+                        console.log('🔍 Checking globals.importer availability:', typeof globals, globals && typeof globals.importer);
+                        console.log('🔍 Importer methods available:', globals && globals.importer ? Object.keys(globals.importer) : 'none');
+                        
+                        if (typeof globals !== 'undefined' && globals.importer && typeof globals.importer.importSVG === 'function') {
+                            console.log('📐 Importing SVG pattern using globals.importer.importSVG...');
+                            
+                            // Register callback to proceed with NFT processing after pattern loads
+                            if (globals.onPatternLoaded) {
+                                globals.onPatternLoaded(function(patternInfo) {
+                                    console.log('🔔 Pattern loaded callback triggered:', patternInfo);
+                                    console.log('🔄 Proceeding to NFT processing after successful pattern import...');
+                                    processNFTData(dataToProcess);
+                                });
+                            }
+                            
+                            try {
+                                var importResult = globals.importer.importSVG(svgContent, selectedPattern.url);
+                                if (importResult) {
+                                    console.log('✅ SVG pattern import initiated successfully');
+                                    
+                                    // Set the maxFolding value for this pattern
+                                    if (selectedPattern.maxFolding && globals.setMaxFolding) {
+                                        console.log('📏 Setting maxFolding to:', selectedPattern.maxFolding);
+                                        globals.setMaxFolding(selectedPattern.maxFolding);
+                                    }
+                                    
+                                } else {
+                                    console.warn('⚠️ SVG import returned false - pattern may not have loaded correctly');
+                                    // Fallback to proceeding with NFT processing
+                                    setTimeout(function() {
+                                        console.log('🔄 Proceeding to NFT processing after import failure...');
+                                        processNFTData(dataToProcess);
+                                    }, 1000);
+                                }
+                            } catch (importError) {
+                                console.error('❌ Error importing SVG:', importError);
+                                console.error('Stack trace:', importError.stack);
+                                // Fallback to proceeding with NFT processing
+                                setTimeout(function() {
+                                    console.log('🔄 Proceeding to NFT processing after import error...');
+                                    processNFTData(dataToProcess);
+                                }, 1000);
+                            }
+                        } else {
+                            var reason = '';
+                            if (typeof globals === 'undefined') reason = 'globals undefined';
+                            else if (!globals.importer) reason = 'importer not found';
+                            else if (typeof globals.importer.importSVG !== 'function') reason = 'importSVG not a function';
+                            
+                            console.warn('⚠️ SVG importer not available (' + reason + '), proceeding with NFT processing anyway');
+                            processNFTData(dataToProcess);
+                        }
+                    })
+                    .catch(function(error) {
+                        console.error('❌ Failed to load origami pattern:', error);
+                        console.log('🔄 Proceeding with NFT processing anyway...');
+                        processNFTData(dataToProcess);
+                    });
+            } else {
+                console.warn('⚠️ origamiPatterns not available!');
+                console.log('  - Type:', typeof origamiPatterns);
+                console.log('  - Value:', origamiPatterns);
+                console.log('🔄 Proceeding with NFT processing without pattern loading');
+                processNFTData(dataToProcess);
+            }
+        } else {
+            console.log('ℹ️  No NFT data available, using default configuration');
+        }
+        
+        // Function to process NFT data (wallet address and textures)
+        function processNFTData(dataToProcess) {
+            console.log('🎯 Processing NFT data:', dataToProcess);
+            
+            // Set wallet address as random seed
+            if (dataToProcess.walletAddress) {
+                console.log('🔑 Setting wallet address as random seed:', dataToProcess.walletAddress);
+                var seedInput = document.getElementById('randomSeed');
+                if (seedInput) {
+                    seedInput.value = dataToProcess.walletAddress;
+                    
+                    // Wait for globals to be available before applying seed
+                    var waitForGlobalsAndApplySeed = function() {
+                        if (typeof globals !== 'undefined' && globals.setRandomSeed) {
+                            console.log('✅ Globals available, applying wallet address as random seed');
+                            applyRandomSeed();
+                            console.log('✅ Wallet address applied as random seed');
+                        } else {
+                            console.log('⏳ Waiting for globals to apply random seed...');
+                            setTimeout(waitForGlobalsAndApplySeed, 100);
+                        }
+                    };
+                    
+                    waitForGlobalsAndApplySeed();
+                }
+            }
+            
+            // Process images for texture loading
+            if (dataToProcess.images && Array.isArray(dataToProcess.images) && dataToProcess.images.length > 0) {
+                console.log('🖼️  Loading NFT images as textures:', dataToProcess.images.length, 'images');
+                
+                // Wait for globals to be available
+                var checkGlobals = function() {
+                    if (typeof globals !== 'undefined' && globals.textureLibrary && typeof THREE !== 'undefined') {
+                        console.log('✅ Globals and THREE.js available, loading textures...');
+                        
+                        // Clear existing textures
+                        globals.textureLibrary = [];
+                        
+                        // Create texture loader
+                        var loader = new THREE.TextureLoader();
+                        loader.crossOrigin = 'anonymous';
+                        
+                        var loadedCount = 0;
+                        var totalImages = dataToProcess.images.length;
+                        
+                        // Textures will be applied immediately after loading - no need for complex model checking
+                        
+                        // Load each image as texture
+                        dataToProcess.images.forEach(function(imageData, index) {
+                            if (imageData.url) {
+                                console.log('🔄 Loading texture', (index + 1) + '/' + dataToProcess.images.length + ':', imageData.url);
+                                
+                                loader.load(
+                                    imageData.url,
+                                    function(texture) {
+                                        // Success callback
+                                        console.log('✅ Texture loaded successfully:', imageData.url);
+                                        
+                                        // Configure texture
+                                        texture.wrapS = THREE.RepeatWrapping;
+                                        texture.wrapT = THREE.RepeatWrapping;
+                                        texture.repeat.set(globals.textureRepeat || 1.0, globals.textureRepeat || 1.0);
+                                        texture.flipY = false;
+                                        texture.generateMipmaps = true;
+                                        texture.minFilter = THREE.LinearFilter;
+                                        texture.magFilter = THREE.LinearFilter;
+                                        texture.name = 'NFT_Image_' + (index + 1);
+                                        
+                                        // Add to texture library
+                                        globals.textureLibrary.push(texture);
+                                        loadedCount++;
+                                        
+                                        // Update texture list UI
+                                        var textureList = document.getElementById('textureList');
+                                        if (textureList) {
+                                            var item = document.createElement('div');
+                                            item.className = 'texture-item';
+                                            item.style.cssText = 'padding: 5px; margin: 2px 0; background: #f0f0f0; border-radius: 3px; font-size: 12px;';
+                                            item.textContent = '✅ ' + imageData.url.split('/').pop();
+                                            textureList.appendChild(item);
+                                        }
+                                        
+                                        // Check if all textures loaded
+                                        if (loadedCount === totalImages) {
+                                            console.log('🎉 All NFT textures loaded successfully!', loadedCount, 'textures');
+                                            
+                                            // Enable random texture assignment
+                                            var randomTexturesCheckbox = document.getElementById('randomTextures');
+                                            if (randomTexturesCheckbox) {
+                                                randomTexturesCheckbox.checked = true;
+                                                console.log('✅ Random texture assignment enabled');
+                                            }
+                                            
+                                            // Apply textures immediately - model should be ready by now
+                                            setTimeout(function() {
+                                                if (globals.assignRandomTextures) {
+                                                    console.log('🔄 Triggering random texture assignment...');
+                                                    globals.assignRandomTextures();
+                                                    
+                                                    // Generate texture-mapped cells (equivalent to File → Generate Texture-Mapped Cells...)
+                                                    setTimeout(function() {
+                                                        if (globals.cellColorizer && globals.cellColorizer.generateTextureMappedCellImage) {
+                                                            console.log('🎨 Generating texture-mapped cells automatically...');
+                                                            globals.cellColorizer.generateTextureMappedCellImage(true); // true for auto mode
+                                                            console.log('✅ Texture-mapped cells generated - textures should now be visible');
+                                                            
+                                                            // Force render updates after generating texture-mapped cells
+                                                            setTimeout(function() {
+                                                                try {
+                                                                    if (typeof getSolver === 'function' && getSolver() && getSolver().render) {
+                                                                        getSolver().render();
+                                                                        console.log('🖼️ Final render update triggered');
+                                                                    }
+                                                                } catch (renderError) {
+                                                                    console.log('ℹ️ Render update not available:', renderError.message);
+                                                                }
+                                                                
+                                                                // Reset NFT processing flag
+                                                                if (typeof globals !== 'undefined') {
+                                                                    globals.isNFTProcessing = false;
+                                                                    console.log('🏁 NFT processing completed - reset isNFTProcessing flag');
+                                                                    
+                                                                    // Show origami object now that textures are applied
+                                                                    if (globals.model && globals.model.showOrigami) {
+                                                                        globals.model.showOrigami();
+                                                                    }
+                                                                    
+                                                                    // Trigger control visibility sequence
+                                                                    if (typeof window.showControlsAfterRender === 'function') {
+                                                                        window.showControlsAfterRender();
+                                                                        console.log('🎬 Triggered control visibility sequence');
+                                                                    }
+                                                                }
+                                                            }, 500);
+                                                        } else {
+                                                            console.warn('⚠️ cellColorizer.generateTextureMappedCellImage not available');
+                                                        }
+                                                    }, 500);
+                                                    
+                                                    // Force a render update if possible
+                                                    try {
+                                                        if (typeof getSolver === 'function' && getSolver() && getSolver().render) {
+                                                            getSolver().render();
+                                                            console.log('�️ Render update triggered');
+                                                        }
+                                                    } catch (renderError) {
+                                                        console.log('ℹ️ Render update not available:', renderError.message);
+                                                    }
+                                                } else {
+                                                    console.warn('⚠️ assignRandomTextures function not available');
+                                                }
+                                            }, 1000);
+                                        }
+                                    },
+                                    function(progress) {
+                                        // Progress callback
+                                        console.log('📊 Loading progress for', imageData.url, ':', progress);
+                                    },
+                                    function(error) {
+                                        // Error callback
+                                        console.error('❌ Failed to load texture:', imageData.url, error);
+                                        loadedCount++;
+                                        
+                                        // Update texture list UI with error
+                                        var textureList = document.getElementById('textureList');
+                                        if (textureList) {
+                                            var item = document.createElement('div');
+                                            item.className = 'texture-item error';
+                                            item.style.cssText = 'padding: 5px; margin: 2px 0; background: #ffe6e6; border-radius: 3px; font-size: 12px; color: #cc0000;';
+                                            item.textContent = '❌ Failed: ' + imageData.url.split('/').pop();
+                                            textureList.appendChild(item);
+                                        }
+                                        
+                                        // Check if all textures processed (loaded or failed)
+                                        if (loadedCount === totalImages) {
+                                            console.log('🏁 All NFT textures processed. Successful:', globals.textureLibrary.length, '/', totalImages);
+                                        }
+                                    }
+                                );
+                            }
+                        });
+                        
+                    } else {
+                        console.log('⏳ Waiting for globals and THREE.js to be available...');
+                        setTimeout(checkGlobals, 100);
+                    }
+                };
+                
+                // Start checking for globals
+                checkGlobals();
+            }
+        } // End processNFTData function
+        
+        }, 1000); // Wait 1 second for all scripts to load
 
         setTimeout(() => {
             window.nftRenderComplete = true;

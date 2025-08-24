@@ -2,11 +2,14 @@ const http = require('http');
 
 // Test data
 const testData = {
-    walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    images: [
-        {url: 'https://example.com/image1.png'},
-        {url: 'https://example.com/image2.png'},
-        {url: 'https://example.com/image3.png'}
+    "walletAddress":"0x1234567890abcdef",
+    "seed2":`${Math.random()}`,
+    "images":[
+        {"url":"https://exonemo.com/test/katachi-gen/images/aventurine.avif"},
+        {"url":"https://exonemo.com/test/katachi-gen/images/infinitegarden.webp"},
+        {"url":"https://exonemo.com/test/katachi-gen/images/gmmoney-die.webp"},
+        {"url":"https://exonemo.com/test/katachi-gen/images/ocote-tekno.gif"},
+        {"url":"https://exonemo.com/test/katachi-gen/images/karborn.webp"}
     ]
 };
 

@@ -38,10 +38,10 @@ const server = http.createServer(async (req, res) => {
 
     // Get URL and method
     const parsedUrl = url.parse(req.url, true);
-    const path = parsedUrl.pathname;
+    const urlPath = parsedUrl.pathname;
     const method = req.method;
 
-    console.log(`${method} ${path}`);
+    console.log(`${method} ${urlPath}`);
 
     // Handle POST requests
     if (method === 'POST') {
@@ -145,7 +145,7 @@ const server = http.createServer(async (req, res) => {
     // Handle GET requests
     else if (method === 'GET') {
         // Check if wallet info is requested
-        if (path === '/wallet-info') {
+        if (urlPath === '/wallet-info') {
             try {
                 // Try to get wallet info if wallet.json exists
                 const walletPath = ArweaveWalletPath;
@@ -179,7 +179,7 @@ const server = http.createServer(async (req, res) => {
         } 
         // Serve static files from public directory
         else {
-            await serveStaticFile(req, res, path);
+            await serveStaticFile(req, res, urlPath);
         }
     }
     // Handle unsupported methods
@@ -404,15 +404,21 @@ async function generateThumbnail(data) {
             await page.waitForSelector('#walletAddress', { timeout: 10000 });
             console.log('Key elements found');
             
-            // 戦略2: カスタムフラグを待つ（タイムアウトを短縮）
+            // 戦略2: カスタムフラグを待つ（優先戦略）
             try {
+                console.log('Waiting for nftRenderComplete flag...');
                 await page.waitForFunction(() => {
                     console.log('Checking nftRenderComplete flag:', window.nftRenderComplete);
                     return window.nftRenderComplete === true;
-                }, { timeout: 15000 });
-                console.log('JavaScript execution confirmed via flag');
+                }, { timeout: 30000, polling: 500 }); // 500ms間隔でチェック
+                console.log('✅ nftRenderComplete flag confirmed - rendering complete!');
+                
+                // nftRenderCompleteがtrueになったら、短い待機のみ
+                await page.waitForTimeout(1000); // 1秒のみ
+                console.log('Short stabilization wait completed');
+                
             } catch (flagError) {
-                console.log('Flag wait failed, proceeding with element-based wait');
+                console.log('Flag wait failed, proceeding with element-based wait:', flagError.message);
                 
                 // 戦略3: 要素の内容が更新されていることを確認
                 await page.waitForFunction(() => {
@@ -420,6 +426,9 @@ async function generateThumbnail(data) {
                     return walletElement && !walletElement.textContent.includes('Loading...');
                 }, { timeout: 10000 });
                 console.log('Content update confirmed');
+                
+                // フォールバック待機
+                await page.waitForTimeout(2000);
             }
             
         } catch (waitError) {
@@ -428,21 +437,6 @@ async function generateThumbnail(data) {
             await page.waitForTimeout(5000);
             console.log('Fallback wait completed');
         }
-        
-        // ページの状態をデバッグ
-        const debugInfo = await page.evaluate(() => {
-            return {
-                nftRenderComplete: window.nftRenderComplete,
-                walletText: document.getElementById('walletAddress')?.textContent,
-                imagesCount: document.querySelectorAll('.image-item').length,
-                bodyBorder: document.body.style.border
-            };
-        });
-        console.log('Page debug info:', debugInfo);
-        
-        // 最終的な視覚的安定化待機
-        await page.waitForTimeout(2000);
-        console.log('Final rendering wait completed, taking screenshot...');
         
         // Take screenshot
         const screenshotBuffer = await page.screenshot({
