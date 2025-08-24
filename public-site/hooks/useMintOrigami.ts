@@ -24,6 +24,7 @@ type PreparedMintData = {
       contractAddress: string;
       functionName: string;
       recipientAddress: string;
+      tokenId: string;
       tokenURI: string;
       nftMetadata: Record<string, unknown>;
       estimatedGas: string;

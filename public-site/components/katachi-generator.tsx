@@ -49,7 +49,6 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     isLoading: isMinting, 
     state: mintState,
     transactionHash,
-    preparedData,
     reset: resetMint 
   } = useMintOrigami();
   
