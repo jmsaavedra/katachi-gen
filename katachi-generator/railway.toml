@@ -1,0 +1,11 @@
+[build]
+builder = "NIXPACKS"
+
+[build.nixpacksConfig]
+phases.setup = "apt-get update && apt-get install -y chromium-browser"
+phases.install = "npm install && npx playwright install-deps chromium"
+
+[deploy]
+startCommand = "npm start"
+healthcheckPath = "/"
+restartPolicyType = "ON_FAILURE"
