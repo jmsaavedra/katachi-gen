@@ -341,7 +341,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           </p>
         </div>
 
-      <div className="grid md:grid-cols-2 gap-8">
+      <div className="grid md:grid-cols-[1fr_3fr] gap-8">
         {/* NFT Analysis */}
         <Card>
           <CardHeader>
@@ -356,7 +356,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           <CardContent className="space-y-4">
             {/* Chain Info */}
             <div className="text-xs text-muted-foreground bg-muted/30 rounded p-2">
-              📊 Reading from {chainConfig.read.name} • 🎯 Minting to {chainConfig.mint.name}
+              📊 Reading from {chainConfig.read.name}<br />🎯 Minting to {chainConfig.mint.name}
               {config.mintChainId === 360 && !config.allowMainnetMinting && (
                 <div className="text-orange-600 mt-1">⚠️ Mainnet minting disabled for safety</div>
               )}
