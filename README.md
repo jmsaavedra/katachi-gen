@@ -2,7 +2,7 @@
 
 **Shape Revealed** - An NFT collection of algorithmically generated 3D Origami forms representing the minter's on-chain journey on Shape.
 
-🏆 Shapecraft2 Hackathon Submission for [Shape Network](https://shape.network/shapecraft)
+🏆 [Shapecraft2 Hackathon](https://shape.network/shapecraft) Submission.
 
 <div align="center">
   
@@ -69,7 +69,7 @@ katachi-gen/
 
 ## AI-Powered Collection Reflection
 
-Beyond the core origami generation, Katachi Gen features an advanced **Collection Reflection** system that uses AI to understand collectors' emotional connections to their NFTs.
+Beyond the core origami generation, Katachi Gen features a **Sentiment Filter** system that uses AI to understand collectors' emotional connections to their NFTs. This filter curates 5 NFTs from their collection to uniquely map artwork to the faces of their origami shape. Every mint will be uniquely filtered and textured based on what the collector writes at the time of minting. 
 
 ### How It Works
 

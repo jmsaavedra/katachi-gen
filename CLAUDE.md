@@ -1,0 +1,1 @@
+- i'll do all testing, you do not do builds or run dev servers. only i do that.

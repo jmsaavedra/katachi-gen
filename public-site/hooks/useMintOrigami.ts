@@ -10,6 +10,18 @@ type MintOrigamiData = {
   svgContent: string;
   name: string;
   description?: string;
+  // Add fields for pattern regeneration with correct numbering
+  nftCount?: number;
+  collections?: number;
+  sentimentFilter?: string;
+  stackMedalsCount?: number;
+  curatedNfts?: Array<{
+    name: string;
+    description: string;
+    image: string;
+    contractAddress: string;
+    tokenId: string;
+  }>;
 };
 
 type PreparedMintData = {
@@ -66,8 +78,16 @@ export function useMintOrigami() {
 
   const prepareMint = async (mintData: MintOrigamiData) => {
     try {
+      console.log('prepareMint: Starting...');
       setState('preparing');
       setError(null);
+      
+      console.log('prepareMint: Calling API with:', {
+        recipientAddress: mintData.recipientAddress,
+        hasStackMedalsCount: mintData.stackMedalsCount !== undefined,
+        hasSentimentFilter: !!mintData.sentimentFilter,
+        curatedNftsCount: mintData.curatedNfts?.length || 0
+      });
       
       const response = await fetch('/api/mint-origami', {
         method: 'POST',
@@ -77,17 +97,28 @@ export function useMintOrigami() {
         body: JSON.stringify(mintData),
       });
 
+      console.log('prepareMint: API response status:', response.status);
+
       if (!response.ok) {
         const errorData = await response.json();
+        console.log('prepareMint: API error:', errorData);
         throw new Error(errorData.details || errorData.error || 'Failed to prepare mint');
       }
 
       const result: PreparedMintData = await response.json();
+      console.log('prepareMint: API result:', {
+        success: result.success,
+        hasTokenId: !!result.mintData?.metadata?.tokenId,
+        contractAddress: result.mintData?.metadata?.contractAddress
+      });
+      
       setPreparedData(result);
       setState('idle');
       
+      console.log('prepareMint: Completed successfully');
       return result;
     } catch (err) {
+      console.error('prepareMint: Error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Failed to prepare mint';
       setError(errorMessage);
       setState('error');
@@ -96,8 +127,22 @@ export function useMintOrigami() {
     }
   };
 
-  const executeMint = async () => {
-    if (!preparedData || !address) {
+  const executeMint = async (dataOverride?: PreparedMintData) => {
+    const dataToUse = dataOverride || preparedData;
+    
+    console.log('executeMint: Starting...', {
+      hasPreparedData: !!preparedData,
+      hasDataOverride: !!dataOverride,
+      hasAddress: !!address,
+      dataToUseSuccess: dataToUse?.success,
+    });
+    
+    if (!dataToUse || !address) {
+      console.error('executeMint: Missing data:', {
+        preparedData: preparedData ? 'exists' : 'null',
+        dataOverride: dataOverride ? 'exists' : 'null',
+        address: address ? 'exists' : 'null'
+      });
       throw new Error('No prepared mint data or wallet not connected');
     }
 
@@ -105,7 +150,7 @@ export function useMintOrigami() {
       setState('pending');
       setError(null);
 
-      const { transaction, metadata } = preparedData.mintData;
+      const { transaction, metadata } = dataToUse.mintData;
       
       // Use the prepared transaction data with safeMintWithURI
       writeContract({
@@ -142,7 +187,9 @@ export function useMintOrigami() {
 
   if (isConfirmed && state !== 'success') {
     setState('success');
-    toast.success('NFT minted successfully! 🎉');
+    
+    // Simple success toast - the UI has the proper buttons with links
+    toast.success('NFT minted successfully! 🎉', { duration: 5000 });
   }
 
   if ((writeError || confirmError) && state !== 'error') {

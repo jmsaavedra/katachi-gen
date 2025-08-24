@@ -1,0 +1,217 @@
+{
+  "title": "Katachi Gen NFT Metadata Specification",
+  "version": "1.0.0",
+  "description": "Complete specification of all NFT metadata traits and fields implemented in Katachi Gen",
+  "lastUpdated": "2025-08-24",
+  "exampleMetadata": {
+    "name": "Katachi Gen #1",
+    "description": "A unique origami NFT generated from on-chain wallet activity on Shape Network. This kabuto (samurai helmet) pattern represents the holder's journey through 5 collections with 23 total NFTs, creating a medium complexity design with 20 fold lines.\n\nhttps://katachi-gen.com",
+    "image": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAw...",
+    "curatedNfts": [
+      { 
+        "name": "Cool NFT #123",
+        "description": "A vibrant digital artwork from the CoolCollection series",
+        "image": "https://api.alchemy.com/nft/v2/images/...",
+        "contractAddress": "0x1234567890abcdef1234567890abcdef12345678",
+        "tokenId": "123"
+      },
+      { 
+        "name": "Abstract Art #456",
+        "description": "Modern abstract piece with geometric patterns",
+        "image": "https://api.alchemy.com/nft/v2/images/...",
+        "contractAddress": "0xabcdef1234567890abcdef1234567890abcdef12",
+        "tokenId": "456"
+      }
+    ],
+    "attributes": [
+      {
+        "trait_type": "Pattern Type",
+        "value": "Kabuto (Samurai Helmet)"
+      },
+      {
+        "trait_type": "Complexity",
+        "value": "Medium"
+      },
+      {
+        "trait_type": "Fold Lines",
+        "value": 20
+      },
+      {
+        "trait_type": "NFT Count",
+        "value": 23
+      },
+      {
+        "trait_type": "Collection Count",
+        "value": 5
+      },
+      {
+        "trait_type": "Stack Medals Count",
+        "value": 12
+      },
+      {
+        "trait_type": "Wallet Seed",
+        "value": "0x1234...5678"
+      },
+      {
+        "trait_type": "Sentiment Filter",
+        "value": "I love collecting vibrant digital art"
+      }
+    ]
+  },
+  "traitSpecifications": {
+    "patternType": {
+      "trait_type": "Pattern Type",
+      "description": "The type of origami pattern generated",
+      "type": "string",
+      "possibleValues": [
+        "Kabuto (Samurai Helmet)",
+        "Tsuru (Crane)",
+        "Sakura (Cherry Blossom)",
+        "Koi (Carp)",
+        "Shuriken (Throwing Star)",
+        "Lotus Flower",
+        "Mountain Peak",
+        "Wave Pattern"
+      ],
+      "source": "utils/generatePlaceholderSVG.ts",
+      "selectionMethod": "Random selection from ORIGAMI_PATTERNS array"
+    },
+    "complexity": {
+      "trait_type": "Complexity",
+      "description": "Pattern complexity based on wallet NFT activity",
+      "type": "string",
+      "possibleValues": ["Basic", "Medium", "High"],
+      "source": "utils/generatePlaceholderSVG.ts",
+      "logic": {
+        "Basic": "nftCount <= 8",
+        "Medium": "nftCount > 8 && nftCount <= 20",
+        "High": "nftCount > 20"
+      }
+    },
+    "foldLines": {
+      "trait_type": "Fold Lines",
+      "description": "Number of fold lines in the origami pattern",
+      "type": "number",
+      "range": "12-32",
+      "source": "utils/generatePlaceholderSVG.ts",
+      "calculation": "12 + (complexity * 6) + random(0-8)"
+    },
+    "nftCount": {
+      "trait_type": "NFT Count",
+      "description": "Total number of NFTs owned by the minting wallet",
+      "type": "number",
+      "source": "Alchemy API via hooks/web3.ts",
+      "dataSource": "Shape Network mainnet (READ_CHAIN_ID=360)"
+    },
+    "collectionCount": {
+      "trait_type": "Collection Count",
+      "description": "Number of unique NFT collections owned by wallet",
+      "type": "number",
+      "source": "Alchemy API via hooks/web3.ts",
+      "calculation": "Unique contract addresses from owned NFTs"
+    },
+    "stackMedalsCount": {
+      "trait_type": "Stack Medals Count",
+      "description": "Number of Shape Stack Medals earned by the wallet",
+      "type": "number",
+      "source": "MCP server get-stack-achievements.ts",
+      "dataSource": "Shape Network mainnet stack contract",
+      "note": "Represents achievements and milestones on Shape Network"
+    },
+    "walletSeed": {
+      "trait_type": "Wallet Seed",
+      "description": "Truncated wallet address that minted the NFT",
+      "type": "string",
+      "format": "0x1234...5678",
+      "source": "utils/generatePlaceholderSVG.ts",
+      "calculation": "walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4)"
+    },
+    "sentimentFilter": {
+      "trait_type": "Sentiment Filter",
+      "description": "The sentiment or feeling the collector expressed about their collection",
+      "type": "string",
+      "source": "Collection Reflection component input",
+      "maxLength": 100,
+      "note": "Captures the collector's personal connection to their NFT collection",
+      "example": "I love collecting vibrant digital art"
+    }
+  },
+  "coreMetadata": {
+    "name": {
+      "field": "name",
+      "description": "NFT title with sequential numbering",
+      "format": "Katachi Gen #[number]",
+      "source": "utils/generatePlaceholderSVG.ts and mint API",
+      "sequencing": "Auto-incremented based on contract totalSupply() + 1 at mint time",
+      "preview": "Shows 'Katachi Gen #TBD' during pattern generation",
+      "note": "Final NFT number is assigned atomically during minting to prevent race conditions"
+    },
+    "description": {
+      "field": "description",
+      "description": "Dynamic description based on pattern and wallet data",
+      "format": "Multi-paragraph text ending with website URL",
+      "source": "utils/generatePlaceholderSVG.ts",
+      "template": "[Pattern description] + '\\n\\nhttps://katachi-gen.com'"
+    },
+    "image": {
+      "field": "image",
+      "description": "Base64-encoded SVG as data URI",
+      "format": "data:image/svg+xml;base64,[base64_svg]",
+      "source": "mcp-server prepare-mint-svg-nft.ts",
+      "dimensions": "400x400px SVG"
+    },
+    "curatedNfts": {
+      "field": "curatedNfts",
+      "description": "Array of up to 5 NFTs that best matched the collector's sentiment from their collection",
+      "type": "array",
+      "optional": true,
+      "source": "MCP server /api/interpret-sentiment endpoint with AI analysis",
+      "maxItems": 5,
+      "structure": {
+        "name": "NFT name (string|null)",
+        "description": "NFT description (string|null)", 
+        "image": "NFT image URL from Alchemy API (string|null)",
+        "contractAddress": "Ethereum contract address (string)",
+        "tokenId": "Token ID within contract (string)"
+      },
+      "dataFlow": [
+        "1. User enters sentiment in Collection Reflection component",
+        "2. Component calls /api/interpret-sentiment with wallet address and sentiment",
+        "3. MCP server analyzes all wallet NFTs against sentiment using AI",
+        "4. Returns curated list with match scores and reasoning",
+        "5. Curated NFTs passed to pattern generation and stored in metadata"
+      ],
+      "note": "Only included when sentiment filter was provided and AI curation completed successfully"
+    }
+  },
+  "implementation": {
+    "frontend": {
+      "patternGeneration": "utils/generatePlaceholderSVG.ts",
+      "apiEndpoint": "app/api/mint-origami/route.ts",
+      "mintingHook": "hooks/useMintOrigami.ts",
+      "mainComponent": "components/katachi-generator.tsx"
+    },
+    "backend": {
+      "mcpServer": "mcp-server/src/tools/nft/prepare-mint-svg-nft.ts",
+      "contractInteraction": "ERC-721 safeMintWithURI function",
+      "chainConfig": "Dual-chain: read from mainnet, mint on testnet"
+    }
+  },
+  "totalTraits": 8,
+  "implementedTraits": [
+    "Pattern Type", "Complexity", "Fold Lines", "NFT Count", 
+    "Collection Count", "Stack Medals Count", "Wallet Seed", "Sentiment Filter"
+  ],
+  "notes": [
+    "All traits are automatically generated based on wallet's on-chain activity",
+    "Pattern generation uses placeholder algorithms (will be replaced with real origami)",
+    "Sequential NFT numbering ensures title #number matches tokenId",
+    "Dual-chain architecture: read real data from mainnet, mint safely on testnet", 
+    "All descriptions end with the website URL for branding",
+    "curatedNfts field contains AI-curated NFTs based on user sentiment",
+    "Sentiment filter is required before minting can proceed",
+    "Stack Medals Count reflects real achievements on Shape Network",
+    "NFT numbering is determined atomically at mint time to prevent race conditions",
+    "Pattern preview shows 'TBD' as placeholder until final minting"
+  ]
+}
