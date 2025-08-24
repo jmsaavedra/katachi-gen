@@ -100,7 +100,7 @@ This creates a deeply personal connection between collectors and their digital a
 Katachi Gen is deployed on both Shape mainnet and testnet:
 
 - **Shape Mainnet**: [`0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1`](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1)
-- **Shape Sepolia Testnet**: [`0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85`](https://sepolia.shapescan.xyz/address/0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85)
+- **Shape Sepolia Testnet**: [`0x06740C004c98afA7f9F5C38C00B8DAF9c33ABFB3`](https://sepolia.shapescan.xyz/token/0x06740C004c98afA7f9F5C38C00B8DAF9c33ABFB3)
 - **Token Standard**: ERC-721
 - **Token Symbol**: KGEN
 - **Token Name**: KatachiGen
@@ -142,7 +142,7 @@ Built with ❤️ by:
 
 - [Smart Contract Repository](https://github.com/jmsaavedra/katachi-gen-721-contract) - ERC-721 contract source code
 - [View on Shape Mainnet](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1) - Live contract on Shape
-- [View on Shape Testnet](https://sepolia.shapescan.xyz/address/0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85) - Test deployment
+- [View on Shape Testnet](https://sepolia.shapescan.xyz/token/0x06740C004c98afA7f9F5C38C00B8DAF9c33ABFB3) - Test deployment
 - [Shapecraft2 Hackathon](https://shape.network/shapecraft)
 - [Shape Network](https://shape.network)
 
