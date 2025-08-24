@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseAbi } from 'viem';
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
 import { toast } from 'sonner';
 
 type MintState = 'idle' | 'preparing' | 'pending' | 'confirming' | 'success' | 'error';
@@ -49,17 +48,6 @@ type PreparedMintData = {
   };
 };
 
-// Complete ABI for the KatachiGen contract to show proper function names in MetaMask
-const mintNFTAbi = parseAbi([
-  'function safeMintWithURI(address to, uint256 tokenId, string memory uri) public',
-  'function name() public view returns (string memory)',
-  'function symbol() public view returns (string memory)',
-  'function totalSupply() public view returns (uint256)',
-  'function tokenURI(uint256 tokenId) public view returns (string memory)',
-  'function ownerOf(uint256 tokenId) public view returns (address)',
-  'function balanceOf(address owner) public view returns (uint256)',
-  'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
-]);
 
 export function useMintOrigami() {
   const [state, setState] = useState<MintState>('idle');
@@ -69,11 +57,11 @@ export function useMintOrigami() {
   const { address } = useAccount();
   
   const { 
-    writeContract, 
+    sendTransaction, 
     data: transactionHash, 
     isPending: isTransactionPending,
     error: writeError 
-  } = useWriteContract();
+  } = useSendTransaction();
   
   const { 
     isLoading: isConfirming, 
@@ -159,23 +147,19 @@ export function useMintOrigami() {
 
       const { transaction, metadata } = dataToUse.mintData;
       
-      console.log('executeMint: Calling writeContract with:', {
+      console.log('executeMint: Calling sendTransaction with:', {
         contractAddress: transaction.to,
         tokenId: metadata.tokenId,
         recipient: metadata.recipientAddress,
-        chainId: metadata.chainId
+        chainId: metadata.chainId,
+        data: transaction.data?.substring(0, 10) + '...' // Log first 10 chars of data
       });
       
-      // Use the prepared transaction data with safeMintWithURI
-      writeContract({
-        address: transaction.to as `0x${string}`,
-        abi: mintNFTAbi,
-        functionName: 'safeMintWithURI',
-        args: [
-          metadata.recipientAddress as `0x${string}`, 
-          BigInt(metadata.tokenId), 
-          metadata.tokenURI
-        ],
+      // Use the prepared transaction data directly from MCP server
+      sendTransaction({
+        to: transaction.to as `0x${string}`,
+        data: transaction.data as `0x${string}`,
+        value: BigInt(transaction.value || '0'),
       });
 
       toast.success('Transaction submitted! Please wait for confirmation...');
