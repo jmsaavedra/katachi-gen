@@ -84,20 +84,43 @@ function initModel(globals){
         if (globals.colorMode == "normal") {
             material = new THREE.MeshNormalMaterial({
                 flatShading:true,
-                side: THREE.DoubleSide,
+                side: THREE.FrontSide,  // 表面のみ
                 polygonOffset: true,
                 polygonOffsetFactor: polygonOffset, // positive value pushes polygon further away
                 polygonOffsetUnits: 1
             });
-            backside.visible = false;
+            // 裏面用の白いマテリアルを追加
+            material2 = new THREE.MeshPhongMaterial({
+                color: 0xffffff,       // 白色
+                flatShading: true,
+                side: THREE.BackSide,  // 裏面のみ
+                polygonOffset: true,
+                polygonOffsetFactor: polygonOffset,
+                polygonOffsetUnits: 1,
+                transparent: false,
+                opacity: 1.0
+            });
+            backside.visible = true;  // 裏面を表示
         } else if (globals.colorMode == "axialStrain"){
             material = new THREE.MeshBasicMaterial({
-                vertexColors: THREE.VertexColors, side:THREE.DoubleSide,
+                vertexColors: THREE.VertexColors, 
+                side: THREE.FrontSide,  // 表面のみ
                 polygonOffset: true,
                 polygonOffsetFactor: polygonOffset, // positive value pushes polygon further away
                 polygonOffsetUnits: 1
             });
-            backside.visible = false;
+            // 裏面用の白いマテリアルを追加
+            material2 = new THREE.MeshPhongMaterial({
+                color: 0xffffff,       // 白色
+                flatShading: true,
+                side: THREE.BackSide,  // 裏面のみ
+                polygonOffset: true,
+                polygonOffsetFactor: polygonOffset,
+                polygonOffsetUnits: 1,
+                transparent: false,
+                opacity: 1.0
+            });
+            backside.visible = true;  // 裏面を表示
             if (!globals.threeView.simulationRunning) {
                 getSolver().render();
                 setGeoUpdates();
@@ -296,6 +319,13 @@ function initModel(globals){
         }
         
         console.log("✅ Materials successfully applied to mesh");
+        console.log("🎨 Material configuration:");
+        console.log("  - Frontside color:", material.color ? "#" + material.color.getHexString() : "N/A");
+        console.log("  - Backside color:", material2.color ? "#" + material2.color.getHexString() : "N/A");
+        console.log("  - Frontside visible:", frontside.visible);
+        console.log("  - Backside visible:", backside.visible);
+        console.log("  - Frontside opacity:", material.opacity);
+        console.log("  - Backside opacity:", material2.opacity);
     }
 
     function updateEdgeVisibility(){
@@ -329,7 +359,8 @@ function initModel(globals){
         
         // Normal visibility logic
         frontside.visible = globals.meshVisible;
-        backside.visible = globals.colorMode == "color" && globals.meshVisible;
+        // Always show backside when mesh is visible (白いマテリアルが適用されている)
+        backside.visible = globals.meshVisible;
     }
 
     function hideOrigami(){
@@ -345,7 +376,8 @@ function initModel(globals){
         globals.hideUntilTextured = false;
         // Restore normal visibility based on settings
         if (frontside) frontside.visible = globals.meshVisible;
-        if (backside) backside.visible = globals.colorMode == "color" && globals.meshVisible;
+        // Always show backside when mesh is visible (白いマテリアルが適用されている)
+        if (backside) backside.visible = globals.meshVisible;
         if (edges) edges.visible = true; // Edges are usually visible
         updateEdgeVisibility(); // Apply edge visibility settings
         
