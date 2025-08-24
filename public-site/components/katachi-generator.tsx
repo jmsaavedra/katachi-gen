@@ -1,6 +1,7 @@
 'use client';
 
 import { useAccount } from 'wagmi';
+import { Address } from 'viem';
 import { useNFTsForOwner } from '@/hooks/web3';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,9 +12,14 @@ import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight } from 'luc
 import Image from 'next/image';
 import { CollectionReflection } from '@/components/collection-reflection';
 
-export function KatachiGenerator() {
-  const { address } = useAccount();
-  const { data: nfts, isLoading, error } = useNFTsForOwner(address);
+interface KatachiGeneratorProps {
+  overrideAddress?: Address;
+}
+
+export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}) {
+  const { address: connectedAddress } = useAccount();
+  const addressToUse = overrideAddress || connectedAddress;
+  const { data: nfts, isLoading, error } = useNFTsForOwner(addressToUse);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPattern, setGeneratedPattern] = useState<{
     complexity: number;
@@ -289,7 +295,7 @@ export function KatachiGenerator() {
       {/* Collection Reflection - AI Interpretation */}
       {nfts && nfts.ownedNfts && nfts.ownedNfts.length > 0 && (
         <CollectionReflection 
-          walletAddress={address} 
+          walletAddress={addressToUse} 
           totalNfts={totalNfts}
         />
       )}
