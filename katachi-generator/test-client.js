@@ -2,11 +2,14 @@ const http = require('http');
 
 // Test data
 const testData = {
-    walletAddress: "0x1234567890abcdef1234567890abcdef12345678",
-    images: [
-        {url: 'https://example.com/image1.png'},
-        {url: 'https://example.com/image2.png'},
-        {url: 'https://example.com/image3.png'}
+    "walletAddress":"0x1234567890abcdef",
+    "seed2":`${Math.random()}`,
+    "images":[
+        {"url":"https://exonemo.com/test/katachi-gen/images/aventurine.avif"},
+        {"url":"https://exonemo.com/test/katachi-gen/images/infinitegarden.webp"},
+        {"url":"https://exonemo.com/test/katachi-gen/images/gmmoney-die.webp"},
+        {"url":"https://exonemo.com/test/katachi-gen/images/ocote-tekno.gif"},
+        {"url":"https://exonemo.com/test/katachi-gen/images/karborn.webp"}
     ]
 };
 
@@ -40,7 +43,21 @@ const req = http.request(options, (res) => {
             console.log('Response received:');
             console.log('Success:', response.success);
             console.log('Message:', response.message);
-            console.log('Transaction ID:', response.txId);
+            
+            if (response.thumbnailId) {
+                console.log('Thumbnail ID:', response.thumbnailId);
+                console.log('Thumbnail URL:', response.thumbnailUrl);
+            }
+            
+            if (response.htmlId) {
+                console.log('HTML ID:', response.htmlId);
+                console.log('HTML URL:', response.htmlUrl);
+            }
+            
+            // Backwards compatibility
+            if (response.txId) {
+                console.log('Transaction ID:', response.txId);
+            }
             
             if (response.thumbnail) {
                 console.log('Thumbnail generated:', response.thumbnail.filename);

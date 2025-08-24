@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "arweave": "^1.15.7",
+    "inliner": "^1.13.1",
     "playwright-core": "^1.55.0",
     "puppeteer-core": "^24.17.0"
   }

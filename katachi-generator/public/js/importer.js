@@ -50,18 +50,31 @@ function initImporter(globals){
             globals.extension = "svg";
 
             reader.onload = function () {
-
-                $("#vertTol").val(globals.vertTol);
-                $("#importSettingsModal").modal("show");
-                $('#doSVGImport').unbind("click").click(function (e) {
-                    e.preventDefault();
-                    $('#doSVGImport').unbind("click");
+                // Check edit mode to decide whether to show modal
+                if (globals.editMode === false) {
+                    console.log('🚫 Edit mode disabled - loading pasted SVG directly without modal');
                     if (!globals.includeCurves) {
                         globals.pattern.loadSVG(reader.result);    
                     } else {
                         globals.curvedFolding.loadSVG(reader.result);
                     }
-                });
+                } else {
+                    console.log('✏️ Edit mode enabled - checking auto-proceed for pasted SVG');
+                    $("#vertTol").val(globals.vertTol);
+                    
+                    // For paste events, assume user interaction and show modal
+                    $("#importSettingsModal").modal("show");
+                    $('#doSVGImport').unbind("click").click(function (e) {
+                        e.preventDefault();
+                        $('#doSVGImport').unbind("click");
+                        if (!globals.includeCurves) {
+                            globals.pattern.loadSVG(reader.result);    
+                        } else {
+                            globals.curvedFolding.loadSVG(reader.result);
+                        }
+                        $("#importSettingsModal").modal("hide");
+                    });
+                }
             }
             reader.readAsDataURL(blob);
         }
@@ -79,20 +92,49 @@ function initImporter(globals){
                         warnUnableToLoad();
                         return;
                     }
-                    $("#vertTol").val(globals.vertTol);
-                    $("#importSettingsModal").modal("show");
-                    $('#doSVGImport').unbind("click").click(function (e) {
-                        e.preventDefault();
-                        $('#doSVGImport').unbind("click");
-                        globals.filename = name;
-                        globals.extension = extension;
-                        globals.url = null;
+                    
+                    globals.filename = name;
+                    globals.extension = extension;
+                    globals.url = null;
+                    
+                    // Check edit mode to decide whether to show modal
+                    if (globals.editMode === false) {
+                        console.log('🚫 Edit mode disabled - loading file SVG directly without modal');
                         if (!globals.includeCurves) {
                             globals.pattern.loadSVG(reader.result);    
                         } else {
                             globals.curvedFolding.loadSVG(reader.result);
                         }
-                    });
+                    } else {
+                        console.log('✏️ Edit mode enabled - checking auto-proceed for file SVG');
+                        $("#vertTol").val(globals.vertTol);
+                        
+                        // Check if this is NFT processing context
+                        var isNFTProcessing = globals.isNFTProcessing || 
+                            (name && (name.includes('hypar') || name.includes('katachi')));
+                        
+                        if (isNFTProcessing) {
+                            console.log('🤖 NFT processing context detected - proceeding automatically without modal');
+                            if (!globals.includeCurves) {
+                                globals.pattern.loadSVG(reader.result);    
+                            } else {
+                                globals.curvedFolding.loadSVG(reader.result);
+                            }
+                        } else {
+                            console.log('👤 User interaction context - showing import modal');
+                            $("#importSettingsModal").modal("show");
+                            $('#doSVGImport').unbind("click").click(function (e) {
+                                e.preventDefault();
+                                $('#doSVGImport').unbind("click");
+                                if (!globals.includeCurves) {
+                                    globals.pattern.loadSVG(reader.result);    
+                                } else {
+                                    globals.curvedFolding.loadSVG(reader.result);
+                                }
+                                $("#importSettingsModal").modal("hide");
+                            });
+                        }
+                    }
                 }
             }(file);
             reader.readAsDataURL(file);
@@ -260,7 +302,85 @@ function initImporter(globals){
         globals.warn("Unable to load file.");
     }
 
+    function importSVG(svgContent, sourceUrl = null) {
+        console.log('🔄 importSVG called with content length:', svgContent.length);
+        console.log('🔄 Source URL:', sourceUrl);
+        
+        try {
+            // Create a blob from the SVG content
+            var blob = new Blob([svgContent], {type: 'image/svg+xml'});
+            var dataUrl = URL.createObjectURL(blob);
+            
+            // Set globals for tracking
+            if (sourceUrl) {
+                var urlParts = sourceUrl.split('/');
+                globals.filename = urlParts[urlParts.length - 1].replace('.svg', '');
+            } else {
+                globals.filename = 'imported_pattern';
+            }
+            globals.extension = 'svg';
+            globals.url = sourceUrl;
+            
+            console.log('📁 Set filename:', globals.filename);
+            
+            // Load the SVG directly without import modal in editMode=false
+            if (globals.editMode === false) {
+                console.log('🚫 Edit mode disabled - importing SVG directly without modal');
+                if (!globals.includeCurves) {
+                    globals.pattern.loadSVG(dataUrl);
+                } else {
+                    globals.curvedFolding.loadSVG(dataUrl);
+                }
+            } else {
+                // For edit mode enabled, check if we should auto-proceed (for NFT processing)
+                console.log('✏️ Edit mode enabled - checking auto-proceed conditions');
+                
+                // Set default tolerance and proceed automatically if this is an NFT processing context
+                $("#vertTol").val(globals.vertTol);
+                
+                // Check if this is being called during NFT processing
+                var isNFTProcessing = globals.isNFTProcessing || 
+                    (globals.filename && (globals.filename.includes('hypar') || globals.filename.includes('katachi'))) ||
+                    (globals.url && globals.url.includes('exonemo.com'));
+                
+                if (isNFTProcessing) {
+                    console.log('🤖 NFT processing context detected - proceeding automatically without modal');
+                    if (!globals.includeCurves) {
+                        globals.pattern.loadSVG(dataUrl);
+                    } else {
+                        globals.curvedFolding.loadSVG(dataUrl);
+                    }
+                } else {
+                    console.log('👤 User interaction context - showing import modal');
+                    $("#importSettingsModal").modal("show");
+                    $('#doSVGImport').unbind("click").click(function (e) {
+                        e.preventDefault();
+                        $('#doSVGImport').unbind("click");
+                        console.log('📐 Processing SVG import...');
+                        if (!globals.includeCurves) {
+                            globals.pattern.loadSVG(dataUrl);
+                        } else {
+                            globals.curvedFolding.loadSVG(dataUrl);
+                        }
+                        $("#importSettingsModal").modal("hide");
+                    });
+                }
+            }
+            
+            console.log('✅ SVG import initiated successfully');
+            return true;
+            
+        } catch (error) {
+            console.error('❌ Error in importSVG:', error);
+            if (globals.warn && globals.editMode !== false) {
+                globals.warn('Failed to import SVG pattern');
+            }
+            return false;
+        }
+    }
+
     return {
-        importDemoFile: importDemoFile
+        importDemoFile: importDemoFile,
+        importSVG: importSVG
     }
 }

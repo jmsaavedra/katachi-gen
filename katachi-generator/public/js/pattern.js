@@ -606,6 +606,44 @@ function initPattern(globals){
         if (returnCreaseParams) return allCreaseParams;
 
         globals.model.buildModel(foldData, allCreaseParams);
+        
+        // Notify that pattern has been loaded successfully
+        if (globals.notifyPatternLoaded) {
+            var patternInfo = {
+                filename: globals.filename,
+                url: globals.url,
+                vertices: foldData.vertices_coords ? foldData.vertices_coords.length : 0,
+                faces: foldData.faces_vertices ? foldData.faces_vertices.length : 0,
+                edges: foldData.edges_vertices ? foldData.edges_vertices.length : 0
+            };
+            console.log('📐 Pattern loading completed, notifying callbacks...', patternInfo);
+            
+            // If in NFT processing mode, hide the origami object immediately after pattern loading
+            if (globals.isNFTProcessing && globals.model && globals.model.hideOrigami) {
+                console.log('🙈 NFT processing mode - hiding origami after pattern load');
+                globals.model.hideOrigami();
+            }
+            
+            globals.notifyPatternLoaded(patternInfo);
+        }
+        
+        // Start auto rotation if pattern is loaded and visible (edit mode without textures)
+        if (window.editMode !== false && !globals.isNFTProcessing && !globals.hideUntilTextured) {
+            setTimeout(function() {
+                if (globals.threeView && globals.threeView.startAutoRotation && !globals.autoRotateEnabled) {
+                    console.log('🎬 Pattern loaded in edit mode - starting auto rotation animation');
+                    globals.threeView.startAutoRotation(true, 6000); // Random rotation, change every 6 seconds
+                    
+                    // Also start slider animation
+                    if (globals.threeView.startSliderAnimation) {
+                        setTimeout(function() {
+                            globals.threeView.startSliderAnimation(0, 100, 5000, true, 5000); // 5s animation, loop enabled, 5s pause
+                        }, globals.autoRotateWaitTime + 1000); // Start 1 second after rotation begins
+                    }
+                }
+            }, 500); // Small delay to ensure everything is initialized
+        }
+        
         return foldData;
     }
 
