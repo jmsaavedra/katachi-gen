@@ -103,6 +103,7 @@ Built with ❤️ by:
 
 ## Links
 
+- [Smart Contract Repository](https://github.com/jmsaavedra/katachi-gen-721-contract) - ERC-721 contract deployed on Shape Sepolia Testnet
 - [Shapecraft2 Hackathon](https://shape.network/shapecraft)
 - [Shape Network](https://shape.network)
 
@@ -119,7 +120,7 @@ Built with ❤️ by:
 - Integrate with NFT marketplace APIs for rarity/value data
 - Enhanced collection analytics and insights
 
-### 📊 Advanced Analytics Dashboard  
+### 📊 Advanced Analytics Dashboard
 - Historical sentiment analysis trends for collectors
 - Collection growth insights and personal behavior patterns
 - Cross-wallet collection analysis and recommendations
