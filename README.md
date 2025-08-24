@@ -103,32 +103,29 @@ Built with ❤️ by:
 
 ## Links
 
+- [Smart Contract Repository](https://github.com/jmsaavedra/katachi-gen-721-contract) - ERC-721 contract deployed on Shape Sepolia Testnet
 - [Shapecraft2 Hackathon](https://shape.network/shapecraft)
 - [Shape Network](https://shape.network)
 
 ## TODO & Future Enhancements
 
 ### 🎨 Enhanced Visual Analysis (High Priority)
-
 - **Goal**: Implement real computer vision for NFT artwork analysis
 - **Current Limitation**: System only performs text-based matching on NFT metadata
 - **Desired Enhancement**: Google Vision API or OpenAI Vision integration for object/color detection
 - **Impact**: Users mentioning "apples", "cats", etc. would get NFTs with actual visual matches
 
 ### 🔄 NFT Metadata Enrichment
-
 - Cache and enrich NFT metadata with additional data sources
 - Integrate with NFT marketplace APIs for rarity/value data
 - Enhanced collection analytics and insights
 
 ### 📊 Advanced Analytics Dashboard
-
 - Historical sentiment analysis trends for collectors
 - Collection growth insights and personal behavior patterns
 - Cross-wallet collection analysis and recommendations
 
 ### 🤖 Smart Collection Recommendations
-
 - AI-powered suggestions for new NFTs based on collection sentiment
 - Cross-collection theme analysis and pattern recognition
 - Marketplace integration for intelligent purchase recommendations
