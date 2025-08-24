@@ -1095,7 +1095,7 @@
 			
         </ul>
 		 <ul class="nav navbar-nav navbar-right">
-			<li><a id="feedback" target="_blank" href="https://forms.gle/3AERmfpp2hhqBxeP6">Feedback</a></li>
+			<a href="#" class="menuHoverControls" id="showAdvancedOptions">Options</a>
 		 </ul>
         <!--<form class="navbar-form navbar-right" action="#" role="search">-->
             <!--<div class="form-group">-->
@@ -1123,12 +1123,12 @@
             <!--Allow User Interaction-->
         <!--</label>-->
     <!--</div><br/><br/>-->
-    <a href="#" id="showAdvancedOptions">Show Advanced Options</a><br/><br/>
+    <!-- <a href="#" id="showAdvancedOptions">Show Advanced Options</a><br/><br/> -->
 
 </div>
 
 <div id="controls">
-    <a href="#" id="hideAdvancedOptions">Hide Advanced Options</a><br/><br/>
+    <a href="#" id="hideAdvancedOptions">Hide Options</a><br/><br/>
     <div class="sliderInput floatRight" id="creasePercent">
         <span class="label-slider">Fold Percent : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
         <input value="" placeholder="" class="float form-control" type="text">&nbsp;&nbsp;%
@@ -1289,10 +1289,10 @@
                         Face Normals Material
                     </label>
                     <label class="radio">
-                        <input name="colorMode" value="texture" data-toggle="radio" class="custom-radio" type="radio"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                        <input name="colorMode" value="texture" data-toggle="radio" class="custom-radio" type="radio" checked><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
                         Texture Material
                     </label>
-                    <div id="textureMaterialOptions" class="indent hide">
+                    <div id="textureMaterialOptions" class="indent">
                         <label>Load Multiple Textures: &nbsp;&nbsp;</label>
                         <input id="textureFileInput" type="file" accept="image/png,image/jpg,image/jpeg,image/avif,image/webp,image/gif" multiple class="form-control" style="width: 250px;"><br/>
                         <span class="smallTxt">Select multiple images (PNG/JPG/AVIF/WebP/GIF). Large files will be automatically optimized. Images will be randomly distributed across faces.</span><br/>
@@ -1305,6 +1305,17 @@
                             Randomly assign textures to faces
                         </label><br/>
                         <span class="smallTxt">🎨 Multiple textures: Images are automatically distributed across origami faces. Random assignment is enabled by default when multiple images are loaded.</span>
+                        
+                        <!-- Random Seed Control -->
+                        <div style="margin-top: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                            <label style="font-weight: bold; color: #2c3e50;">🎲 Random Seed Control:</label><br/>
+                            <div style="display: flex; align-items: center; margin-top: 5px;">
+                                <input id="randomSeed" value="origami-simulator-2024" placeholder="Enter seed..." class="form-control" type="text" style="width: 200px; margin-right: 10px;">
+                                <button id="applyRandomSeed" class="btn btn-primary btn-sm" onclick="applyRandomSeed()">Apply Seed</button>
+                                <button id="resetRandomSeed" class="btn btn-secondary btn-sm" onclick="resetRandomSeed()" style="margin-left: 5px;">Reset</button>
+                            </div>
+                            <span class="smallTxt" style="color: #7f8c8d;">🔑 Set a custom seed to make random operations deterministic. Same seed = same results.</span>
+                        </div>
                     </div>
                 </div>
                 <br/>
@@ -2072,5 +2083,90 @@
     <a href="#" id="stopRecord" class="btn btn-lg btn-danger">Stop Record <span></span></a>
 </div>
 <a href="#" id="aboutCorner">?</a>
+
+<script>
+    // Random Seed Control Functions
+    function applyRandomSeed() {
+        var seedInput = document.getElementById('randomSeed');
+        var seed = seedInput.value.trim();
+        
+        if (!seed) {
+            alert('Please enter a seed value');
+            return;
+        }
+        
+        console.log('🔄 UI: Applying new random seed:', seed);
+        console.log('🔄 UI: Current time:', new Date().toISOString());
+        
+        // Apply the seed through globals
+        if (typeof globals !== 'undefined' && globals.setRandomSeed) {
+            console.log('🔄 UI: Calling globals.setRandomSeed...');
+            
+            // Clear any existing assignments first to ensure clean slate
+            if (globals.faceTextureMapping) {
+                console.log('🔄 UI: Clearing existing face texture mapping');
+                globals.faceTextureMapping = {};
+            }
+            
+            // Apply the new seed - this will trigger reassignment
+            globals.setRandomSeed(seed);
+            
+            console.log('✅ UI: Random seed applied successfully');
+            console.log('📊 UI: Texture library size:', globals.textureLibrary ? globals.textureLibrary.length : 0);
+            console.log('📊 UI: Face mapping size:', Object.keys(globals.faceTextureMapping || {}).length);
+            
+            // Show confirmation
+            var statusElement = document.createElement('span');
+            statusElement.textContent = '✅ Seed applied: ' + seed + ' (Deterministic mode active)';
+            statusElement.style.color = '#27ae60';
+            statusElement.style.marginLeft = '10px';
+            statusElement.style.fontSize = '12px';
+            statusElement.style.fontWeight = 'bold';
+            
+            var container = seedInput.parentNode;
+            var existingStatus = container.querySelector('.seed-status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+            
+            statusElement.className = 'seed-status';
+            container.appendChild(statusElement);
+            
+            setTimeout(function() {
+                if (statusElement.parentNode) {
+                    statusElement.remove();
+                }
+            }, 5000); // Show for 5 seconds
+            
+        } else {
+            console.warn('🚨 Globals not available or setRandomSeed function not found');
+            console.log('🚨 typeof globals:', typeof globals);
+            console.log('🚨 globals object:', globals);
+            alert('Random seed system not available. Please wait for the application to fully load.');
+        }
+    }
+    
+    function resetRandomSeed() {
+        var seedInput = document.getElementById('randomSeed');
+        seedInput.value = 'origami-simulator-2024';
+        applyRandomSeed();
+    }
+    
+    // Initialize random seed when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🎲 Setting up random seed controls');
+        
+        // Set up enter key handler for seed input
+        var seedInput = document.getElementById('randomSeed');
+        if (seedInput) {
+            seedInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    applyRandomSeed();
+                }
+            });
+        }
+    });
+</script>
+
 </body>
 </html>

@@ -12,6 +12,17 @@ function initThreeView(globals) {
     var renderer = new THREE.WebGLRenderer({antialias: true, alpha: true});
     // var svgRenderer = new THREE.SVGRenderer();
     var controls;
+    
+    // Store lighting objects for later adjustment
+    var lights = {
+        frontMain: null,
+        backLight: null,
+        sideLeft: null,
+        sideRight: null,
+        frontDetail1: null,
+        frontDetail2: null,
+        ambient: null
+    };
 
     init();
 
@@ -40,37 +51,72 @@ function initThreeView(globals) {
         scene.add(modelWrapper);
         
         // Optimized lighting for clear texture visibility without white blown-out highlights
-        // Main front light for texture clarity
-        var directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight1.position.set(0, 100, 0);
-        scene.add(directionalLight1);
+        // Using global lighting settings for adjustable parameters
+        
+        // Debug: Log current lighting settings
+        console.log("🔧 ThreeView: Initializing lighting with globals settings:");
+        console.log("- frontMain intensity:", globals.lighting.frontMain.intensity);
+        console.log("- frontDetail1 intensity:", globals.lighting.frontDetail1.intensity);
+        console.log("- frontDetail2 intensity:", globals.lighting.frontDetail2.intensity);
+        console.log("- ambient intensity:", globals.lighting.ambient.intensity);
+        
+        // Main front light for texture clarity - globals.jsから値を読み取り
+        lights.frontMain = new THREE.DirectionalLight(0xffffff, globals.lighting.frontMain.intensity);
+        lights.frontMain.position.set(
+            globals.lighting.frontMain.position.x,
+            globals.lighting.frontMain.position.y,
+            globals.lighting.frontMain.position.z
+        );
+        scene.add(lights.frontMain);
         
         // Back light for depth
-        var directionalLight4 = new THREE.DirectionalLight(0xffffff, 0.3);
-        directionalLight4.position.set(0, -100, 0);
-        scene.add(directionalLight4);
+        lights.backLight = new THREE.DirectionalLight(0xffffff, globals.lighting.backLight.intensity);
+        lights.backLight.position.set(
+            globals.lighting.backLight.position.x,
+            globals.lighting.backLight.position.y,
+            globals.lighting.backLight.position.z
+        );
+        scene.add(lights.backLight);
         
         // Side lights for even illumination
-        var directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.6);
-        directionalLight2.position.set(100, -30, 0);
-        scene.add(directionalLight2);
+        lights.sideLeft = new THREE.DirectionalLight(0xffffff, globals.lighting.sideLeft.intensity);
+        lights.sideLeft.position.set(
+            globals.lighting.sideLeft.position.x,
+            globals.lighting.sideLeft.position.y,
+            globals.lighting.sideLeft.position.z
+        );
+        scene.add(lights.sideLeft);
         
-        var directionalLight3 = new THREE.DirectionalLight(0xffffff, 0.6);
-        directionalLight3.position.set(-100, -30, 0);
-        scene.add(directionalLight3);
+        lights.sideRight = new THREE.DirectionalLight(0xffffff, globals.lighting.sideRight.intensity);
+        lights.sideRight.position.set(
+            globals.lighting.sideRight.position.x,
+            globals.lighting.sideRight.position.y,
+            globals.lighting.sideRight.position.z
+        );
+        scene.add(lights.sideRight);
         
         // Front lights for texture detail - positioned to face the model directly
-        var directionalLight5 = new THREE.DirectionalLight(0xffffff, 0.7);
-        directionalLight5.position.set(0, 30, 100);
-        scene.add(directionalLight5);
+        lights.frontDetail1 = new THREE.DirectionalLight(0xffffff, globals.lighting.frontDetail1.intensity);
+        lights.frontDetail1.position.set(
+            globals.lighting.frontDetail1.position.x,
+            globals.lighting.frontDetail1.position.y,
+            globals.lighting.frontDetail1.position.z
+        );
+        scene.add(lights.frontDetail1);
         
-        var directionalLight6 = new THREE.DirectionalLight(0xffffff, 0.4);
-        directionalLight6.position.set(0, 30, -100);
-        scene.add(directionalLight6);
+        lights.frontDetail2 = new THREE.DirectionalLight(0xffffff, globals.lighting.frontDetail2.intensity);
+        lights.frontDetail2.position.set(
+            globals.lighting.frontDetail2.position.x,
+            globals.lighting.frontDetail2.position.y,
+            globals.lighting.frontDetail2.position.z
+        );
+        scene.add(lights.frontDetail2);
         
         // Enhanced ambient light for better overall visibility
-        var ambientLight = new THREE.AmbientLight(0xffffff, 0.25);
-        scene.add(ambientLight);
+        lights.ambient = new THREE.AmbientLight(0xffffff, globals.lighting.ambient.intensity);
+        scene.add(lights.ambient);
+        
+        console.log("✅ ThreeView: Lighting initialization completed");
         //scene.fog = new THREE.FogExp2(0xf4f4f4, 1.7);
         //renderer.setClearColor(scene.fog.color);
 
@@ -244,6 +290,109 @@ function initThreeView(globals) {
         if (color === undefined) color = globals.backgroundColor;
         scene.background.setStyle( "#" + color);
     }
+    
+    // Function to update lighting based on global settings
+    function updateLighting() {
+        console.log("🔧 Updating lighting settings");
+        
+        // Update main front light
+        if (lights.frontMain) {
+            lights.frontMain.intensity = globals.lighting.frontMain.intensity;
+            lights.frontMain.position.set(
+                globals.lighting.frontMain.position.x,
+                globals.lighting.frontMain.position.y,
+                globals.lighting.frontMain.position.z
+            );
+        }
+        
+        // Update back light
+        if (lights.backLight) {
+            lights.backLight.intensity = globals.lighting.backLight.intensity;
+            lights.backLight.position.set(
+                globals.lighting.backLight.position.x,
+                globals.lighting.backLight.position.y,
+                globals.lighting.backLight.position.z
+            );
+        }
+        
+        // Update side lights
+        if (lights.sideLeft) {
+            lights.sideLeft.intensity = globals.lighting.sideLeft.intensity;
+            lights.sideLeft.position.set(
+                globals.lighting.sideLeft.position.x,
+                globals.lighting.sideLeft.position.y,
+                globals.lighting.sideLeft.position.z
+            );
+        }
+        
+        if (lights.sideRight) {
+            lights.sideRight.intensity = globals.lighting.sideRight.intensity;
+            lights.sideRight.position.set(
+                globals.lighting.sideRight.position.x,
+                globals.lighting.sideRight.position.y,
+                globals.lighting.sideRight.position.z
+            );
+        }
+        
+        // Update front detail lights
+        if (lights.frontDetail1) {
+            lights.frontDetail1.intensity = globals.lighting.frontDetail1.intensity;
+            lights.frontDetail1.position.set(
+                globals.lighting.frontDetail1.position.x,
+                globals.lighting.frontDetail1.position.y,
+                globals.lighting.frontDetail1.position.z
+            );
+        }
+        
+        if (lights.frontDetail2) {
+            lights.frontDetail2.intensity = globals.lighting.frontDetail2.intensity;
+            lights.frontDetail2.position.set(
+                globals.lighting.frontDetail2.position.x,
+                globals.lighting.frontDetail2.position.y,
+                globals.lighting.frontDetail2.position.z
+            );
+        }
+        
+        // Update ambient light
+        if (lights.ambient) {
+            lights.ambient.intensity = globals.lighting.ambient.intensity;
+        }
+        
+        console.log("✅ Lighting settings updated");
+    }
+    
+    // Function to get current lighting settings
+    function getLightingSettings() {
+        return {
+            frontMain: {
+                intensity: lights.frontMain ? lights.frontMain.intensity : 0,
+                position: lights.frontMain ? lights.frontMain.position : {x: 0, y: 0, z: 0}
+            },
+            backLight: {
+                intensity: lights.backLight ? lights.backLight.intensity : 0,
+                position: lights.backLight ? lights.backLight.position : {x: 0, y: 0, z: 0}
+            },
+            sideLeft: {
+                intensity: lights.sideLeft ? lights.sideLeft.intensity : 0,
+                position: lights.sideLeft ? lights.sideLeft.position : {x: 0, y: 0, z: 0}
+            },
+            sideRight: {
+                intensity: lights.sideRight ? lights.sideRight.intensity : 0,
+                position: lights.sideRight ? lights.sideRight.position : {x: 0, y: 0, z: 0}
+            },
+            frontDetail1: {
+                intensity: lights.frontDetail1 ? lights.frontDetail1.intensity : 0,
+                position: lights.frontDetail1 ? lights.frontDetail1.position : {x: 0, y: 0, z: 0}
+            },
+            frontDetail2: {
+                intensity: lights.frontDetail2 ? lights.frontDetail2.intensity : 0,
+                position: lights.frontDetail2 ? lights.frontDetail2.position : {x: 0, y: 0, z: 0}
+            },
+            ambient: {
+                intensity: lights.ambient ? lights.ambient.intensity : 0
+            }
+        };
+    }
 
     return {
         sceneAddModel: sceneAddModel,
@@ -268,6 +417,10 @@ function initThreeView(globals) {
 
         resetModel: resetModel,//reset model orientation
         resetCamera:resetCamera,
-        setBackgroundColor: setBackgroundColor
+        setBackgroundColor: setBackgroundColor,
+        
+        // Lighting control functions
+        updateLighting: updateLighting,
+        getLightingSettings: getLightingSettings
     }
 }
