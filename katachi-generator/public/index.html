@@ -23,18 +23,19 @@
 
     <script>
         const origamiPatterns = [
-            {url:"https://exonemo.com/test/katachi-gen/svgs/airplane.svg", maxFolding:95},
-            {url:"https://exonemo.com/test/katachi-gen/svgs/huffmanWaterbomb.svg", maxFolding:100},
-            {url:"https://exonemo.com/test/katachi-gen/svgs/hypar.svg", maxFolding:70},
-            {url:"https://exonemo.com/test/katachi-gen/svgs/pinwheelBase.svg", maxFolding:80},
-            {url:"https://exonemo.com/test/katachi-gen/svgs/traditionalCrane.svg", maxFolding:97},
-            {url:"https://exonemo.com/test/katachi-gen/svgs/FTpoly7.svg", maxFolding:85},
+            {url:"https://arweave.net/DEwA5RuJrMaZo4tHYmtKXV0gPXHJBC0p16HbhFqA15k", maxFolding:95, name:"airplane.svg"},
+            {url:"https://arweave.net/aeUK83c7uqmpWCUwwwv0Ao-_Ttxs_9XMcrznkjwXOqs", maxFolding:100, name:"birdBase.svg"},
+            {url:"https://arweave.net/l-mOj-cl7LGG7IjNWnZv1LIFLM_no_6gisnK53XD9Os", maxFolding:70, name:"hypar.svg"},
+            {url:"https://arweave.net/G3TfyqgWOlSdxjluMhnhswxZANT4waZdBh69HwllFCQ", maxFolding:80, name:"pinwheelBase.svg"},
+            {url:"https://arweave.net/4Y1SaF832toY5ac9fXqkQlaN_xmGqGWaOfcj0txzyg0", maxFolding:97, name:"traditionalCrane.svg"},
+            {url:"https://arweave.net/59F93UIm1IJCWflSrWq_IsENxzvllCxz5QtwBky4xGM", maxFolding:85, name:"FTpoly7.svg"},
         ]
         window.nftRenderComplete = false;
+        window.renderingComplete = false;
         const editMode = false;
         window.editMode = editMode; // Make editMode accessible from other scripts
         // This will be replaced with actual data
-        const nftData = `{dataJson}`;
+        const nftData = {{dataJson}};
 //         const nftData = JSON.parse(`
 // {
 //     "walletAddress":"0x1234567890abcdef",
@@ -1200,9 +1201,15 @@
         </a>
         <span><span id="foldPercentSimple"></span>%</span>
     </div>
-    <div id="bottomButtonContainer" style="display: flex; gap: 20px; margin-left: 40px; align-items: center;">
-        <a href="#" id="pdfButton" style="color: #ffffff; text-decoration: none; font-size: 14px; cursor: pointer; font-weight: 500;">PDF</a>
-        <a href="#" id="printButton" style="color: #ffffff; text-decoration: none; font-size: 14px; cursor: pointer; font-weight: 500;">PRINT</a>
+    <div id="bottomButtonContainer" style="position:absolute; right:0px;display: flex; gap: 20px; margin-left: 40px; ">
+        <a href="#" id="dlButton" style="font-size: 10px; cursor: pointer; font-weight: 500;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+  <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
+</svg></a>
+        <a href="#" id="printButton" style="font-size: 10px; cursor: pointer; font-weight: 500;"><svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-printer" viewBox="0 0 16 16">
+  <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"/>
+  <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/>
+</svg></a>
     </div>
     <!-- <div id="controlsToggle" class="bigToggle">
         <div>
@@ -2155,9 +2162,9 @@
                     var controlsBottom = document.getElementById('controlsBottom');
                     if (controlsBottom) {
                         controlsBottom.style.display = 'flex';
-                        console.log('✅ Bottom controls shown after 2 second delay');
+                        console.log('✅ Bottom controls shown after 5 second delay');
                     }
-                }, 2000); // 2 second delay (reduced from 5 seconds)
+                }, 5000); // 5秒に戻す（スクリーンショット撮影の余裕を作る）
             };
             
             // Suppress alerts by overriding alert function
@@ -2251,6 +2258,182 @@
                     applyRandomSeed();
                 }
             });
+        }
+
+        // Set up download button handler for texture images
+        var dlButton = document.getElementById('dlButton');
+        if (dlButton) {
+            dlButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                console.log('Download button clicked');
+                
+                // Check if cellColorizer is available and has generateTextureMappedCellImage function
+                if (typeof globals !== 'undefined' && globals.cellColorizer && 
+                    typeof globals.cellColorizer.generateTextureMappedCellImage === 'function') {
+                    
+                    console.log('Generating and downloading texture-mapped cell image...');
+                    globals.cellColorizer.generateTextureMappedCellImage(false); // false = manual mode, will download
+                    
+                } else if (typeof globals !== 'undefined' && globals.textureLibrary && 
+                          globals.textureLibrary.length > 0) {
+                    
+                    // Fallback: download the first texture from library
+                    console.log('Downloading first texture from library...');
+                    downloadTextureFromLibrary(0);
+                    
+                } else {
+                    // No textures available
+                    console.warn('No textures available to download');
+                    alert('No texture images are currently loaded to download.');
+                }
+            });
+        }
+
+        // Set up print button handler for crease pattern SVG
+        var printButton = document.getElementById('printButton');
+        if (printButton) {
+            printButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                console.log('Print button clicked');
+                
+                // Check if pattern is available for SVG export
+                if (typeof globals !== 'undefined' && globals.pattern && 
+                    typeof globals.pattern.saveSVG === 'function') {
+                    
+                    console.log('Exporting crease pattern as SVG for printing...');
+                    globals.pattern.saveSVG();
+                    
+                } else if (typeof globals !== 'undefined' && globals.curvedFolding && 
+                          typeof globals.curvedFolding.saveSVG === 'function') {
+                    
+                    console.log('Exporting curved folding pattern as SVG for printing...');
+                    globals.curvedFolding.saveSVG();
+                    
+                } else if (typeof globals !== 'undefined' && globals.threeView && 
+                          typeof globals.threeView.saveSVG === 'function') {
+                    
+                    console.log('Exporting 3D view as SVG for printing...');
+                    globals.threeView.saveSVG();
+                    
+                } else {
+                    // Try alternative approach - take a screenshot and open print dialog
+                    console.log('SVG export not available, using alternative print method...');
+                    printCurrentView();
+                }
+            });
+        }
+
+        // Function to print current view using browser's print functionality
+        function printCurrentView() {
+            try {
+                // Hide UI elements temporarily for cleaner print
+                var elementsToHide = [
+                    document.getElementById('globalNav'),
+                    document.getElementById('controlsLeft'),
+                    document.getElementById('controlsBottom'),
+                    document.querySelector('.main-content')
+                ];
+                
+                var originalStyles = [];
+                elementsToHide.forEach(function(element, index) {
+                    if (element) {
+                        originalStyles[index] = element.style.display;
+                        element.style.display = 'none';
+                    }
+                });
+                
+                // Create print-specific styles
+                var printStyles = document.createElement('style');
+                printStyles.type = 'text/css';
+                printStyles.innerHTML = `
+                    @media print {
+                        body { margin: 0; padding: 0; }
+                        #threeView { 
+                            width: 100% !important; 
+                            height: 100% !important; 
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                        }
+                        .no-print { display: none !important; }
+                    }
+                `;
+                document.head.appendChild(printStyles);
+                
+                // Trigger print dialog
+                setTimeout(function() {
+                    window.print();
+                    
+                    // Restore original styles after print dialog
+                    setTimeout(function() {
+                        elementsToHide.forEach(function(element, index) {
+                            if (element) {
+                                element.style.display = originalStyles[index];
+                            }
+                        });
+                        document.head.removeChild(printStyles);
+                    }, 1000);
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error in print functionality:', error);
+                alert('Print functionality is not available at the moment.');
+            }
+        }
+
+        // Function to download texture from library
+        function downloadTextureFromLibrary(index) {
+            if (typeof globals === 'undefined' || !globals.textureLibrary || 
+                index >= globals.textureLibrary.length) {
+                console.error('Texture index out of range or no textures available');
+                return;
+            }
+            
+            var texture = globals.textureLibrary[index];
+            if (!texture || !texture.image) {
+                console.error('Invalid texture at index', index);
+                return;
+            }
+            
+            // Create canvas to convert texture to downloadable format
+            var canvas = document.createElement('canvas');
+            canvas.width = texture.image.width;
+            canvas.height = texture.image.height;
+            var ctx = canvas.getContext('2d');
+            
+            // Draw the texture image to canvas
+            ctx.drawImage(texture.image, 0, 0);
+            
+            // Convert to blob and download
+            canvas.toBlob(function(blob) {
+                if (blob) {
+                    var url = URL.createObjectURL(blob);
+                    var downloadLink = document.createElement("a");
+                    downloadLink.href = url;
+                    
+                    var filename = texture.name || ('texture_' + index + '.png');
+                    // Ensure filename has .png extension
+                    if (!filename.toLowerCase().endsWith('.png') && 
+                        !filename.toLowerCase().endsWith('.jpg') && 
+                        !filename.toLowerCase().endsWith('.jpeg')) {
+                        filename += '.png';
+                    }
+                    
+                    downloadLink.download = filename;
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    URL.revokeObjectURL(url);
+                    
+                    console.log("Texture downloaded successfully:", filename);
+                } else {
+                    console.error("Failed to create blob for texture download");
+                }
+            }, 'image/png');
         }
 
         // Process nftData after a delay to ensure all scripts are loaded
@@ -2517,6 +2700,10 @@
                                                                     if (globals.model && globals.model.showOrigami) {
                                                                         globals.model.showOrigami();
                                                                     }
+                                                                    
+                                                                    // Set global rendering completion flag for screenshot detection
+                                                                    window.renderingComplete = true;
+                                                                    console.log('🎯 Set window.renderingComplete = true for thumbnail detection');
                                                                     
                                                                     // Trigger control visibility sequence
                                                                     if (typeof window.showControlsAfterRender === 'function') {

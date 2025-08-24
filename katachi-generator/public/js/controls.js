@@ -517,6 +517,18 @@ function initControls(globals){
     }
     updateCreasePercent();
 
+    // Check if slider controls should auto-animate when they become visible
+    setTimeout(function() {
+        if ($("#creasePercent").is(':visible') && globals.threeView && globals.threeView.startSliderAnimation) {
+            console.log('🎮 Slider controls detected as visible - considering auto animation');
+            // Only start if not already animating and in appropriate mode
+            if (!globals.sliderAutoAnimationEnabled && window.editMode !== false) {
+                console.log('🎮 Starting immediate slider auto animation');
+                globals.threeView.startSliderAnimation(0, 100, 4000, true, 5000); // 4s animation, loop enabled, 5s pause
+            }
+        }
+    }, 1000); // Delay to ensure UI is fully rendered
+
     function updateFoldingSliderMax(){
         var currentMax = globals.currentPatternMaxFolding;
         
@@ -1090,7 +1102,15 @@ function initControls(globals){
     return {
         setDeltaT: setDeltaT,
         updateCreasePercent: updateCreasePercent,
-        setSliderInputVal: setSliderInputVal
+        setSliderInputVal: setSliderInputVal,
+        
+        // Start slider animation when controls become visible
+        startSliderAutoAnimation: function() {
+            if (globals.threeView && globals.threeView.startSliderAnimation) {
+                console.log('🎮 Controls visible - starting slider auto animation');
+                globals.threeView.startSliderAnimation(0, 100, 4000, true, 5000); // 4s animation, loop enabled, 5s pause
+            }
+        }
     }
 }
 
