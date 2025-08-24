@@ -6,10 +6,30 @@ const Arweave = require('arweave');
 const { chromium } = require('playwright-core');
 
 // Server port configuration
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 const templateHTML = 'index.html';
 const arweaveWalletPath = './keys/arweave-wallet.json';
 const walletAddress = 'WJBf3OFtVmHVaIwMzIGq4nBseTRobFUiJmc2OW52-Dk';
+
+// Wallet loading with environment variable support
+function loadArweaveWallet() {
+    try {
+        // Try environment variable first (for Railway/production)
+        if (process.env.ARWEAVE_WALLET) {
+            console.log('Loading Arweave wallet from environment variable');
+            return JSON.parse(process.env.ARWEAVE_WALLET);
+        }
+        // Fall back to file (for local development)
+        if (fs.existsSync(arweaveWalletPath)) {
+            console.log('Loading Arweave wallet from file:', arweaveWalletPath);
+            return JSON.parse(fs.readFileSync(arweaveWalletPath, 'utf8'));
+        }
+        throw new Error('No Arweave wallet found in environment or file');
+    } catch (error) {
+        console.error('Error loading Arweave wallet:', error);
+        return null;
+    }
+}
 
 // Thumbnail configuration
 const THUMB_WIDTH = 1024;
@@ -147,10 +167,10 @@ const server = http.createServer(async (req, res) => {
         // Check if wallet info is requested
         if (path === '/wallet-info') {
             try {
-                // Try to get wallet info if wallet.json exists
-                const walletPath = ArweaveWalletPath;
-                if (fs.existsSync(walletPath)) {
-                    const walletAddress = await getWalletAddress(walletPath);
+                // Try to get wallet info if wallet is available
+                const walletKey = loadArweaveWallet();
+                if (walletKey) {
+                    const walletAddress = await getWalletAddress();
                     const balance = await getWalletBalance(walletAddress);
                     
                     res.setHeader('Content-Type', 'application/json');
@@ -527,10 +547,13 @@ function uploadToArweave(data) {
 }
 
 // Function to get wallet address from key file
-async function getWalletAddress(walletPath) {
+async function getWalletAddress(walletPath = null) {
     try {
-        // Load wallet key
-        const walletKey = JSON.parse(fs.readFileSync(walletPath, 'utf8'));
+        // Load wallet key using the new function
+        const walletKey = loadArweaveWallet();
+        if (!walletKey) {
+            throw new Error('Arweave wallet not available');
+        }
         
         // Get wallet address from the key
         const walletAddress = await arweave.wallets.jwkToAddress(walletKey);
@@ -575,10 +598,13 @@ async function getWalletBalance(walletAddress) {
 }
 
 // Function to upload to Arweave with actual wallet (for production use)
-async function uploadToArweaveWithWallet(data, walletPath) {
+async function uploadToArweaveWithWallet(data, walletPath = null) {
     try {
-        // Load wallet key
-        const walletKey = JSON.parse(fs.readFileSync(walletPath, 'utf8'));
+        // Load wallet key using the new function
+        const walletKey = loadArweaveWallet();
+        if (!walletKey) {
+            throw new Error('Arweave wallet not available');
+        }
         
         // Get wallet address
         const walletAddress = await getWalletAddressFromKey(walletKey);

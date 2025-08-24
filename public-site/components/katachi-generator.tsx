@@ -5,7 +5,7 @@ import { Address } from 'viem';
 import { useNFTsForOwner } from '@/hooks/web3';
 import { useMintOrigami } from '@/hooks/useMintOrigami';
 import { useStackMedals } from '@/hooks/useStackMedals';
-import { generatePlaceholderPattern } from '@/utils/generatePlaceholderSVG';
+// import { generatePlaceholderPattern } from '@/utils/generatePlaceholderSVG'; // Commented out - using katachi-generator service
 import { chainConfig } from '@/lib/chains';
 import { config } from '@/lib/config';
 import { Button } from '@/components/ui/button';
@@ -152,24 +152,81 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     resetMint(); // Reset any previous mint state
     
     try {
-      // Simulate generation delay for UX
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const patternData = generatePlaceholderPattern({
-        nftCount: nfts?.totalCount || 0,
-        collections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
+      // Get first 5 filtered NFT images for pattern generation
+      const imageUrls = sentimentData.filteredNfts
+        .slice(0, 5)
+        .map(nft => ({ url: nft.imageUrl || '' }))
+        .filter(img => img.url); // Remove empty URLs
+
+      if (imageUrls.length === 0) {
+        throw new Error('No valid NFT images found for pattern generation');
+      }
+
+      console.log('Calling katachi-generator with:', {
         walletAddress: addressToUse,
-        sentimentFilter: sentimentData.sentiment,
-        stackMedalsCount: stackMedals?.totalMedals || 0,
-        // Don't assign nftNumber here - it will be determined at mint time
-        curatedNfts: sentimentData.filteredNfts.map(nft => ({
-          name: nft.name || 'Untitled',
-          description: nft.description || '',
-          image: nft.imageUrl || '',
-          contractAddress: nft.contractAddress,
-          tokenId: nft.tokenId
-        }))
+        imageCount: imageUrls.length
       });
+
+      // Call katachi-generator API
+      const response = await fetch('/api/generate-katachi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: addressToUse,
+          images: imageUrls
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.error || !result.success) {
+        throw new Error(result.message || 'Pattern generation failed');
+      }
+
+      console.log('Katachi generation result:', {
+        success: result.success,
+        txId: result.txId,
+        hasThumbnail: !!result.thumbnail
+      });
+
+      // Create pattern data structure using Arweave URL
+      const patternData = {
+        svgContent: result.thumbnail?.data ? 
+          `<img src="data:image/png;base64,${result.thumbnail.data}" alt="Generated Pattern" style="width:100%;height:100%;object-fit:contain;" />` :
+          `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#f0f0f0;">Pattern Generated</div>`,
+        metadata: {
+          name: `Katachi Gen #${result.txId?.slice(-8) || 'Unknown'}`,
+          description: `Unique origami pattern generated from ${imageUrls.length} curated NFTs from your collection. Sentiment: ${sentimentData.sentiment}`,
+          patternType: 'Origami',
+          complexity: 'Generated' as const,
+          foldLines: 0,
+          colors: ['#000000', '#ffffff'],
+          arweaveId: result.txId, // Store Arweave ID for minting
+          curatedNfts: sentimentData.filteredNfts.slice(0, 5).map(nft => ({
+            name: nft.name || 'Untitled',
+            description: nft.description || '',
+            image: nft.imageUrl || '',
+            contractAddress: nft.contractAddress,
+            tokenId: nft.tokenId
+          })),
+          traits: [
+            { trait_type: 'Pattern Type', value: 'Origami' },
+            { trait_type: 'Generation Method', value: 'AI-Generated' },
+            { trait_type: 'Source NFTs', value: imageUrls.length },
+            { trait_type: 'Sentiment Filter', value: sentimentData.sentiment },
+            { trait_type: 'Arweave ID', value: result.txId || 'Unknown' },
+            { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 },
+            { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
+            { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 }
+          ]
+        }
+      };
       
       setGeneratedPattern(patternData);
       toast.success('Pattern generated successfully!');
