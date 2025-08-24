@@ -72,38 +72,32 @@
   content: '';
   position: absolute;
   top: 0;
-  left: -100%;
-  width: 150%;
+  left: 0;
+  width: 200%;
   height: 100%;
   z-index: -1;
-  background: linear-gradient(
+  background: repeating-linear-gradient(
     90deg,
-    transparent,
-    rgba(0, 123, 255, 0.8),
-    rgba(0, 123, 255, 0.8),
-    rgba(147, 197, 253, 0.9),
-    rgba(147, 197, 253, 0.9),
-    rgba(80, 80, 80, 0.7),
-    rgba(147, 197, 253, 0.9),
-    rgba(147, 197, 253, 0.9),
-    rgba(0, 123, 255, 0.8),
-    rgba(0, 123, 255, 0.8),
-    transparent
+    rgba(0, 123, 255, 0.8) 0%,
+    rgba(100, 150, 200, 0.9) 12.5%,
+    rgba(80, 80, 80, 0.7) 25%,
+    rgba(100, 150, 200, 0.9) 37.5%,
+    rgba(0, 123, 255, 0.8) 50%
   );
-  animation: gradient-shift 3s ease infinite;
+  animation: infinite-shimmer 3s linear infinite;
 }
 
-@keyframes gradient-shift {
+@keyframes infinite-shimmer {
   0% { 
-    left: -100%;
+    transform: translateX(-50%);
   }
   100% { 
-    left: 100%;
+    transform: translateX(0%);
   }
 }
 
 .animate-gradient-button:hover:not(:disabled)::before {
-  animation-duration: 1.5s;
+  animation-duration: 4s;
 }
 
 :root {
