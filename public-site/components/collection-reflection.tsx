@@ -120,6 +120,12 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
               placeholder='e.g., "I feel connected to a creative community." or "blue is my favorite color"'
               value={sentiment}
               onChange={(e) => setSentiment(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && sentiment.trim() && !isLoading) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
               className="min-h-[100px]"
               disabled={isLoading}
             />

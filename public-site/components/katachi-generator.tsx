@@ -587,17 +587,17 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                     <p className="text-green-800 text-sm font-semibold" style={{ color: '#166534' }}>NFT Minted Successfully! 🎉</p>
                     <div className="flex gap-2 justify-center">
                       <Button 
-                        variant="outline" 
+                        variant="default" 
                         size="sm"
                         onClick={() => window.open(`${chainConfig.mint.explorer}/tx/${transactionHash}`, '_blank')}
-                        className="gap-1"
+                        className="gap-1 bg-green-700 hover:bg-green-800 text-white"
                       >
                         <ExternalLink className="h-3 w-3" />
                         View Transaction
                       </Button>
                       {preparedData?.mintData?.metadata && (
                         <Button 
-                          variant="outline" 
+                          variant="default" 
                           size="sm"
                           onClick={() => {
                             const { contractAddress, tokenId, chainId } = preparedData.mintData.metadata;
@@ -605,7 +605,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                             const shapescanUrl = `${explorerBase}/token/${contractAddress}/instance/${tokenId}`;
                             window.open(shapescanUrl, '_blank');
                           }}
-                          className="gap-1"
+                          className="gap-1 bg-green-700 hover:bg-green-800 text-white"
                         >
                           <ExternalLink className="h-3 w-3" />
                           View NFT
