@@ -46,6 +46,14 @@ export const metadata = {
 };
 
 export default async function prepareMintSVGNFT(params: InferSchema<typeof schema>) {
+  const startTime = Date.now();
+  console.log('🚀 [MCP SERVER] prepareMintSVGNFT called:', { 
+    timestamp: new Date().toISOString(),
+    requestedChainId: params.chainId,
+    providedTokenId: params.tokenId,
+    recipient: params.recipientAddress
+  });
+  
   try {
     const {
       recipientAddress,
@@ -56,6 +64,15 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       chainId: requestedChainId,
       metadata: additionalMetadata,
     } = params;
+    
+    console.log('📝 [MCP SERVER] Processing parameters:', {
+      recipientAddress,
+      nameLength: name?.length || 0,
+      svgContentLength: svgContent?.length || 0,
+      hasAdditionalMetadata: !!additionalMetadata,
+      providedTokenId,
+      requestedChainId
+    });
 
     const chainId = requestedChainId ?? config.mintChainId;
     const contractAddress = addresses.nftMinter[chainId];
@@ -84,10 +101,24 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       ...(additionalMetadata?.curatedNfts && { curatedNfts: additionalMetadata.curatedNfts }),
     };
 
+    console.log('📦 [MCP SERVER] Creating NFT metadata:', {
+      name,
+      descriptionLength: description.length,
+      svgBase64Length: Buffer.from(svgContent).toString('base64').length,
+      attributeCount: additionalMetadata?.traits?.length || 0,
+      hasCuratedNfts: !!additionalMetadata?.curatedNfts?.length
+    });
+
     const tokenURI = `data:application/json;base64,${Buffer.from(JSON.stringify(nftMetadata)).toString('base64')}`;
 
     // Use provided token ID or generate a random one as fallback
     const tokenId = providedTokenId ?? (Date.now() + Math.floor(Math.random() * 1000));
+    
+    console.log('🎫 [MCP SERVER] Token configuration:', {
+      tokenId,
+      wasProvided: !!providedTokenId,
+      tokenUriLength: tokenURI.length
+    });
 
     const transactionData = {
       to: contractAddress,
@@ -122,6 +153,17 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       },
     };
 
+    console.log('🎉 [MCP SERVER] Transaction prepared successfully:', {
+      contractAddress,
+      functionName: 'safeMintWithURI',
+      chainId,
+      tokenId: tokenId.toString(),
+      recipientAddress,
+      dataLength: transactionData.data.length,
+      estimatedGas: result.metadata.estimatedGas,
+      processingTime: `${Date.now() - startTime}ms`
+    });
+
     return {
       content: [
         {
@@ -131,6 +173,17 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       ],
     };
   } catch (error) {
+    console.error('❌ [MCP SERVER] Error in prepareMintSVGNFT:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      processingTime: `${Date.now() - startTime}ms`,
+      params: {
+        recipientAddress: params.recipientAddress,
+        chainId: params.chainId,
+        tokenId: params.tokenId
+      }
+    });
+
     const errorOutput: ToolErrorOutput = {
       error: true,
       message: `Error preparing mint transaction: ${

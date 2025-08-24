@@ -13,4 +13,7 @@ export const config = {
   // API keys
   alchemyKey: process.env.NEXT_PUBLIC_ALCHEMY_KEY as string,
   walletConnectProjectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID as string,
+  
+  // MCP Server URL (server-side only, no NEXT_PUBLIC prefix needed)
+  mcpServerUrl: process.env.MCP_SERVER_URL as string,
 } as const;

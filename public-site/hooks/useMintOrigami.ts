@@ -49,9 +49,16 @@ type PreparedMintData = {
   };
 };
 
-// ABI for the safeMintWithURI function
+// Complete ABI for the KatachiGen contract to show proper function names in MetaMask
 const mintNFTAbi = parseAbi([
-  'function safeMintWithURI(address to, uint256 tokenId, string memory uri) public'
+  'function safeMintWithURI(address to, uint256 tokenId, string memory uri) public',
+  'function name() public view returns (string memory)',
+  'function symbol() public view returns (string memory)',
+  'function totalSupply() public view returns (uint256)',
+  'function tokenURI(uint256 tokenId) public view returns (string memory)',
+  'function ownerOf(uint256 tokenId) public view returns (address)',
+  'function balanceOf(address owner) public view returns (uint256)',
+  'event Transfer(address indexed from, address indexed to, uint256 indexed tokenId)'
 ]);
 
 export function useMintOrigami() {
@@ -152,6 +159,13 @@ export function useMintOrigami() {
 
       const { transaction, metadata } = dataToUse.mintData;
       
+      console.log('executeMint: Calling writeContract with:', {
+        contractAddress: transaction.to,
+        tokenId: metadata.tokenId,
+        recipient: metadata.recipientAddress,
+        chainId: metadata.chainId
+      });
+      
       // Use the prepared transaction data with safeMintWithURI
       writeContract({
         address: transaction.to as `0x${string}`,
@@ -186,6 +200,11 @@ export function useMintOrigami() {
   }
 
   if (isConfirmed && state !== 'success') {
+    console.log('Transaction confirmed!', { 
+      transactionHash, 
+      isConfirmed, 
+      receipt: 'Transaction receipt received' 
+    });
     setState('success');
     
     // Simple success toast - the UI has the proper buttons with links
