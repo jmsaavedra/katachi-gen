@@ -1,4 +1,4 @@
-# Katachi Gen - 形現
+# Katachi Gen - カタチ・ゲン
 
 **Shape Revealed** - An NFT collection of algorithmically generated 3D Origami forms representing the minter's on-chain journey on Shape.
 
