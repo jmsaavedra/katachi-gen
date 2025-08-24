@@ -4,6 +4,19 @@
 
 🏆 Shapecraft2 Hackathon Submission for [Shape Network](https://shape.network/shapecraft)
 
+<div align="center">
+  
+## 🎯 [Mint Your Katachi Gen NFT at katachi-gen.com](https://katachi-gen.com)
+
+[![Mint Now](https://img.shields.io/badge/MINT%20NOW-katachi--gen.com-blue?style=for-the-badge&logo=ethereum&logoColor=white)](https://katachi-gen.com)
+[![Shape Network](https://img.shields.io/badge/Shape%20Network-Mainnet%20Live-green?style=for-the-badge)](https://shapescan.xyz/address/0x9fba90186403d1c5e3e1971536862cf4ebb0f766)
+
+**Live on Shape Mainnet** • Transform your on-chain journey into unique origami art
+
+</div>
+
+---
+
 ## Overview
 
 Katachi Gen transforms blockchain data into physical art. By interpreting your wallet's ShapeL2 participation data, we generate unique, foldable origami patterns that represent your on-chain journey. Each NFT is both a digital collectible and a printable origami pattern that can be brought to life.

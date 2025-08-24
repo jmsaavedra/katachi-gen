@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAddress } from 'viem';
-import { chainConfig } from '@/lib/chains';
 import { config } from '@/lib/config';
 import { shape } from 'viem/chains';
 
