@@ -61,9 +61,10 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       name: string;
       description: string;
       patternType: string;
-      complexity: 'Basic' | 'Medium' | 'High';
+      complexity: 'Basic' | 'Medium' | 'High' | 'Generated';
       foldLines: number;
       colors: string[];
+      arweaveId?: string;
       curatedNfts?: Array<{
         name: string;
         description: string;
@@ -317,14 +318,28 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     }
   };
 
+  // Show loading overlay while initial data is loading
+  const isInitialLoading = isLoading || isLoadingMedals;
+
   return (
-    <div className="w-full max-w-6xl mx-auto space-y-8">
-      <div className="text-center space-y-4">
-        <h2 className="text-3xl font-light">Mint a Katachi Gen</h2>
-        <p className="text-muted-foreground">
-          Your unique origami pattern based on your Shape journey
-        </p>
-      </div>
+    <>
+      {/* Loading Overlay */}
+      {isInitialLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-lg font-medium">あなたのShapeの旅を読み込んでいます...</p>
+          </div>
+        </div>
+      )}
+      
+      <div className="w-full max-w-6xl mx-auto space-y-8">
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl font-light">Mint a Katachi Gen</h2>
+          <p className="text-muted-foreground">
+            Your unique origami pattern based on your Shape journey
+          </p>
+        </div>
 
       <div className="grid md:grid-cols-2 gap-8">
         {/* NFT Analysis */}
@@ -792,5 +807,6 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         </Card>
       )}
     </div>
+    </>
   );
 }
