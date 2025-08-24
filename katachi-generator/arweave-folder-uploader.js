@@ -13,10 +13,20 @@ const arweave = Arweave.init({
 // Load wallet key
 function loadWallet() {
     try {
-        const walletPath = '../keys/GFgK-XvXL1L-4uoY0W2b1X7BfzpC2fwqOdoFC4WgFiE.json';
-        if (!fs.existsSync(walletPath)) {
-            throw new Error('Wallet file not found. Please ensure arweave-key.json exists in the current directory.');
+        // First check for environment variable
+        if (process.env.ARWEAVE_WALLET) {
+            console.log('Loading wallet from environment variable...');
+            return JSON.parse(process.env.ARWEAVE_WALLET);
         }
+        
+        // Fall back to local wallet file
+        const walletPath = '../keys/arweave-wallet.json';
+        console.log(`Loading wallet from file: ${walletPath}`);
+        
+        if (!fs.existsSync(walletPath)) {
+            throw new Error(`Wallet file not found at ${walletPath}. Please ensure arweave-wallet.json exists or set ARWEAVE_WALLET environment variable.`);
+        }
+        
         return JSON.parse(fs.readFileSync(walletPath, 'utf8'));
     } catch (error) {
         console.error('Error loading wallet:', error.message);
