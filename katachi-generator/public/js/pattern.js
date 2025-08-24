@@ -606,6 +606,27 @@ function initPattern(globals){
         if (returnCreaseParams) return allCreaseParams;
 
         globals.model.buildModel(foldData, allCreaseParams);
+        
+        // Notify that pattern has been loaded successfully
+        if (globals.notifyPatternLoaded) {
+            var patternInfo = {
+                filename: globals.filename,
+                url: globals.url,
+                vertices: foldData.vertices_coords ? foldData.vertices_coords.length : 0,
+                faces: foldData.faces_vertices ? foldData.faces_vertices.length : 0,
+                edges: foldData.edges_vertices ? foldData.edges_vertices.length : 0
+            };
+            console.log('📐 Pattern loading completed, notifying callbacks...', patternInfo);
+            
+            // If in NFT processing mode, hide the origami object immediately after pattern loading
+            if (globals.isNFTProcessing && globals.model && globals.model.hideOrigami) {
+                console.log('🙈 NFT processing mode - hiding origami after pattern load');
+                globals.model.hideOrigami();
+            }
+            
+            globals.notifyPatternLoaded(patternInfo);
+        }
+        
         return foldData;
     }
 

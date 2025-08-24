@@ -142,7 +142,7 @@ function initModel(globals){
                     shininess: 30,         // Moderate shininess
                     specular: 0x333333,    // Reduced specular reflection
                     reflectivity: 0.2,     // Low reflectivity
-                    transparent: false,    // No transparency to keep colors vivid
+                    transparent: false,    // No transparency to keep texture colors vivid
                     opacity: 1.0
                 });
                 
@@ -194,8 +194,8 @@ function initModel(globals){
                     shininess: 25,
                     specular: 0x222222,
                     reflectivity: 0.15,
-                    transparent: false,
-                    opacity: 1.0
+                    transparent: true,  // Enable transparency for default surfaces
+                    opacity: globals.defaultOpacity || 0.0  // Use transparent default opacity
                 });
                 material2 = new THREE.MeshPhongMaterial({
                     flatShading:true,
@@ -207,20 +207,21 @@ function initModel(globals){
                     shininess: 25,
                     specular: 0x222222,
                     reflectivity: 0.15,
-                    transparent: false,
-                    opacity: 1.0
+                    transparent: true,     // Enable transparency for backside too
+                    opacity: globals.defaultOpacity || 0.0  // Use transparent default opacity
                 });
-                material.color.setStyle( "#" + globals.color1);
-                // テクスチャーモードの場合は裏面を白に設定
-                if (globals.colorMode === "texture") {
-                    material2.color.setStyle("#ffffff"); // 白色
-                    console.log("🎨 テクスチャーモード: 裏面マテリアルを白色に設定");
-                } else {
+                
+                // For transparent surfaces, color setting is optional
+                if (globals.defaultOpacity > 0) {
+                    material.color.setStyle( "#" + globals.color1);
                     material2.color.setStyle( "#" + globals.color2);
+                } else {
+                    console.log("🔍 Fallback surfaces set to transparent - color not applied");
                 }
                 backside.visible = true;
             }
         } else {
+            // Standard color mode - make surfaces transparent by default
             material = new THREE.MeshPhongMaterial({
                 flatShading:true,
                 side:THREE.FrontSide,
@@ -231,8 +232,8 @@ function initModel(globals){
                 shininess: 25,         // Low shininess
                 specular: 0x222222,    // Reduced specular reflection
                 reflectivity: 0.15,    // Low reflectivity
-                transparent: false,
-                opacity: 1.0
+                transparent: true,     // Enable transparency for default surfaces
+                opacity: globals.defaultOpacity || 0.0  // Use transparent default opacity
             });
             material2 = new THREE.MeshPhongMaterial({
                 flatShading:true,
@@ -244,16 +245,15 @@ function initModel(globals){
                 shininess: 25,         // Low shininess
                 specular: 0x222222,    // Reduced specular reflection
                 reflectivity: 0.15,    // Low reflectivity
-                transparent: false,
-                opacity: 1.0
+                transparent: true,     // Enable transparency for backside too
+                opacity: globals.defaultOpacity || 0.0  // Use transparent default opacity
             });
-            material.color.setStyle( "#" + globals.color1);
-            // テクスチャーモードの場合は裏面を白に設定
-            if (globals.colorMode === "texture") {
-                material2.color.setStyle("#ffffff"); // 白色
-                console.log("🎨 テクスチャーモード: 裏面マテリアルを白色に設定");
-            } else {
+            // For transparent surfaces, color setting is optional
+            if (globals.defaultOpacity > 0) {
+                material.color.setStyle( "#" + globals.color1);
                 material2.color.setStyle( "#" + globals.color2);
+            } else {
+                console.log("🔍 Surfaces set to transparent - color not applied");
             }
             backside.visible = true;
         }
@@ -270,10 +270,29 @@ function initModel(globals){
         frontside.material = material;
         backside.material = material2;
         
+        // If in NFT processing mode, ensure objects remain hidden
+        if (globals.isNFTProcessing || globals.hideUntilTextured) {
+            console.log('🙈 NFT processing detected in setMeshMaterial - forcing objects hidden');
+            frontside.visible = false;
+            backside.visible = false;
+        }
+        
         console.log("✅ Materials successfully applied to mesh");
     }
 
     function updateEdgeVisibility(){
+        // If hideUntilTextured is true, hide edges too
+        if (globals.hideUntilTextured) {
+            mountainLines.visible = false;
+            valleyLines.visible = false;
+            facetLines.visible = false;
+            hingeLines.visible = false;
+            borderLines.visible = false;
+            cutLines.visible = false;
+            return;
+        }
+        
+        // Normal edge visibility logic
         mountainLines.visible = globals.edgesVisible && globals.mtnsVisible;
         valleyLines.visible = globals.edgesVisible && globals.valleysVisible;
         facetLines.visible = globals.edgesVisible && globals.panelsVisible;
@@ -283,8 +302,34 @@ function initModel(globals){
     }
 
     function updateMeshVisibility(){
+        // If hideUntilTextured is true, keep objects hidden regardless of other settings
+        if (globals.hideUntilTextured) {
+            frontside.visible = false;
+            backside.visible = false;
+            return;
+        }
+        
+        // Normal visibility logic
         frontside.visible = globals.meshVisible;
         backside.visible = globals.colorMode == "color" && globals.meshVisible;
+    }
+
+    function hideOrigami(){
+        console.log('🙈 Hiding origami object until textures are ready');
+        if (frontside) frontside.visible = false;
+        if (backside) backside.visible = false;
+        if (edges) edges.visible = false;
+        globals.hideUntilTextured = true;
+    }
+
+    function showOrigami(){
+        console.log('👁️ Showing origami object - textures applied');
+        globals.hideUntilTextured = false;
+        // Restore normal visibility based on settings
+        if (frontside) frontside.visible = globals.meshVisible;
+        if (backside) backside.visible = globals.colorMode == "color" && globals.meshVisible;
+        if (edges) edges.visible = true; // Edges are usually visible
+        updateEdgeVisibility(); // Apply edge visibility settings
     }
 
     function getGlobalBounds(vertices) {
@@ -881,6 +926,14 @@ function initModel(globals){
 
         updateEdgeVisibility();
         updateMeshVisibility();
+        
+        // If in NFT processing mode, override visibility to keep objects hidden
+        if (globals.isNFTProcessing || globals.hideUntilTextured) {
+            console.log('🙈 NFT processing detected in buildModel - forcing objects hidden');
+            if (frontside) frontside.visible = false;
+            if (backside) backside.visible = false;
+            if (edges) edges.visible = false;
+        }
 
         syncSolver();
 
@@ -953,7 +1006,17 @@ function initModel(globals){
         updateEdgeVisibility: updateEdgeVisibility,
         updateMeshVisibility: updateMeshVisibility,
         updateUVMapping: updateUVMapping,
+        hideOrigami: hideOrigami,
+        showOrigami: showOrigami,
 
         getDimensions: getDimensions//for save stl
     }
+    
+    // Initial setup for NFT processing mode
+    if (window.editMode === false) {
+        console.log('🙈 Edit mode disabled - setting initial hide state for NFT processing');
+        globals.hideUntilTextured = true;
+    }
+    
+    return model;
 }
