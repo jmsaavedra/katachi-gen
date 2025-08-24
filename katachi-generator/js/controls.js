@@ -549,6 +549,22 @@ function initControls(globals){
     setLink("#saveSVG", function(){
         globals.pattern.saveSVG();
     });
+    
+    setLink("#generateCellMap", function(){
+        if (globals.cellColorizer) {
+            globals.cellColorizer.generateCellMapImage();
+        } else {
+            globals.warn("Cell colorizer not available.");
+        }
+    });
+    
+    setLink("#generateTextureMappedCells", function(){
+        if (globals.cellColorizer) {
+            globals.cellColorizer.generateTextureMappedCellImage();
+        } else {
+            globals.warn("Cell colorizer not available.");
+        }
+    });
     setLink("#addAnimationItem", function(){
         globals.videoAnimator.addItem();
     });
@@ -572,6 +588,14 @@ function initControls(globals){
 
     function setColorMode(val){
         console.log("Setting color mode to:", val);
+        
+        // Reset cell texture mode flag when switching away from texture mode
+        if (val !== "texture" && (globals.isCellGeneratedTexture || globals.useSimpleTextureMode)) {
+            if (globals.cellColorizer && globals.cellColorizer.resetCellTextureMode) {
+                globals.cellColorizer.resetCellTextureMode();
+            }
+        }
+        
         globals.colorMode = val;
         if (val == "color") {
             $("#coloredMaterialOptions").show();
@@ -619,33 +643,34 @@ function initControls(globals){
                     
                     setColorMode("texture");
                     
-                    // Force update if we already have a model
-                    if (globals.model && textures.length > 1) {
-                        console.log("Multiple textures detected, forcing random assignment and material update");
-                        globals.assignRandomTextures();
-                        
-                        // Create texture atlas for multiple textures
-                        var atlas = globals.createTextureAtlas();
-                        if (atlas) {
-                            globals.faceTexture = atlas;
-                            console.log("✅ Texture atlas created and assigned");
+                    // Note: Texture processing is now handled automatically by globals.js
+                    // via cellColorizer auto-generation, so we don't need complex manual processing here
+                    
+                    // Additional fallback: try manual execution if auto-generation didn't work
+                    setTimeout(function() {
+                        console.log("🔄 Controls: Checking if auto-generation completed...");
+                        if (globals.isCellGeneratedTexture && globals.useSimpleTextureMode) {
+                            console.log("✅ Auto-generation completed successfully");
+                        } else {
+                            console.log("⚠️ Auto-generation may not have completed, trying manual trigger...");
+                            if (globals.cellColorizer && globals.cellColorizer.generateTextureMappedCellImage) {
+                                try {
+                                    globals.cellColorizer.generateTextureMappedCellImage(true); // Pass true for auto mode
+                                    console.log("✅ Manual trigger successful");
+                                } catch (error) {
+                                    console.warn("❌ Manual trigger failed:", error);
+                                }
+                            }
                         }
-                        
-                        globals.model.setMeshMaterial();
-                    } else if (globals.model && textures.length === 1) {
-                        // Single texture case
-                        globals.faceTexture = textures[0];
-                        globals.model.setMeshMaterial();
-                        console.log("✅ Single texture assigned");
-                    }
+                    }, 2000); // 2 second delay
                     
                     // Show success message
                     var statusElement = document.getElementById('compressionStatus');
-                    if (statusElement && textures.length > 1) {
-                        statusElement.textContent = "✨ " + textures.length + " textures loaded and randomly distributed!";
+                    if (statusElement) {
+                        statusElement.textContent = "✨ " + textures.length + " texture" + (textures.length > 1 ? "s" : "") + " loaded and processed!";
                         setTimeout(function() {
                             statusElement.textContent = "";
-                        }, 4000);
+                        }, 3000);
                     }
                 } else {
                     console.warn("No textures were loaded successfully");

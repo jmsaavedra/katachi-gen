@@ -61,6 +61,7 @@ $(function() {
     globals.pattern = initPattern(globals);
     globals.vive = initViveInterface(globals);
     globals.videoAnimator = initVideoAnimator(globals);
+    globals.cellColorizer = initCellColorizer(globals); // Cell colorizer for colored cell maps
 
     globals.curvedFolding = initCurvedFolding(globals);//for curved folding
 

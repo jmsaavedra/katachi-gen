@@ -525,8 +525,8 @@ function initGlobals(){
             // Auto-enable random textures for testing (moved before fold data check)
             console.log("🔍 Checking conditions: textureLibrary.length =", _globals.textureLibrary.length, "model exists =", !!_globals.model);
             if (_globals.textureLibrary.length >= 1) {
-                console.log("✅ Textures detected, enabling random assignment (test mode - bypassing model check)");
-                assignRandomTextures();
+                console.log("✅ Textures detected, but skipping immediate assignment (waiting for simple texture generation)");
+                // assignRandomTextures(); // 削除：一時的なテクスチャ適用を防ぐ
                 _globals.randomTextures = true;
                 $("#randomTextures").prop("checked", true);
             } else {
@@ -541,10 +541,10 @@ function initGlobals(){
                 console.warn("⚠️ No origami pattern loaded. Please import an SVG pattern first for textures to display properly.");
                 updateLoadingStatus("⚠ Load an origami pattern first for multi-texture support");
                 
-                // Still set single texture if available
-                if (_globals.textureLibrary.length > 0) {
-                    _globals.faceTexture = _globals.textureLibrary[0];
-                }
+                // テクスチャの一時適用を削除（シンプルテクスチャ生成まで待つ）
+                // if (_globals.textureLibrary.length > 0) {
+                //     _globals.faceTexture = _globals.textureLibrary[0];
+                // }
                 
                 if (callback) callback(_globals.textureLibrary);
                 return;
@@ -557,22 +557,70 @@ function initGlobals(){
                 updateLoadingStatus("✓ " + successCount + " image" + (successCount > 1 ? "s" : "") + " loaded successfully");
             }
 
-            // Set appropriate texture based on count
-            if (_globals.textureLibrary.length > 1) {
-                // Multiple textures: create atlas
-                console.log("🎨 Creating texture atlas for", _globals.textureLibrary.length, "textures");
-                var atlas = createTextureAtlas();
-                if (atlas) {
-                    _globals.faceTexture = atlas;
-                    console.log("✅ Texture atlas created and set as faceTexture");
-                } else {
-                    console.warn("⚠️ Failed to create atlas, falling back to first texture");
-                    _globals.faceTexture = _globals.textureLibrary[0];
+            // Auto-generate simple texture-mapped cells when textures are loaded
+            console.log("🎯 Auto-generating simple texture for loaded textures...");
+            
+            // Skip complex texture processing - use simple texture mode only
+            if (_globals.cellColorizer && _globals.cellColorizer.generateTextureMappedCellImage) {
+                // Check if we have fold data
+                var hasFoldData = false;
+                if (_globals.fold && _globals.fold.vertices_coords && _globals.fold.faces_vertices) {
+                    hasFoldData = true;
+                    console.log("📊 Using existing fold data for simple texture");
+                } else if (_globals.pattern && _globals.pattern.getFoldData) {
+                    try {
+                        var foldData = _globals.pattern.getFoldData(false);
+                        if (foldData && foldData.vertices_coords && foldData.faces_vertices) {
+                            hasFoldData = true;
+                            console.log("📊 Retrieved fold data from pattern for simple texture");
+                        }
+                    } catch (e) {
+                        console.warn("⚠️ Failed to get fold data from pattern:", e.message);
+                    }
+                } else if (_globals.curvedFolding && _globals.curvedFolding.getFoldData) {
+                    try {
+                        var foldData = _globals.curvedFolding.getFoldData(false);
+                        if (foldData && foldData.vertices_coords && foldData.faces_vertices) {
+                            hasFoldData = true;
+                            console.log("📊 Retrieved fold data from curvedFolding for simple texture");
+                        }
+                    } catch (e) {
+                        console.warn("⚠️ Failed to get fold data from curvedFolding:", e.message);
+                    }
                 }
-            } else if (_globals.textureLibrary.length === 1) {
-                // Single texture: use directly
+                
+                if (hasFoldData) {
+                    try {
+                        console.log("🚀 Executing simple texture generation...");
+                        _globals.cellColorizer.generateTextureMappedCellImage(true); // Auto mode
+                        console.log("✅ Simple texture applied successfully");
+                    } catch (error) {
+                        console.error("❌ Failed to generate simple texture:", error);
+                        console.log("🔄 Falling back to first texture only");
+                        _globals.faceTexture = _globals.textureLibrary[0];
+                        _globals.useSimpleTextureMode = true;
+                        _globals.isCellGeneratedTexture = false; // Use basic texture mapping
+                        if (_globals.model && _globals.model.setMeshMaterial) {
+                            _globals.model.setMeshMaterial();
+                        }
+                    }
+                } else {
+                    console.warn("⚠️ No fold data available, using basic single texture");
+                    _globals.faceTexture = _globals.textureLibrary[0];
+                    _globals.useSimpleTextureMode = true;
+                    _globals.isCellGeneratedTexture = false; // Use basic texture mapping
+                    if (_globals.model && _globals.model.setMeshMaterial) {
+                        _globals.model.setMeshMaterial();
+                    }
+                }
+            } else {
+                console.warn("⚠️ cellColorizer not available, using basic single texture");
                 _globals.faceTexture = _globals.textureLibrary[0];
-                console.log("✅ Single texture set as faceTexture");
+                _globals.useSimpleTextureMode = true;
+                _globals.isCellGeneratedTexture = false; // Use basic texture mapping
+                if (_globals.model && _globals.model.setMeshMaterial) {
+                    _globals.model.setMeshMaterial();
+                }
             }
             
             // Clear status after 3 seconds
@@ -605,6 +653,7 @@ function initGlobals(){
             }
         });
     }
+    _globals.updateTextureList = updateTextureList;
 
     function selectTexture(index) {
         if (index >= 0 && index < _globals.textureLibrary.length && _globals.textureLibrary[index]) {
