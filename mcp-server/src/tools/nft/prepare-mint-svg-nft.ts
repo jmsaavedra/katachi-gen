@@ -71,12 +71,15 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
 
     const tokenURI = `data:application/json;base64,${Buffer.from(JSON.stringify(metadata)).toString('base64')}`;
 
+    // Generate a random token ID (in production, this should be managed properly)
+    const tokenId = Date.now() + Math.floor(Math.random() * 1000);
+
     const transactionData = {
       to: contractAddress,
       data: encodeFunctionData({
         abi: nftMinterAbi,
-        functionName: 'mintNFT',
-        args: [recipientAddress, tokenURI],
+        functionName: 'safeMintWithURI',
+        args: [recipientAddress, BigInt(tokenId), tokenURI],
       }),
       value: '0x0', // No ETH value needed
     };
@@ -86,11 +89,12 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       transaction: transactionData,
       metadata: {
         contractAddress,
-        functionName: 'mintNFT',
+        functionName: 'safeMintWithURI',
         recipientAddress,
+        tokenId: tokenId.toString(),
         tokenURI,
         nftMetadata: metadata,
-        estimatedGas: '100000', // TODO: Get actual gas estimate to prevent failed transactions
+        estimatedGas: '150000', // Increased for safeMintWithURI
         chainId,
         explorerUrl: `https://sepolia.shapescan.xyz/address/${contractAddress}`,
       },

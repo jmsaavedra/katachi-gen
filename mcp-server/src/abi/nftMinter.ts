@@ -381,19 +381,18 @@ export const abi = [
         type: 'address',
       },
       {
+        internalType: 'uint256',
+        name: 'tokenId',
+        type: 'uint256',
+      },
+      {
         internalType: 'string',
-        name: 'tokenMetadataURI',
+        name: 'uri',
         type: 'string',
       },
     ],
-    name: 'mintNFT',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
+    name: 'safeMintWithURI',
+    outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',
   },

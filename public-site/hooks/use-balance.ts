@@ -12,7 +12,7 @@ export function useWalletBalance() {
     error,
   } = useBalance({
     address,
-    chainId: config.chainId,
+    chainId: config.mintChainId, // Use mint chain for balance (where users need funds to mint)
     query: {
       enabled: isConnected && !!address,
       refetchInterval: 30000, // Refetch every 30 seconds
