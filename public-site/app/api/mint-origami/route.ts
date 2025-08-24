@@ -61,9 +61,24 @@ async function getNextTokenId(): Promise<number> {
 
 
 export async function POST(request: NextRequest) {
+  const startTime = Date.now();
+  console.log('🚀 [MINT API] Request started:', { timestamp: new Date().toISOString() });
+  
   try {
     const body: MintOrigamiRequest = await request.json();
     const { recipientAddress, svgContent, name, description, nftCount, collections, sentimentFilter, stackMedalsCount, curatedNfts } = body;
+    
+    console.log('📝 [MINT API] Request payload:', {
+      recipientAddress,
+      nameLength: name?.length || 0,
+      svgContentLength: svgContent?.length || 0,
+      hasDescription: !!description,
+      nftCount,
+      collections,
+      hasSentimentFilter: !!sentimentFilter,
+      stackMedalsCount,
+      curatedNftsCount: curatedNfts?.length || 0
+    });
 
     if (!recipientAddress || !isAddress(recipientAddress)) {
       return NextResponse.json(
@@ -97,8 +112,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const mcpServerUrl = process.env.MCP_SERVER_URL;
+    const mcpServerUrl = config.mcpServerUrl;
     if (!mcpServerUrl) {
+      console.error('❌ [MINT API] MCP server URL not configured:', {
+        envVar: 'MCP_SERVER_URL',
+        configValue: config.mcpServerUrl
+      });
       return NextResponse.json(
         { error: 'MCP server not configured' },
         { status: 500 }
@@ -106,7 +125,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the next sequential NFT number
+    console.log('🔢 [MINT API] Getting next token ID...');
     const nextNftNumber = await getNextTokenId();
+    console.log('✅ [MINT API] Next token ID retrieved:', { nextNftNumber });
     
     // If pattern data is provided, regenerate with correct NFT number
     let finalSvgContent = svgContent;
@@ -124,6 +145,15 @@ export async function POST(request: NextRequest) {
     } | undefined;
     
     if (nftCount !== undefined && collections !== undefined) {
+      console.log('🎨 [MINT API] Regenerating pattern with final NFT number:', {
+        nftCount,
+        collections,
+        nftNumber: nextNftNumber,
+        hasSentimentFilter: !!sentimentFilter,
+        hasStackMedals: !!stackMedalsCount,
+        hasCuratedNfts: !!curatedNfts?.length
+      });
+      
       const regeneratedPattern = generatePlaceholderPattern({
         nftCount,
         collections,
@@ -141,6 +171,14 @@ export async function POST(request: NextRequest) {
         traits: regeneratedPattern.metadata.traits,
         ...(regeneratedPattern.metadata.curatedNfts && { curatedNfts: regeneratedPattern.metadata.curatedNfts }),
       };
+      
+      console.log('✅ [MINT API] Pattern regenerated:', {
+        finalName,
+        svgLength: finalSvgContent.length,
+        traitCount: finalMetadata.traits.length
+      });
+    } else {
+      console.log('ℹ️ [MINT API] Using original SVG content (no regeneration)');
     }
 
     const mcpRequest = {
@@ -160,6 +198,16 @@ export async function POST(request: NextRequest) {
       },
       id: Date.now(),
     };
+    
+    console.log('📡 [MINT API] Sending MCP request:', {
+      method: mcpRequest.method,
+      toolName: mcpRequest.params.name,
+      requestId: mcpRequest.id,
+      chainId: config.mintChainId,
+      tokenId: nextNftNumber,
+      recipientAddress,
+      mcpServerUrl: config.mcpServerUrl || 'NOT_SET'
+    });
 
     const response = await fetch(mcpServerUrl, {
       method: 'POST',
@@ -170,14 +218,37 @@ export async function POST(request: NextRequest) {
       body: JSON.stringify(mcpRequest),
     });
 
+    console.log('📨 [MINT API] MCP server response received:', {
+      status: response.status,
+      statusText: response.statusText,
+      ok: response.ok,
+      requestDuration: `${Date.now() - startTime}ms`
+    });
+
     if (!response.ok) {
+      console.error('❌ [MINT API] MCP server error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: mcpServerUrl
+      });
       throw new Error(`MCP server responded with status: ${response.status}`);
     }
 
     const mcpResponse = await response.json();
+    console.log('✅ [MINT API] MCP server response parsed:', {
+      hasResult: !!mcpResponse.result,
+      hasError: !!mcpResponse.error,
+      resultType: typeof mcpResponse.result,
+      requestId: mcpResponse.id
+    });
 
     // Handle JSON-RPC error response
     if (mcpResponse.error) {
+      console.error('❌ [MINT API] MCP server returned error:', {
+        errorCode: mcpResponse.error.code,
+        errorMessage: mcpResponse.error.message,
+        requestId: mcpResponse.id
+      });
       return NextResponse.json(
         { 
           error: 'MCP server error',
@@ -209,13 +280,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log('🎉 [MINT API] Successfully prepared mint transaction:', {
+      success: result.success || true,
+      hasTransactionData: !!result.transaction,
+      hasMetadata: !!result.metadata,
+      contractAddress: result.transaction?.to,
+      tokenId: result.metadata?.tokenId,
+      chainId: result.metadata?.chainId,
+      totalDuration: `${Date.now() - startTime}ms`
+    });
+
     return NextResponse.json({
       success: true,
       mintData: result,
     });
 
   } catch (error) {
-    console.error('Error in mint-origami API:', error);
+    console.error('❌ [MINT API] Error in mint-origami API:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      duration: `${Date.now() - startTime}ms`
+    });
     return NextResponse.json(
       { 
         error: 'Internal server error',
