@@ -275,6 +275,21 @@ function initModel(globals){
             console.log('🙈 NFT processing detected in setMeshMaterial - forcing objects hidden');
             frontside.visible = false;
             backside.visible = false;
+        } else {
+            // If origami is visible and has textures, start auto rotation
+            if (globals.colorMode == "texture" && (globals.faceTexture || globals.textureLibrary.length > 0)) {
+                if (globals.threeView && globals.threeView.startAutoRotation && !globals.autoRotateEnabled) {
+                    console.log('🎬 Textures applied - starting auto rotation animation');
+                    globals.threeView.startAutoRotation(true, 6000); // Random rotation, change every 6 seconds
+                    
+                    // Also start slider animation
+                    if (globals.threeView.startSliderAnimation) {
+                        setTimeout(function() {
+                            globals.threeView.startSliderAnimation(0, 100, 5000, true, 5000); // 5s animation, loop enabled, 5s pause
+                        }, globals.autoRotateWaitTime + 1000); // Start 1 second after rotation begins
+                    }
+                }
+            }
         }
         
         console.log("✅ Materials successfully applied to mesh");
@@ -330,6 +345,19 @@ function initModel(globals){
         if (backside) backside.visible = globals.colorMode == "color" && globals.meshVisible;
         if (edges) edges.visible = true; // Edges are usually visible
         updateEdgeVisibility(); // Apply edge visibility settings
+        
+        // Start auto rotation animation when origami becomes visible with textures
+        if (globals.threeView && globals.threeView.startAutoRotation) {
+            console.log('🎬 Triggering auto rotation animation after origami is shown');
+            globals.threeView.startAutoRotation(true, 6000); // Random rotation, change every 6 seconds
+            
+            // Also start slider animation from min to max
+            if (globals.threeView.startSliderAnimation) {
+                setTimeout(function() {
+                    globals.threeView.startSliderAnimation(0, 100, 5000, true, 5000); // 5s animation, loop enabled, 5s pause
+                }, globals.autoRotateWaitTime + 1000); // Start 1 second after rotation begins
+            }
+        }
     }
 
     function getGlobalBounds(vertices) {

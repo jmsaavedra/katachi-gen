@@ -43,7 +43,21 @@ const req = http.request(options, (res) => {
             console.log('Response received:');
             console.log('Success:', response.success);
             console.log('Message:', response.message);
-            console.log('Transaction ID:', response.txId);
+            
+            if (response.thumbnailId) {
+                console.log('Thumbnail ID:', response.thumbnailId);
+                console.log('Thumbnail URL:', response.thumbnailUrl);
+            }
+            
+            if (response.htmlId) {
+                console.log('HTML ID:', response.htmlId);
+                console.log('HTML URL:', response.htmlUrl);
+            }
+            
+            // Backwards compatibility
+            if (response.txId) {
+                console.log('Transaction ID:', response.txId);
+            }
             
             if (response.thumbnail) {
                 console.log('Thumbnail generated:', response.thumbnail.filename);

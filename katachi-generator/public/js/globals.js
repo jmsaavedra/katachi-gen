@@ -148,6 +148,31 @@ function initGlobals(){
 
         rotateModel: null,
         rotationSpeed: 0.01,
+        
+        // Multi-axis rotation animation
+        autoRotateEnabled: false,
+        autoRotateStartTime: null,
+        autoRotateWaitTime: 3000, // 3 seconds wait
+        multiAxisRotation: {
+            x: 0.005, // X-axis rotation speed
+            y: 0.008, // Y-axis rotation speed  
+            z: 0.003  // Z-axis rotation speed
+        },
+        randomRotationEnabled: true, // Enable random rotation directions
+        rotationChangeInterval: 6000, // Change rotation direction every 6 seconds
+        lastRotationChangeTime: null,
+
+        // Slider auto animation
+        sliderAutoAnimationEnabled: false,
+        sliderAnimationStartTime: null,
+        sliderAnimationDuration: 4000, // 4 seconds to go from min to max
+        sliderAnimationDirection: 1, // 1 for min->max, -1 for max->min
+        sliderAnimationStartValue: 0,
+        sliderAnimationEndValue: 100,
+        sliderAnimationLoop: true, // Enable looping
+        sliderAnimationPauseTime: 5000, // 5 seconds pause at each end
+        sliderAnimationState: 'animating', // 'animating', 'pausing'
+        sliderAnimationPauseStartTime: null,
 
         backgroundColor:"ffffff",
 

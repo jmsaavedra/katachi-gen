@@ -5,6 +5,7 @@ html{
     overflow: hidden;
     padding:0;
     margin:0;
+    background: transparent;
     /*min-width: 1025px;*/
 }
 
@@ -15,12 +16,8 @@ body{
     padding:0;
     margin:0;
     overflow: hidden;
-    /* Gradient background: black to white to black */
-    background: linear-gradient(to bottom, 
-        #afafaf 0%,     /* Top: Black */
-        #ffffff 50%,    /* Center: White */
-        #afafaf 100%);  /* Bottom: Black */
-    background-attachment: fixed;
+    /* Transparent background */
+    background: transparent;
     /*min-width: 1025px;*/
     /*-webkit-touch-callout: none; !* iOS Safari *!*/
     /*-webkit-user-select: none;   !* Chrome/Safari/Opera *!*/
@@ -791,10 +788,12 @@ object{
     align-items: center;
 }
 
-#pdfButton, #printButton {
-    color: #ffffff !important;
-    text-decoration: none !important;
-    font-size: 14px;
+#dlButton, #printButton {
+    color: #b0b0b0;
+    text-decoration: bold;
+    width: 5em;
+    text-align: center;
+    font-size: 9px;
     font-weight: 500;
     cursor: pointer;
     transition: opacity 0.2s ease;
@@ -805,12 +804,12 @@ object{
     white-space: nowrap;
 }
 
-#pdfButton:hover, #printButton:hover {
+#dlButton:hover, #printButton:hover {
     opacity: 0.7;
     text-decoration: none !important;
 }
 
-#pdfButton:focus, #printButton:focus {
+#dlButton:focus, #printButton:focus {
     outline: none;
     text-decoration: none !important;
 }

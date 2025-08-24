@@ -4,12 +4,12 @@ const fs = require('fs');
 const path = require('path');
 const Arweave = require('arweave');
 const { chromium } = require('playwright-core');
+const { uploadFileToArweave } = require('./arweave-uploader');
 
 // Server port configuration
 const port = process.env.PORT || 3000;
-const templateHTML = 'index.html';
-const arweaveWalletPath = './keys/arweave-wallet.json';
-const walletAddress = 'WJBf3OFtVmHVaIwMzIGq4nBseTRobFUiJmc2OW52-Dk';
+const templateHTML = 'template.html';
+const arweaveWalletPath = '../keys/GFgK-XvXL1L-4uoY0W2b1X7BfzpC2fwqOdoFC4WgFiE.json';
 
 // Thumbnail configuration
 const THUMB_WIDTH = 1024;
@@ -78,56 +78,64 @@ const server = http.createServer(async (req, res) => {
                     // Save thumbnail (optional)
                     const timestamp = Date.now();
                     const thumbnailFilename = `thumbnail_${timestamp}.png`;
-                    await saveThumbnail(thumbnailBuffer, thumbnailFilename);
+                    const thumbnailPath = await saveThumbnail(thumbnailBuffer, thumbnailFilename);
                     
-                    // upload thumbnail to Arweave
-
                     // load templateHTML file from public directory
                     const templatePath = path.join(__dirname, 'public', templateHTML);
                     const template = fs.readFileSync(templatePath, 'utf-8');
                     const rendered = template.replace('{{dataJson}}', JSON.stringify(data));
                     
-                    uploadToArweave(data).then((txId) => {
-                        console.log('Uploaded to Arweave:', txId);
-                        
-                        // Convert thumbnail buffer to base64 for response
-                        const thumbnailBase64 = thumbnailBuffer.toString('base64');
-                        
-                        // Send response
-                        res.setHeader('Content-Type', 'application/json');
-                        res.writeHead(200);
-                        res.end(JSON.stringify({
-                            success: true,
-                            message: 'NFT generated successfully',
-                            txId,
-                            html: rendered,
-                            thumbnail: {
-                                data: thumbnailBase64,
-                                type: 'image/png',
-                                filename: thumbnailFilename
-                            }
-                        }));
-                    }).catch((error) => {
-                        console.error('Error uploading to Arweave:', error);
-                        // Send response
-                        res.setHeader('Content-Type', 'application/json');
-                        res.writeHead(500);
-                        res.end(JSON.stringify({
-                            success: false,
-                            message: 'NFT generation failed',
-                            error: error.message
-                        }));
-                    });
+                    // Upload thumbnail to Arweave
+                    console.log('Uploading thumbnail to Arweave...');
+                    const thumbnailTxId = await uploadFileToArweave(thumbnailPath, arweaveWalletPath);
+                    console.log('Thumbnail uploaded to Arweave:', thumbnailTxId);
                     
-                } catch (thumbnailError) {
-                    console.error('Error in thumbnail generation:', thumbnailError);
-                    // Send error response
+                    // Create temporary HTML file for upload
+                    const htmlFilename = `nft_${timestamp}.html`;
+                    const htmlPath = path.join(__dirname, 'temp', htmlFilename);
+                    
+                    // Create temp directory if it doesn't exist
+                    const tempDir = path.dirname(htmlPath);
+                    if (!fs.existsSync(tempDir)) {
+                        fs.mkdirSync(tempDir, { recursive: true });
+                    }
+                    
+                    // Write HTML to temporary file
+                    fs.writeFileSync(htmlPath, rendered, 'utf-8');
+                    
+                    // Upload HTML to Arweave
+                    console.log('Uploading HTML to Arweave...');
+                    const htmlTxId = await uploadFileToArweave(htmlPath, arweaveWalletPath);
+                    console.log('HTML uploaded to Arweave:', htmlTxId);
+                    
+                    // Clean up temporary HTML file
+                    try {
+                        fs.unlinkSync(htmlPath);
+                    } catch (cleanupError) {
+                        console.warn('Could not clean up temporary HTML file:', cleanupError.message);
+                    }
+                    
+                    // Send response with both transaction IDs
+                    res.setHeader('Content-Type', 'application/json');
+                    res.writeHead(200);
+                    res.end(JSON.stringify({
+                        success: true,
+                        message: 'NFT generated and uploaded successfully',
+                        thumbnailId: thumbnailTxId,
+                        htmlId: htmlTxId,
+                        thumbnailUrl: `https://arweave.net/${thumbnailTxId}`,
+                        htmlUrl: `https://arweave.net/${htmlTxId}`
+                    }));
+                    
+                } catch (uploadError) {
+                    console.error('Error uploading to Arweave:', uploadError);
+                    // Send response
                     res.setHeader('Content-Type', 'application/json');
                     res.writeHead(500);
                     res.end(JSON.stringify({
                         success: false,
-                        message: 'Thumbnail generation failed',
-                        error: thumbnailError.message
+                        message: 'NFT generation or upload failed',
+                        error: uploadError.message
                     }));
                 }
 
@@ -148,7 +156,7 @@ const server = http.createServer(async (req, res) => {
         if (urlPath === '/wallet-info') {
             try {
                 // Try to get wallet info if wallet.json exists
-                const walletPath = ArweaveWalletPath;
+                const walletPath = arweaveWalletPath;
                 if (fs.existsSync(walletPath)) {
                     const walletAddress = await getWalletAddress(walletPath);
                     const balance = await getWalletBalance(walletAddress);
@@ -398,54 +406,184 @@ async function generateThumbnail(data) {
         
         console.log('Data injected, waiting for JavaScript execution...');
         
-        // 複数の待機戦略を試行
+        // コンソールメッセージを監視
+        let renderingComplete = false;
+        let origamiVisible = false;
+        
+        page.on('console', (msg) => {
+            const text = msg.text();
+            console.log('Browser console:', text);
+            
+            // レンダリング完了を示すメッセージを監視
+            if (text.includes('NFT processing completed - reset isNFTProcessing flag') ||
+                text.includes('Show origami object now that textures are applied') ||
+                text.includes('Triggered control visibility sequence')) {
+                renderingComplete = true;
+                console.log('🎯 Rendering completion detected via console message');
+            }
+            
+            // origamiが表示されたことを示すメッセージを監視
+            if (text.includes('showOrigami') || text.includes('origami object now visible')) {
+                origamiVisible = true;
+                console.log('👁️ Origami visibility confirmed via console message');
+            }
+        });
+        
+        // 複数の待機戦略を試行 - 最優先でコンソールメッセージを監視
+        let screenshotTaken = false;
+        let screenshotBuffer = null;
+        
+        // コンソールメッセージ検出でのスクリーンショット関数
+        const takeScreenshotOnDetection = async () => {
+            if (screenshotTaken) return null;
+            screenshotTaken = true;
+            
+            console.log('📸 IMMEDIATE CAPTURE - Console message detected');
+            
+            // スクリーンショット撮影前の状態確認
+            const preScreenshotState = await page.evaluate(() => {
+                const controlsBottom = document.getElementById('controlsBottom');
+                const controlsVisible = controlsBottom ? controlsBottom.style.display !== 'none' : 'element not found';
+                
+                return {
+                    timestamp: new Date().toISOString(),
+                    renderingComplete: window.renderingComplete,
+                    nftRenderComplete: window.nftRenderComplete,
+                    controlsBottomDisplay: controlsBottom ? controlsBottom.style.display : 'not found',
+                    controlsVisible: controlsVisible,
+                    walletText: document.getElementById('walletAddress')?.textContent?.substring(0, 50) || 'not found'
+                };
+            });
+            
+            console.log('📸 SCREENSHOT TIMING - Immediate capture state:', JSON.stringify(preScreenshotState, null, 2));
+            
+            // Take screenshot immediately
+            console.log('📸 Taking screenshot immediately after detection...');
+            const buffer = await page.screenshot({
+                type: 'png',
+                fullPage: false
+            });
+            
+            console.log('📸 Screenshot captured successfully at:', new Date().toISOString());
+            screenshotBuffer = buffer; // グローバル変数に保存
+            return buffer;
+        };
+        
+        // コンソールメッセージリスナーを設定（最優先）
+        page.on('console', async (msg) => {
+            const text = msg.text();
+            console.log('Browser console:', text);
+            
+            // レンダリング完了を示すメッセージを検出したら即座にスクリーンショット
+            if (text.includes('Set window.renderingComplete = true for thumbnail detection') ||
+                text.includes('Showing origami object - textures applied')) {
+                console.log('🎯 Rendering completion detected via console message');
+                
+                try {
+                    await takeScreenshotOnDetection();
+                    console.log('✅ Thumbnail generated successfully via console detection');
+                } catch (error) {
+                    console.error('Error taking immediate screenshot:', error);
+                }
+            }
+        });
+        
         try {
-            // 戦略1: DOM要素の存在を確認
-            await page.waitForSelector('#walletAddress', { timeout: 10000 });
+            // 戦略1: より短いタイムアウトでDOM要素を確認
+            await page.waitForSelector('#walletAddress', { timeout: 3000 });
             console.log('Key elements found');
             
-            // 戦略2: カスタムフラグを待つ（優先戦略）
+            // 短い待機でコンソールメッセージ検出を待つ
+            console.log('Waiting for console message detection...');
+            await page.waitForTimeout(2000); // 2秒待機してコンソールメッセージを待つ
+            
+            // 戦略2: コンソールメッセージベースの待機（最優先）
             try {
-                console.log('Waiting for nftRenderComplete flag...');
+                console.log('Waiting for rendering completion via console messages...');
+                
+                // より短いタイムアウトで、高速チェック
                 await page.waitForFunction(() => {
-                    console.log('Checking nftRenderComplete flag:', window.nftRenderComplete);
-                    return window.nftRenderComplete === true;
-                }, { timeout: 30000, polling: 500 }); // 500ms間隔でチェック
-                console.log('✅ nftRenderComplete flag confirmed - rendering complete!');
+                    return window.renderingComplete === true;
+                }, { timeout: 3000, polling: 100 });
                 
-                // nftRenderCompleteがtrueになったら、短い待機のみ
-                await page.waitForTimeout(1000); // 1秒のみ
-                console.log('Short stabilization wait completed');
+                console.log('✅ Rendering completion confirmed via renderingComplete flag!');
                 
-            } catch (flagError) {
-                console.log('Flag wait failed, proceeding with element-based wait:', flagError.message);
+                // まだスクリーンショットが撮られていない場合のみ撮影
+                if (!screenshotTaken) {
+                    await takeScreenshotOnDetection();
+                    console.log('✅ Thumbnail generated successfully via flag detection');
+                }
                 
-                // 戦略3: 要素の内容が更新されていることを確認
-                await page.waitForFunction(() => {
-                    const walletElement = document.getElementById('walletAddress');
-                    return walletElement && !walletElement.textContent.includes('Loading...');
-                }, { timeout: 10000 });
-                console.log('Content update confirmed');
+            } catch (consoleError) {
+                console.log('Console-based wait failed, trying alternative approach:', consoleError.message);
                 
-                // フォールバック待機
-                await page.waitForTimeout(2000);
+                // 戦略3: nftRenderCompleteフラグ（短縮タイムアウト）
+                try {
+                    await page.waitForFunction(() => {
+                        return window.nftRenderComplete === true;
+                    }, { timeout: 2000, polling: 100 });
+                    
+                    console.log('🎯 STRATEGY SUCCESS: nftRenderComplete flag detection');
+                    
+                    if (!screenshotTaken) {
+                        await takeScreenshotOnDetection();
+                        console.log('✅ Thumbnail generated successfully via nft flag');
+                    }
+                    
+                } catch (flagError) {
+                    console.log('Flag wait also failed, proceeding with minimal wait:', flagError.message);
+                    console.log('🎯 STRATEGY: Minimal timeout');
+                    await page.waitForTimeout(1000); // 1秒に短縮
+                    console.log('📸 Taking screenshot after minimal wait');
+                }
             }
             
         } catch (waitError) {
-            console.log('Advanced wait strategies failed, using fallback:', waitError.message);
-            // フォールバック: 固定時間待機
-            await page.waitForTimeout(5000);
-            console.log('Fallback wait completed');
+            console.log('Wait strategies failed, using minimal fallback:', waitError.message);
+            console.log('🎯 STRATEGY: Minimal fallback timeout');
+            await page.waitForTimeout(1000); // 1秒に短縮
+            console.log('📸 Minimal fallback wait completed - taking screenshot');
         }
         
-        // Take screenshot
-        const screenshotBuffer = await page.screenshot({
-            type: 'png',
-            fullPage: false // Only capture viewport
-        });
+        // フォールバック: まだスクリーンショットが撮られていない場合のみ撮影
+        if (!screenshotTaken) {
+            console.log('📸 Taking fallback screenshot...');
+            
+            // スクリーンショット撮影前の状態確認
+            const preScreenshotState = await page.evaluate(() => {
+                const controlsBottom = document.getElementById('controlsBottom');
+                const controlsVisible = controlsBottom ? controlsBottom.style.display !== 'none' : 'element not found';
+                
+                return {
+                    timestamp: new Date().toISOString(),
+                    renderingComplete: window.renderingComplete,
+                    nftRenderComplete: window.nftRenderComplete,
+                    controlsBottomDisplay: controlsBottom ? controlsBottom.style.display : 'not found',
+                    controlsVisible: controlsVisible,
+                    walletText: document.getElementById('walletAddress')?.textContent?.substring(0, 50) || 'not found'
+                };
+            });
+            
+            console.log('📸 SCREENSHOT TIMING - Fallback capture state:', JSON.stringify(preScreenshotState, null, 2));
+            
+            // Take screenshot
+            console.log('📸 Taking fallback screenshot NOW...');
+            screenshotBuffer = await page.screenshot({
+                type: 'png',
+                fullPage: false
+            });
+            
+            console.log('📸 Screenshot captured successfully at:', new Date().toISOString());
+            console.log('✅ Thumbnail generated successfully');
+        }
         
-        console.log('Thumbnail generated successfully');
-        return screenshotBuffer;
+        // 最終的にscreenshotBufferを返す
+        if (screenshotBuffer) {
+            console.log('✅ Returning screenshot buffer, size:', screenshotBuffer.length, 'bytes');
+            return screenshotBuffer;
+        } else {
+            throw new Error('Failed to generate screenshot');
+        }
         
     } catch (error) {
         console.error('Error generating thumbnail:', error);
