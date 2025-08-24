@@ -48,7 +48,9 @@ See deployed website: [builder-kit.vercel.app](https://builder-kit.vercel.app/)
 
    - `NEXT_PUBLIC_ALCHEMY_KEY`: Get from [Alchemy](https://alchemy.com)
    - `NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID`: Get from [WalletConnect](https://cloud.walletconnect.com)
-   - `NEXT_PUBLIC_CHAIN_ID`: Use `11011` for Shape Sepolia or `360` for Shape Mainnet
+   - `NEXT_PUBLIC_READ_CHAIN_ID`: Use `360` for Shape Mainnet (for reading NFT data)
+   - `NEXT_PUBLIC_MINT_CHAIN_ID`: Use `11011` for Shape Sepolia (for minting NFTs)
+   - `NEXT_PUBLIC_KATACHI_CONTRACT_TESTNET`: Contract address on testnet
 
 4. **Start development server**
 

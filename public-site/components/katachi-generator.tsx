@@ -3,14 +3,19 @@
 import { useAccount } from 'wagmi';
 import { Address } from 'viem';
 import { useNFTsForOwner } from '@/hooks/web3';
+import { useMintOrigami } from '@/hooks/useMintOrigami';
+import { generatePlaceholderPattern } from '@/utils/generatePlaceholderSVG';
+import { chainConfig } from '@/lib/chains';
+import { config } from '@/lib/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { WalletConnect } from '@/components/wallet-connect';
 import { useState, useEffect } from 'react';
-import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Download } from 'lucide-react';
 import Image from 'next/image';
 import { CollectionReflection } from '@/components/collection-reflection';
+import { toast } from 'sonner';
 
 interface KatachiGeneratorProps {
   overrideAddress?: Address;
@@ -22,11 +27,31 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const { data: nfts, isLoading, error } = useNFTsForOwner(addressToUse);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPattern, setGeneratedPattern] = useState<{
-    complexity: number;
-    foldLines: number;
-    pattern: string;
-    colors: string[];
+    svgContent: string;
+    metadata: {
+      name: string;
+      description: string;
+      patternType: string;
+      complexity: 'Basic' | 'Medium' | 'High';
+      foldLines: number;
+      colors: string[];
+      traits: Array<{
+        trait_type: string;
+        value: string | number;
+      }>;
+    };
   } | null>(null);
+  
+  // Minting functionality
+  const { 
+    prepareMint, 
+    executeMint, 
+    isLoading: isMinting, 
+    state: mintState,
+    transactionHash,
+    preparedData,
+    reset: resetMint 
+  } = useMintOrigami();
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -38,23 +63,69 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   }, [nfts?.totalCount]);
 
   const handleGenerateKatachi = async () => {
+    if (!addressToUse) {
+      toast.error('Please connect your wallet first');
+      return;
+    }
+
     setIsGenerating(true);
+    resetMint(); // Reset any previous mint state
     
-    // Simulate pattern generation
-    setTimeout(() => {
-      setGeneratedPattern({
-        complexity: nfts?.totalCount || 0,
-        foldLines: Math.floor(Math.random() * 50) + 20,
-        pattern: 'kabuto',
-        colors: generateColors(nfts?.totalCount || 0)
+    try {
+      // Simulate generation delay for UX
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const patternData = generatePlaceholderPattern({
+        nftCount: nfts?.totalCount || 0,
+        collections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
+        walletAddress: addressToUse,
       });
+      
+      setGeneratedPattern(patternData);
+      toast.success('Pattern generated successfully!');
+    } catch (err) {
+      toast.error('Failed to generate pattern');
+      console.error('Pattern generation error:', err);
+    } finally {
       setIsGenerating(false);
-    }, 3000);
+    }
   };
 
-  const generateColors = (nftCount: number) => {
-    const baseColors = ['#4F46E5', '#06B6D4', '#10B981', '#F59E0B', '#EF4444'];
-    return baseColors.slice(0, Math.min(nftCount, 5));
+  const handleMintNFT = async () => {
+    if (!generatedPattern || !addressToUse) {
+      toast.error('No pattern generated or wallet not connected');
+      return;
+    }
+
+    try {
+      // First, prepare the mint transaction
+      await prepareMint({
+        recipientAddress: addressToUse,
+        svgContent: generatedPattern.svgContent,
+        name: generatedPattern.metadata.name,
+        description: generatedPattern.metadata.description,
+      });
+      
+      // Then execute the mint
+      await executeMint();
+    } catch (err) {
+      console.error('Mint error:', err);
+    }
+  };
+
+  const handleDownloadSVG = () => {
+    if (!generatedPattern) return;
+    
+    const blob = new Blob([generatedPattern.svgContent], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${generatedPattern.metadata.name.replace(/\s+/g, '_')}.svg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('SVG downloaded!');
   };
 
   // Pagination logic
@@ -102,6 +173,14 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Chain Info */}
+            <div className="text-xs text-muted-foreground bg-muted/30 rounded p-2">
+              📊 Reading from {chainConfig.read.name} • 🎯 Minting to {chainConfig.mint.name}
+              {config.mintChainId === 360 && !config.allowMainnetMinting && (
+                <div className="text-orange-600 mt-1">⚠️ Mainnet minting disabled for safety</div>
+              )}
+            </div>
+            
             {isLoading ? (
               <>
                 <Skeleton className="h-4 w-full" />
@@ -174,36 +253,91 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="aspect-square rounded-lg bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-1">
-                  <div className="h-full w-full rounded-lg bg-background flex items-center justify-center">
-                    <div className="text-center space-y-2">
-                      <div className="text-6xl">🗾</div>
-                      <p className="text-sm text-muted-foreground">Kabuto Pattern #{Math.floor(Math.random() * 9999)}</p>
-                    </div>
-                  </div>
+                {/* SVG Pattern Preview */}
+                <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/20 p-2">
+                  <div 
+                    className="h-full w-full rounded-lg overflow-hidden"
+                    dangerouslySetInnerHTML={{ __html: generatedPattern.svgContent }}
+                  />
                 </div>
                 
+                {/* Pattern Metadata */}
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Pattern</span>
+                    <span className="font-mono text-xs">{generatedPattern.metadata.patternType}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Fold Lines</span>
-                    <span className="font-mono">{generatedPattern.foldLines}</span>
+                    <span className="font-mono">{generatedPattern.metadata.foldLines}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Complexity</span>
-                    <span className="font-mono">{generatedPattern.complexity > 10 ? 'High' : generatedPattern.complexity > 5 ? 'Medium' : 'Basic'}</span>
+                    <span className="font-mono">{generatedPattern.metadata.complexity}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Pattern Type</span>
-                    <span className="font-mono capitalize">{generatedPattern.pattern}</span>
+                    <span className="text-muted-foreground">Colors</span>
+                    <div className="flex gap-1">
+                      {generatedPattern.metadata.colors.map((color, i) => (
+                        <div 
+                          key={i} 
+                          className="w-4 h-4 rounded-sm border border-border" 
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
 
+                {/* Mint Status */}
+                {mintState === 'success' && transactionHash && (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-center space-y-2">
+                    <p className="text-green-800 text-sm font-medium">NFT Minted Successfully! 🎉</p>
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => window.open(`${chainConfig.mint.explorer}/tx/${transactionHash}`, '_blank')}
+                      className="gap-1"
+                    >
+                      <ExternalLink className="h-3 w-3" />
+                      View on {chainConfig.mint.name}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
                 <div className="flex gap-2 pt-4">
-                  <Button className="flex-1" disabled>
-                    Mint NFT (Coming Soon)
+                  <Button 
+                    className="flex-1 gap-2" 
+                    onClick={handleMintNFT}
+                    disabled={isMinting || mintState === 'success'}
+                  >
+                    {isMinting ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {mintState === 'preparing' ? 'Preparing...' : 
+                         mintState === 'pending' ? 'Confirm in Wallet' :
+                         mintState === 'confirming' ? 'Minting...' : 'Minting'}
+                      </>
+                    ) : mintState === 'success' ? (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Minted!
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        Mint NFT
+                      </>
+                    )}
                   </Button>
-                  <Button variant="outline" className="flex-1" disabled>
-                    Download Pattern
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 gap-2" 
+                    onClick={handleDownloadSVG}
+                  >
+                    <Download className="h-4 w-4" />
+                    Download SVG
                   </Button>
                 </div>
               </div>

@@ -38,7 +38,13 @@ Create a `.env.local` file in the project root:
 
 ```bash
 # Shape Network Configuration
-NEXT_PUBLIC_CHAIN_ID=360
+# Reading chain (for NFT data) - use mainnet for real data
+NEXT_PUBLIC_READ_CHAIN_ID=360
+# Minting chain (for NFT contract) - use testnet for safe testing
+NEXT_PUBLIC_MINT_CHAIN_ID=11011
+
+# Contract Addresses
+NEXT_PUBLIC_KATACHI_CONTRACT_TESTNET=0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85
 
 # Alchemy API Key (get from https://www.alchemy.com/)
 NEXT_PUBLIC_ALCHEMY_KEY=your_alchemy_api_key
