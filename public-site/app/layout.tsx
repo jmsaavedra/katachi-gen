@@ -1,5 +1,4 @@
 import { Providers } from '@/components/providers';
-import { ThemeToggle } from '@/components/theme-toggle';
 import { WalletConnect } from '@/components/wallet-connect';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
@@ -92,7 +91,6 @@ export default function RootLayout({
                   <span className="text-xl opacity-70">形現</span>
                 </Link>
                 <div className="flex items-center gap-2">
-                  <ThemeToggle />
                   <WalletConnect />
                 </div>
               </div>

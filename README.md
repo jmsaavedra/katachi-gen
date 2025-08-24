@@ -2,7 +2,20 @@
 
 **Shape Revealed** - An NFT collection of algorithmically generated 3D Origami forms representing the minter's on-chain journey on Shape.
 
-🏆 Shapecraft2 Hackathon Submission for [Shape Network](https://shape.network/shapecraft)
+🏆 [Shapecraft2 Hackathon](https://shape.network/shapecraft) Submission.
+
+<div align="center">
+  
+## 🎯 [Mint Your Katachi Gen NFT at katachi-gen.com](https://katachi-gen.com)
+
+[![Mint Now](https://img.shields.io/badge/MINT%20NOW-katachi--gen.com-blue?style=for-the-badge&logo=ethereum&logoColor=white)](https://katachi-gen.com)
+[![Shape Network](https://img.shields.io/badge/Shape%20Network-Mainnet%20Live-green?style=for-the-badge)](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1)
+
+**Live on Shape Mainnet** • Transform your on-chain journey into unique origami art
+
+</div>
+
+---
 
 ## Overview
 
@@ -56,7 +69,7 @@ katachi-gen/
 
 ## AI-Powered Collection Reflection
 
-Beyond the core origami generation, Katachi Gen features an advanced **Collection Reflection** system that uses AI to understand collectors' emotional connections to their NFTs.
+Beyond the core origami generation, Katachi Gen features a **Sentiment Filter** system that uses AI to understand collectors' emotional connections to their NFTs. This filter curates 5 NFTs from their collection to uniquely map artwork to the faces of their origami shape. Every mint will be uniquely filtered and textured based on what the collector writes at the time of minting. 
 
 ### How It Works
 
@@ -81,10 +94,34 @@ This creates a deeply personal connection between collectors and their digital a
 
 > For detailed technical specifications of the sentiment analysis algorithm, see [mcp-server/README.md](./mcp-server/README.md#interpretcollectionsentiment)
 
+## Smart Contract Details
+
+### Deployed Contracts
+Katachi Gen is deployed on both Shape mainnet and testnet:
+
+- **Shape Mainnet**: [`0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1`](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1)
+- **Shape Sepolia Testnet**: [`0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85`](https://sepolia.shapescan.xyz/address/0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85)
+- **Token Standard**: ERC-721
+- **Token Symbol**: KGEN
+- **Token Name**: KatachiGen
+
+### Contract Features
+- **Owner-Controlled Minting**: Currently requires owner permission (will be updated for public minting)
+- **Metadata Support**: Full on-chain SVG storage with rich trait metadata
+- **Burnable**: NFTs can be burned by their owners
+- **OpenSea Compatible**: Full marketplace support with proper metadata standards
+
+### Minting Process
+1. **Pattern Generation**: Your wallet's Shape NFT data generates a unique origami pattern
+2. **SVG Creation**: The pattern is rendered as an on-chain SVG with metadata
+3. **Mint Transaction**: Execute `safeMintWithURI` with auto-generated token ID
+4. **Gasback Rewards**: Benefit from Shape's 80% sequencer fee cashback program
+
 ## Minting Eligibility
 
-- **Requirement**: Must own a Stack NFT on ShapeL2
-- **Limit**: None
+- **Requirement**: Connected wallet with Shape network activity
+- **Cost**: Gas fees only (no mint price)
+- **Limit**: None - mint as many unique patterns as you want
 - **Uniqueness**: Each mint generates a unique pattern based on current wallet state
 
 ## Cultural Inspiration
@@ -103,7 +140,9 @@ Built with ❤️ by:
 
 ## Links
 
-- [Smart Contract Repository](https://github.com/jmsaavedra/katachi-gen-721-contract) - ERC-721 contract deployed on Shape Sepolia Testnet
+- [Smart Contract Repository](https://github.com/jmsaavedra/katachi-gen-721-contract) - ERC-721 contract source code
+- [View on Shape Mainnet](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1) - Live contract on Shape
+- [View on Shape Testnet](https://sepolia.shapescan.xyz/address/0x9FdB107c9AAE301F021e1F34BEB8Ca6F2324de85) - Test deployment
 - [Shapecraft2 Hackathon](https://shape.network/shapecraft)
 - [Shape Network](https://shape.network)
 
