@@ -98,7 +98,7 @@ export default function Home() {
           ) : (
             <Button 
               size="lg" 
-              className="gap-2 px-10 py-6 text-lg"
+              className="gap-2 px-10 py-6 text-lg animate-gradient-button"
               onClick={handleMintClick}
             >
               <Sparkles className="h-5 w-5" />

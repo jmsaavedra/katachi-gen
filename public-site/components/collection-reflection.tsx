@@ -32,10 +32,27 @@ interface CollectionReflectionProps {
 }
 
 export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubmitted, onCurationCompleted }: CollectionReflectionProps) {
-  const [sentiment, setSentiment] = useState('');
+  // Random 5-word sentences for development testing
+  const devSentences = [
+    'I love creative community vibes',
+    'Blue colors make me happy',
+    'Art connects souls through beauty',
+    'Digital collectibles inspire my creativity',
+    'Shape network feels like home'
+  ];
+  
+  const getRandomDevSentiment = () => {
+    if (process.env.NODE_ENV === 'development') {
+      return devSentences[Math.floor(Math.random() * devSentences.length)];
+    }
+    return '';
+  };
+  
+  const [sentiment, setSentiment] = useState(getRandomDevSentiment());
   const [count, setCount] = useState('5');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [isCurated, setIsCurated] = useState(false);
 
   const handleSubmit = async () => {
     if (!walletAddress || !sentiment.trim()) {
@@ -85,6 +102,9 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
       if (onCurationCompleted) {
         onCurationCompleted(data.interpretation || '', data.themes || [], data.selectedNfts || []);
       }
+      
+      // Mark as curated to stop animation
+      setIsCurated(true);
     } catch (err) {
       console.error('Error interpreting sentiment:', err);
       setError(err instanceof Error ? err.message : 'Failed to interpret your collection sentiment');
@@ -106,18 +126,19 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
           Sentiment Filter
         </CardTitle>
         <CardDescription>
-          Share your feelings about collecting on Shape and our AI will interpret your words to curate 5 pieces to be applied to your Katachi Gen Shape
+          Share your feelings about collecting on Shape and our AI will interpret your words to curate 5 pieces to be applied to your Katachi Gen Shape.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {/* Input Form - Always visible */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">
-              What does collecting art mean to you? Write a few words about your favorite parts of collecting on Shape.
+        <div className="space-y-6">
+          <div className="space-y-4 pt-4">
+            <label className="text-base font-bold block text-center">
+              What does collecting art mean to you?<br />
+              What's your favorite thing about collecting on Shape?
             </label>
             <Textarea
-              placeholder='e.g., "I feel connected to a creative community." or "blue is my favorite color"'
+              placeholder='e.g., "I love feeling connected to such a creative community." or "i like turtles."'
               value={sentiment}
               onChange={(e) => setSentiment(e.target.value)}
               onKeyDown={(e) => {
@@ -126,12 +147,12 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                   handleSubmit();
                 }
               }}
-              className="min-h-[100px]"
+              className="min-h-[80px]"
               disabled={isLoading}
             />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-end gap-4 pb-2">
             <div className="flex-1">
               <label className="text-sm font-medium mb-2 block">
                 Number of NFTs to curate
@@ -150,13 +171,18 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
 
             <Button 
               onClick={handleSubmit}
-              disabled={isLoading || !sentiment.trim()}
-              className="gap-2"
+              disabled={isLoading || !sentiment.trim() || isCurated}
+              className={`gap-2 ${!isLoading && sentiment.trim() && !error && !isCurated ? 'animate-gradient-button' : ''}`}
             >
               {isLoading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
                   Interpreting...
+                </>
+              ) : isCurated ? (
+                <>
+                  <Sparkles className="h-4 w-4" />
+                  Curated
                 </>
               ) : (
                 <>
