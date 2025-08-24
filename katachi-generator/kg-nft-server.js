@@ -83,7 +83,7 @@ const server = http.createServer(async (req, res) => {
                     // load templateHTML file from public directory
                     const templatePath = path.join(__dirname, 'public', templateHTML);
                     const template = fs.readFileSync(templatePath, 'utf-8');
-                    const rendered = template.replace('{dataJson}', JSON.stringify(data));
+                    const rendered = template.replace('`{dataJson}`', JSON.stringify(data));
                     
                     // Upload thumbnail to Arweave
                     console.log('Uploading thumbnail to Arweave...');
@@ -392,16 +392,16 @@ async function generateThumbnail(data) {
                 window.loadNftData(data);
             }
             
-            // Also replace any {{dataJson}} placeholders in the DOM
-            const elements = document.querySelectorAll('*');
-            elements.forEach(el => {
-                if (el.textContent && el.textContent.includes('{{dataJson}}')) {
-                    el.textContent = el.textContent.replace('{{dataJson}}', JSON.stringify(data));
-                }
-                if (el.innerHTML && el.innerHTML.includes('{{dataJson}}')) {
-                    el.innerHTML = el.innerHTML.replace('{{dataJson}}', JSON.stringify(data));
-                }
-            });
+            // // Also replace any {{dataJson}} placeholders in the DOM
+            // const elements = document.querySelectorAll('*');
+            // elements.forEach(el => {
+            //     if (el.textContent && el.textContent.includes('{{dataJson}}')) {
+            //         el.textContent = el.textContent.replace('{{dataJson}}', JSON.stringify(data));
+            //     }
+            //     if (el.innerHTML && el.innerHTML.includes('{{dataJson}}')) {
+            //         el.innerHTML = el.innerHTML.replace('{{dataJson}}', JSON.stringify(data));
+            //     }
+            // });
         }, data);
         
         console.log('Data injected, waiting for JavaScript execution...');
