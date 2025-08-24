@@ -1,5 +1,6 @@
 import { Providers } from '@/components/providers';
-import { WalletConnect } from '@/components/wallet-connect';
+import { HeaderWrapper } from '@/components/header-wrapper';
+import { HeaderProvider } from '@/contexts/header-context';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
@@ -83,53 +84,58 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
-          <div className="bg-background min-h-screen font-[family-name:var(--font-geist-sans)]">
-            <header className="border-b">
-              <div className="container mx-auto flex h-16 items-center justify-between px-4">
-                <Link href="/" className="flex items-center gap-2">
-                  <span className="text-xl font-light">Katachi Gen</span>
-                  <span className="text-xl opacity-70">形現</span>
-                </Link>
-                <div className="flex items-center gap-2">
-                  <WalletConnect />
-                </div>
-              </div>
-            </header>
+          <HeaderProvider>
+            <div className="bg-background min-h-screen font-[family-name:var(--font-geist-sans)]">
+              <HeaderWrapper />
 
-            <main className="container mx-auto px-4 py-8">{children}</main>
+              <main className="container mx-auto px-4 py-8">{children}</main>
 
             <footer className="border-t py-6">
               <div className="container mx-auto px-4">
-                <div className="text-center text-sm text-muted-foreground">
-                  Made with 🤍 by{' '}
-                  <Link
-                    href="https://x.com/1000b"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Sembo
-                  </Link>
-                  {' '}and{' '}
-                  <Link
-                    href="https://x.com/quietloops"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    quietloops
-                  </Link>
-                  . Built on{' '}
-                  <Link
-                    href="https://shape.network"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Shape
-                  </Link>
-                  .
+                <div className="text-center text-sm text-muted-foreground space-y-2">
+                  <div>
+                    Made with 🤍 by{' '}
+                    <Link
+                      href="https://x.com/1000b"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Sembo
+                    </Link>
+                    {' '}and{' '}
+                    <Link
+                      href="https://x.com/quietloops"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      quietloops
+                    </Link>
+                    . Built on{' '}
+                    <Link
+                      href="https://shape.network"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Shape
+                    </Link>
+                    .
+                  </div>
+                  <div className="text-xs">
+                    Contract:{' '}
+                    <Link
+                      href="https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="font-mono hover:underline"
+                    >
+                      0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1
+                    </Link>
+                  </div>
                 </div>
               </div>
             </footer>
-          </div>
+            </div>
+          </HeaderProvider>
         </Providers>
       </body>
     </html>
