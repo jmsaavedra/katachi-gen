@@ -157,8 +157,8 @@ function initModel(globals){
                     shininess: 25,
                     specular: 0x222222,
                     reflectivity: 0.15,
-                    transparent: false,
-                    opacity: 1.0
+                    transparent: false,    // 不透明
+                    opacity: 1.0          // 完全に不透明
                 });
                 
                 console.log("✅ Texture material created successfully");
@@ -207,8 +207,9 @@ function initModel(globals){
                     shininess: 25,
                     specular: 0x222222,
                     reflectivity: 0.15,
-                    transparent: true,     // Enable transparency for backside too
-                    opacity: globals.defaultOpacity || 0.0  // Use transparent default opacity
+                    transparent: false,    // 不透明に変更
+                    opacity: 1.0,         // 完全に不透明
+                    color: 0xffffff       // 白色に設定
                 });
                 
                 // For transparent surfaces, color setting is optional
@@ -221,7 +222,7 @@ function initModel(globals){
                 backside.visible = true;
             }
         } else {
-            // Standard color mode - make surfaces transparent by default
+            // Standard color mode - white surfaces
             material = new THREE.MeshPhongMaterial({
                 flatShading:true,
                 side:THREE.FrontSide,
@@ -232,8 +233,9 @@ function initModel(globals){
                 shininess: 25,         // Low shininess
                 specular: 0x222222,    // Reduced specular reflection
                 reflectivity: 0.15,    // Low reflectivity
-                transparent: true,     // Enable transparency for default surfaces
-                opacity: globals.defaultOpacity || 0.0  // Use transparent default opacity
+                transparent: false,    // 表面を不透明に変更
+                opacity: 1.0,          // 完全に不透明
+                color: 0xffffff        // 表面を白色に設定
             });
             material2 = new THREE.MeshPhongMaterial({
                 flatShading:true,
@@ -245,8 +247,9 @@ function initModel(globals){
                 shininess: 25,         // Low shininess
                 specular: 0x222222,    // Reduced specular reflection
                 reflectivity: 0.15,    // Low reflectivity
-                transparent: true,     // Enable transparency for backside too
-                opacity: globals.defaultOpacity || 0.0  // Use transparent default opacity
+                transparent: false,    // 裏面を不透明に変更
+                opacity: 1.0,          // 完全に不透明
+                color: 0xffffff        // 裏面を白色に設定
             });
             // For transparent surfaces, color setting is optional
             if (globals.defaultOpacity > 0) {
