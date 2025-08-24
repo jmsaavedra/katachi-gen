@@ -103,31 +103,23 @@ function initModel(globals){
                 setGeoUpdates();
             }
         } else if (globals.colorMode == "texture" && (globals.faceTexture || globals.textureLibrary.length > 0)) {
-            console.log("🎨 Setting mesh material to texture mode");
-            console.log("📋 Material context:");
-            console.log("  - textureLibrary size:", globals.textureLibrary.length);
+            console.log("🎨 Setting mesh material to simple texture mode");
+            console.log("📋 Simple texture context:");
             console.log("  - faceTexture exists:", !!globals.faceTexture);
-            console.log("  - faceTextureMapping size:", globals.faceTextureMapping ? Object.keys(globals.faceTextureMapping).length : 0);
-            console.log("  - textureAtlas exists:", !!globals.textureAtlas);
+            console.log("  - useSimpleTextureMode:", !!globals.useSimpleTextureMode);
+            console.log("  - isCellGeneratedTexture:", !!globals.isCellGeneratedTexture);
             
             var textureToUse = globals.faceTexture;
             
-            // Enable multi-texture support with atlas
-            if (globals.textureLibrary.length > 1 && globals.faceTextureMapping && Object.keys(globals.faceTextureMapping).length > 0) {
-                console.log("🔄 Creating texture atlas for", globals.textureLibrary.length, "textures");
-                textureToUse = globals.createTextureAtlas();
-                if (textureToUse) {
-                    globals.faceTexture = textureToUse;
-                    console.log("✅ Texture atlas created successfully");
-                    console.log("📊 Atlas dimensions:", textureToUse.image.width + "x" + textureToUse.image.height);
-                } else {
-                    console.warn("❌ Failed to create texture atlas, using first texture");
-                    textureToUse = globals.textureLibrary[0];
-                }
-            } else if (!textureToUse && globals.textureLibrary.length > 0) {
-                console.log("📝 Using first texture from library");
+            // Only use texture if it's cell-generated or explicitly set
+            if (!textureToUse && globals.textureLibrary.length > 0 && globals.isCellGeneratedTexture) {
+                console.log("📝 Using first texture from library for cell-generated texture");
                 textureToUse = globals.textureLibrary[0];
                 globals.faceTexture = textureToUse;
+            } else if (!textureToUse && globals.textureLibrary.length > 0 && !globals.isCellGeneratedTexture) {
+                console.log("⏳ Waiting for cell-generated texture, skipping temporary texture application");
+                // Don't apply temporary texture - wait for cellColorizer
+                return;
             }
             
             if (textureToUse) {
@@ -157,9 +149,20 @@ function initModel(globals){
                 console.log("✅ Texture material created successfully");
                 backside.visible = false;
                 
-                // Update UV coordinates for face-based texture mapping
-                console.log("🔄 Updating UV coordinates for texture mapping");
-                updateFaceBasedUVs();
+                // Check if this is a cell-generated texture that needs simple UV mapping
+                console.log("🔍 Checking UV mapping condition:");
+                console.log("  - globals.isCellGeneratedTexture:", !!globals.isCellGeneratedTexture);
+                console.log("  - globals.useSimpleTextureMode:", !!globals.useSimpleTextureMode);
+                console.log("  - Combined condition:", !!(globals.isCellGeneratedTexture && globals.useSimpleTextureMode));
+                
+                if (globals.isCellGeneratedTexture && globals.useSimpleTextureMode) {
+                    console.log("🎯 Using simple UV mapping for cell-generated texture");
+                    setSimpleUVMapping();
+                } else {
+                    // Update UV coordinates for face-based texture mapping
+                    console.log("🔄 Updating UV coordinates for texture mapping (fallback)");
+                    updateFaceBasedUVs();
+                }
                 console.log("✅ Texture material applied successfully");
             } else {
                 console.warn("⚠️ Texture mode selected but no texture available, falling back to color mode");
@@ -298,278 +301,14 @@ function initModel(globals){
         };
     }
 
-    function updateFaceBasedUVs(){
-        console.log("🔍 Checking UV update requirements...");
-        console.log("- geometry:", !!geometry);
-        console.log("- globals.fold:", !!globals.fold);
-        console.log("- globals.fold.faces_vertices:", globals.fold ? !!globals.fold.faces_vertices : false);
-        console.log("- globals.fold.vertices_coords:", globals.fold ? !!globals.fold.vertices_coords : false);
+    function getGeometryBounds(positionsArray) {
+        var minX = Infinity, minY = Infinity, minZ = Infinity;
+        var maxX = -Infinity, maxY = -Infinity, maxZ = -Infinity;
         
-        if (!geometry) {
-            console.warn("❌ Cannot update UVs: geometry not available");
-            return;
-        }
-        
-        // Try to use fold data first, then fall back to geometry-based UV mapping
-        var faces, originalVertices;
-        var useGeometryFallback = false;
-        
-        if (globals.fold && globals.fold.faces_vertices && globals.fold.vertices_coords) {
-            console.log("✅ Using fold data for UV mapping");
-            faces = globals.fold.faces_vertices;
-            originalVertices = globals.fold.vertices_coords;
-        } else {
-            console.log("⚠️ No fold data available, using geometry-based UV mapping");
-            useGeometryFallback = true;
-            
-            // Create basic UV mapping for existing geometry
-            if (geometry && geometry.attributes && geometry.attributes.position) {
-                console.log("📐 Creating UV mapping for existing geometry");
-                createBasicUVMapping();
-                return;
-            } else {
-                console.warn("❌ Cannot create UV mapping: no position data in geometry");
-                return;
-            }
-        }
-        
-        console.log("✅ All requirements met, proceeding with UV update");
-        console.log("Updating face-based UVs for", faces.length, "faces");
-        
-        var uvs = [];
-        // Continue with existing logic for fold-based UV mapping...
-        
-        // Calculate global bounds once for all faces
-        var globalBounds = getGlobalBounds(originalVertices);
-        var globalWidth = globalBounds.maxX - globalBounds.minX;
-        var globalHeight = globalBounds.maxY - globalBounds.minY;
-        
-        // Prevent division by zero and handle flat patterns
-        if (globalWidth === 0) globalWidth = 1;
-        if (globalHeight === 0) {
-            globalHeight = globalWidth; // Use width for height to create square mapping
-        }
-        
-        console.log("Global bounds:", globalBounds, "Size:", globalWidth + "x" + globalHeight);
-        
-        // Check if we're using texture atlas
-        var useAtlas = globals.textureLibrary.length > 1 && 
-                       globals.faceTextureMapping && 
-                       Object.keys(globals.faceTextureMapping).length > 0 &&
-                       globals.atlasLayout;
-        
-        if (useAtlas) {
-            console.log("🔥 Using texture atlas mapping with layout:", globals.atlasLayout);
-            console.log("🎯 Face mappings available:", Object.keys(globals.faceTextureMapping).length, "faces");
-            console.log("📚 Texture library size:", globals.textureLibrary.length);
-            console.log("🗺️ Atlas layout - Grid:", globals.atlasLayout.texturesPerRow + "x" + globals.atlasLayout.texturesPerCol);
-        } else {
-            console.log("❌ Atlas not used. Reasons:");
-            console.log("- Multiple textures?", globals.textureLibrary.length > 1);
-            console.log("- Face mapping exists?", globals.faceTextureMapping && Object.keys(globals.faceTextureMapping).length > 0);
-            console.log("- Atlas layout exists?", !!globals.atlasLayout);
-            if (globals.textureLibrary.length > 1) {
-                console.warn("⚠️ Multiple textures loaded but atlas not being used - this may cause display issues!");
-            }
-        }
-        
-        // For each face, map vertices to appropriate texture region
-        for (var i = 0; i < faces.length; i++) {
-            var face = faces[i];
-            if (face.length !== 3) continue; // Only triangular faces
-            
-            // Get original 2D coordinates of face vertices (before folding)
-            var v0 = new THREE.Vector2(originalVertices[face[0]][0], originalVertices[face[0]][1]);
-            var v1 = new THREE.Vector2(originalVertices[face[1]][0], originalVertices[face[1]][1]);
-            var v2 = new THREE.Vector2(originalVertices[face[2]][0], originalVertices[face[2]][1]);
-            
-            // Calculate face area to detect degenerate triangles
-            var area = Math.abs((v1.x - v0.x) * (v2.y - v0.y) - (v2.x - v0.x) * (v1.y - v0.y)) / 2;
-            var minArea = 0.001; // Minimum area threshold
-            
-            // Determine which texture this face should use
-            var textureIndex = 0;
-            var textureOffsetX = 0;
-            var textureOffsetY = 0;
-            var textureScaleX = 1;
-            var textureScaleY = 1;
-            
-            // Enhanced texture mapping: Create virtual grid even for single textures
-            var virtualGridSize = Math.max(2, Math.ceil(Math.sqrt(Math.min(faces.length / 20, 16)))); // 2x2 to 4x4 grid based on face count
-            var useSingleTextureGrid = globals.textureLibrary.length <= 2; // Use grid for single or dual textures
-            
-            if (useAtlas && globals.faceTextureMapping[i] !== undefined) {
-                // Multi-texture atlas mapping
-                textureIndex = globals.faceTextureMapping[i];
-                var layout = globals.atlasLayout;
-                
-                // Use the correct property names from atlasLayout
-                var texturesPerRow = layout.texturesPerRow || layout.cols || 1;
-                var texturesPerCol = layout.texturesPerCol || layout.rows || 1;
-                
-                // Calculate texture position in atlas
-                var row = Math.floor(textureIndex / texturesPerRow);
-                var col = textureIndex % texturesPerRow;
-                
-                // Calculate UV offsets and scale for this texture in the atlas
-                textureScaleX = 1 / texturesPerRow;
-                textureScaleY = 1 / texturesPerCol;
-                textureOffsetX = col * textureScaleX;
-                textureOffsetY = row * textureScaleY;
-                
-                if (i < 5) { // Log first few faces for debugging
-                    console.log("🎨 Face", i, "→ Texture", textureIndex, "at atlas grid[" + col + "," + row + "] offset[" + textureOffsetX.toFixed(3) + "," + textureOffsetY.toFixed(3) + "] scale[" + textureScaleX.toFixed(3) + "," + textureScaleY.toFixed(3) + "]");
-                    console.log("   Grid size:", texturesPerRow + "x" + texturesPerCol);
-                }
-            } else if (useSingleTextureGrid) {
-                // Virtual grid mapping for single/few textures - each face gets different part of texture
-                var faceGridIndex = i % (virtualGridSize * virtualGridSize); // Cycle through grid positions
-                var gridRow = Math.floor(faceGridIndex / virtualGridSize);
-                var gridCol = faceGridIndex % virtualGridSize;
-                
-                // Calculate UV offsets and scale for this grid cell
-                textureScaleX = 1 / virtualGridSize;
-                textureScaleY = 1 / virtualGridSize;
-                textureOffsetX = gridCol * textureScaleX;
-                textureOffsetY = gridRow * textureScaleY;
-                
-                if (i < 10) { // Log first few faces for debugging
-                    console.log("🔲 Face", i, "→ Virtual grid[" + gridCol + "," + gridRow + "] (index " + faceGridIndex + ") offset[" + textureOffsetX.toFixed(3) + "," + textureOffsetY.toFixed(3) + "] scale[" + textureScaleX.toFixed(3) + "," + textureScaleY.toFixed(3) + "]");
-                    console.log("   Virtual grid size:", virtualGridSize + "x" + virtualGridSize);
-                }
-            }
-            
-            // For very small triangles, use center point mapping to avoid stretching
-            if (area < minArea) {
-                var centerX = (v0.x + v1.x + v2.x) / 3;
-                var centerY = (v0.y + v1.y + v2.y) / 3;
-                
-                // Map center point to UV space
-                var centerU = (centerX - globalBounds.minX) / globalWidth;
-                var centerV;
-                
-                // For flat patterns, create V from other coordinates
-                if (Math.abs(globalBounds.maxY - globalBounds.minY) < 0.001) {
-                    centerV = (centerY - globalBounds.minY) / globalWidth; // Use width for scaling
-                    if (centerV === 0) {
-                        // If Y is also 0, use face index for variation
-                        centerV = (i * 0.01) % 1.0;
-                    }
-                } else {
-                    centerV = (centerY - globalBounds.minY) / globalHeight;
-                }
-                
-                // Apply atlas texture region mapping
-                centerU = textureOffsetX + (centerU % 1.0) * textureScaleX;
-                centerV = textureOffsetY + (centerV % 1.0) * textureScaleY;
-                
-                uvs.push(centerU, centerV);
-                uvs.push(centerU, centerV);
-                uvs.push(centerU, centerV);
-            } else {
-                // Standard UV mapping - handle flat patterns specially with improved aspect ratio
-                var u0 = (v0.x - globalBounds.minX) / globalWidth;
-                var u1 = (v1.x - globalBounds.minX) / globalWidth;
-                var u2 = (v2.x - globalBounds.minX) / globalWidth;
-                
-                var v0_uv, v1_uv, v2_uv;
-                
-                // For flat patterns (height=0), create V coordinates from Y coordinates properly
-                if (Math.abs(globalBounds.maxY - globalBounds.minY) < 0.001) {
-                    // For flat patterns, use Y coordinates but with better scaling
-                    if (Math.abs(v0.y - v1.y) > 0.001 || Math.abs(v1.y - v2.y) > 0.001) {
-                        // Y coordinates do vary, use them with proper aspect ratio
-                        var yRange = Math.max(0.1, Math.abs(globalBounds.maxY - globalBounds.minY)); // Avoid division by zero
-                        if (yRange < 0.1) yRange = globalWidth; // Use width if Y range is too small
-                        
-                        v0_uv = (v0.y - globalBounds.minY) / yRange;
-                        v1_uv = (v1.y - globalBounds.minY) / yRange;
-                        v2_uv = (v2.y - globalBounds.minY) / yRange;
-                        
-                        // Clamp to [0,1] range
-                        v0_uv = Math.max(0, Math.min(1, v0_uv));
-                        v1_uv = Math.max(0, Math.min(1, v1_uv));
-                        v2_uv = Math.max(0, Math.min(1, v2_uv));
-                    } else {
-                        // Create V coordinates based on face position with better distribution
-                        var faceU = (u0 + u1 + u2) / 3; // Average U coordinate of face
-                        v0_uv = (faceU + (face[0] * 0.001) % 1.0) % 1.0;
-                        v1_uv = (faceU + (face[1] * 0.001) % 1.0) % 1.0;
-                        v2_uv = (faceU + (face[2] * 0.001) % 1.0) % 1.0;
-                    }
-                } else {
-                    // Normal Y-based V coordinates with proper aspect ratio preservation
-                    v0_uv = (v0.y - globalBounds.minY) / globalHeight;
-                    v1_uv = (v1.y - globalBounds.minY) / globalHeight;
-                    v2_uv = (v2.y - globalBounds.minY) / globalHeight;
-                }
-                
-                // Apply atlas texture region mapping for multiple textures
-                u0 = textureOffsetX + (u0 % 1.0) * textureScaleX;
-                v0_uv = textureOffsetY + (v0_uv % 1.0) * textureScaleY;
-                u1 = textureOffsetX + (u1 % 1.0) * textureScaleX;
-                v1_uv = textureOffsetY + (v1_uv % 1.0) * textureScaleY;
-                u2 = textureOffsetX + (u2 % 1.0) * textureScaleX;
-                v2_uv = textureOffsetY + (v2_uv % 1.0) * textureScaleY;
-                
-                uvs.push(u0, v0_uv);
-                uvs.push(u1, v1_uv);
-                uvs.push(u2, v2_uv);
-            }
-        }
-        
-        console.log("Generated", uvs.length / 2, "UV coordinates with texture mapping");
-        
-        // Debug: Check UV coordinate ranges
-        var minU = Math.min.apply(Math, uvs.filter((_, i) => i % 2 === 0));
-        var maxU = Math.max.apply(Math, uvs.filter((_, i) => i % 2 === 0));
-        var minV = Math.min.apply(Math, uvs.filter((_, i) => i % 2 === 1));
-        var maxV = Math.max.apply(Math, uvs.filter((_, i) => i % 2 === 1));
-        console.log("UV ranges: U[" + minU.toFixed(3) + ", " + maxU.toFixed(3) + "], V[" + minV.toFixed(3) + ", " + maxV.toFixed(3) + "]");
-        
-        if (!geometry.attributes) {
-            console.error("Geometry attributes not found");
-            return;
-        }
-        
-        // Use addAttribute for older Three.js versions (instead of setAttribute)
-        if (geometry.addAttribute) {
-            geometry.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
-        } else if (geometry.setAttribute) {
-            geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
-        } else {
-            console.error("Neither addAttribute nor setAttribute methods available");
-            return;
-        }
-        
-        if (geometry.attributes.uv) {
-            geometry.attributes.uv.needsUpdate = true;
-        }
-        
-        console.log("UV mapping updated successfully with multi-texture support");
-    }
-    
-    function createBasicUVMapping() {
-        console.log("🔧 Creating basic UV mapping for geometry");
-        
-        if (!geometry || !geometry.attributes || !geometry.attributes.position) {
-            console.warn("Cannot create basic UV mapping: no position data");
-            return;
-        }
-        
-        var positions = geometry.attributes.position.array;
-        var vertexCount = positions.length / 3;
-        var uvs = [];
-        
-        // Find bounds for UV coordinate normalization
-        var minX = Infinity, maxX = -Infinity;
-        var minY = Infinity, maxY = -Infinity;
-        var minZ = Infinity, maxZ = -Infinity;
-        
-        for (var i = 0; i < vertexCount; i++) {
-            var x = positions[i * 3];
-            var y = positions[i * 3 + 1];
-            var z = positions[i * 3 + 2];
+        for (var i = 0; i < positionsArray.length; i += 3) {
+            var x = positionsArray[i];
+            var y = positionsArray[i + 1];
+            var z = positionsArray[i + 2];
             
             minX = Math.min(minX, x);
             maxX = Math.max(maxX, x);
@@ -579,120 +318,300 @@ function initModel(globals){
             maxZ = Math.max(maxZ, z);
         }
         
-        var rangeX = maxX - minX || 1;
-        var rangeY = Math.max(maxY - minY, maxZ - minZ) || 1; // Use Z range if Y range is flat
-        var actualMinY = (maxY - minY) > (maxZ - minZ) ? minY : minZ;
-        var actualMaxY = (maxY - minY) > (maxZ - minZ) ? maxY : maxZ;
+        return {
+            minX: minX, maxX: maxX,
+            minY: minY, maxY: maxY,
+            minZ: minZ, maxZ: maxZ
+        };
+    }
+
+    function setSimpleUVMapping() {
+        console.log("🎯 Setting simple UV mapping for cell-generated texture");
         
-        console.log("Geometry bounds:", {minX, maxX, minY, maxY, minZ, maxZ, rangeX, rangeY, actualMinY, actualMaxY});
-        
-        // Check if we're using texture atlas
-        var useAtlas = globals.textureLibrary.length > 1 && 
-                       globals.faceTextureMapping && 
-                       Object.keys(globals.faceTextureMapping).length > 0 &&
-                       globals.atlasLayout;
-        
-        // Virtual grid system for single/few textures
-        var virtualGridSize = Math.max(2, Math.ceil(Math.sqrt(Math.min(vertexCount / 60, 16)))); // 2x2 to 4x4 grid
-        var useSingleTextureGrid = globals.textureLibrary.length <= 2; // Use grid for single or dual textures
-        
-        if (useAtlas) {
-            console.log("🔥 Using texture atlas for basic UV mapping");
-            console.log("📋 Atlas layout info:", {
-                dimensions: globals.atlasLayout.width + "x" + globals.atlasLayout.height,
-                regions: globals.atlasLayout.regions.length,
-                textureMapping: Object.keys(globals.atlasLayout.textureIndexMapping).length,
-                faceMapping: Object.keys(globals.faceTextureMapping).length
-            });
-        } else if (useSingleTextureGrid) {
-            console.log("🔲 Using virtual grid (" + virtualGridSize + "x" + virtualGridSize + ") for single texture variation");
+        if (!geometry || !geometry.attributes || !geometry.attributes.position) {
+            console.warn("❌ Cannot set simple UV mapping: geometry not available");
+            return;
         }
         
-        // Create UV coordinates for each vertex
-        for (var i = 0; i < vertexCount; i++) {
-            var x = positions[i * 3];
-            var y = positions[i * 3 + 1];
-            var z = positions[i * 3 + 2];
+        var positions = geometry.attributes.position.array;
+        var vertexCount = positions.length / 3;
+        
+        console.log("📐 Creating simple UV mapping for", vertexCount, "vertices");
+        
+        // Create simple UV coordinates (0,0) to (1,1) mapping
+        var uvs = new Float32Array(vertexCount * 2);
+        
+        // Get fold data for consistent coordinate transformation
+        var fold = globals.cellColorizerFoldData || globals.fold;
+        if (!fold || !fold.vertices_coords) {
+            console.warn("❌ No fold data available for consistent UV mapping");
+            console.log("🔍 Available globals:", {
+                cellColorizerFoldData: !!globals.cellColorizerFoldData,
+                globalsFold: !!globals.fold,
+                cellColorizerTransformParams: !!globals.cellColorizerTransformParams
+            });
+            return;
+        }
+        
+        console.log("✅ Using fold data with", fold.vertices_coords.length, "vertices");
+        
+        // Get original 2D pattern bounds using the EXACT same method as cellColorizer
+        var minX = Infinity, minZ = Infinity;
+        var maxX = -Infinity, maxZ = -Infinity;
+        
+        // Use the same getBoundingBox logic as cellColorizer
+        for (var i = 0; i < fold.vertices_coords.length; i++) {
+            var vertex = fold.vertices_coords[i];
+            var x = vertex[0];
+            var z = vertex[2]; // Using Z coordinate for 2D projection (same as cellColorizer)
             
-            // Normalize to [0,1] range
-            var u = (x - minX) / rangeX;
-            var v = ((maxY - minY) > (maxZ - minZ) ? y - actualMinY : z - actualMinY) / rangeY;
+            minX = Math.min(minX, x);
+            maxX = Math.max(maxX, x);
+            minZ = Math.min(minZ, z);
+            maxZ = Math.max(maxZ, z);
+        }
+        
+        var patternWidth = maxX - minX;
+        var patternHeight = maxZ - minZ;
+        
+        console.log("📊 Pattern bounds from fold data (same as cellColorizer):", {minX, maxX, minZ, maxZ});
+        console.log("📊 Pattern dimensions from fold data:", patternWidth.toFixed(3), "x", patternHeight.toFixed(3));
+        
+        // Use the EXACT same canvas dimensions and transformation parameters from cellColorizer
+        var canvasWidth, canvasHeight;
+        var scale, offsetX, offsetY;
+        
+        if (globals.cellColorizerCanvasWidth && globals.cellColorizerCanvasHeight && 
+            globals.cellColorizerScale !== null && globals.cellColorizerOffsetX !== null && globals.cellColorizerOffsetY !== null) {
+            // Use exact same parameters as cellColorizer
+            canvasWidth = globals.cellColorizerCanvasWidth;
+            canvasHeight = globals.cellColorizerCanvasHeight;
+            scale = globals.cellColorizerScale;
+            offsetX = globals.cellColorizerOffsetX;
+            offsetY = globals.cellColorizerOffsetY;
             
-            // Apply atlas mapping if multiple textures
-            if (useAtlas) {
-                // Determine which face this vertex belongs to (simplified approach)
-                var faceIndex = Math.floor(i / 3); // Assuming triangles
-                var originalTextureIndex = globals.faceTextureMapping[faceIndex] || 0;
-                
-                // Get atlas position for this texture
-                var atlasPosition = globals.atlasLayout.textureIndexMapping[originalTextureIndex];
-                
-                if (typeof atlasPosition !== 'undefined' && globals.atlasLayout.regions[atlasPosition]) {
-                    var region = globals.atlasLayout.regions[atlasPosition];
-                    
-                    // Map UV to atlas region
-                    u = region.x / globals.atlasLayout.width + (u * region.width / globals.atlasLayout.width);
-                    v = region.y / globals.atlasLayout.height + (v * region.height / globals.atlasLayout.height);
-                    
-                    // Debug logging for first few vertices
-                    if (i < 12 && i % 3 === 0) {
-                        console.log("🔥 Vertex", i, "Face", faceIndex, "→ OriginalTexture", originalTextureIndex, 
-                                  "AtlasPos", atlasPosition, "Region[" + region.x + "," + region.y + "], UV[" + u.toFixed(3) + "," + v.toFixed(3) + "]",
-                                  "BaseUV[" + ((u - region.x / globals.atlasLayout.width) / (region.width / globals.atlasLayout.width)).toFixed(3) + "," + 
-                                  ((v - region.y / globals.atlasLayout.height) / (region.height / globals.atlasLayout.height)).toFixed(3) + "]",
-                                  "Position[" + x.toFixed(3) + "," + y.toFixed(3) + "," + z.toFixed(3) + "]");
-                    }
-                } else {
-                    // Fallback to first region if mapping not found
-                    if (globals.atlasLayout.regions.length > 0) {
-                        var region = globals.atlasLayout.regions[0];
-                        u = region.x / globals.atlasLayout.width + (u * region.width / globals.atlasLayout.width);
-                        v = region.y / globals.atlasLayout.height + (v * region.height / globals.atlasLayout.height);
-                        
-                        if (i < 12 && i % 3 === 0) {
-                            console.warn("⚠️ Vertex", i, "Face", faceIndex, "using fallback region for texture", originalTextureIndex,
-                                       "Position[" + x.toFixed(3) + "," + y.toFixed(3) + "," + z.toFixed(3) + "]");
-                        }
-                    }
-                }
-            } else if (useSingleTextureGrid) {
-                // Virtual grid mapping for single texture - create variation
-                var vertexGridIndex = i % (virtualGridSize * virtualGridSize); // Cycle through grid positions
-                var gridRow = Math.floor(vertexGridIndex / virtualGridSize);
-                var gridCol = vertexGridIndex % virtualGridSize;
-                
-                // Calculate UV scale and offset for this grid cell
-                var gridScaleX = 1 / virtualGridSize;
-                var gridScaleY = 1 / virtualGridSize;
-                var gridOffsetX = gridCol * gridScaleX;
-                var gridOffsetY = gridRow * gridScaleY;
-                
-                // Map UV to grid cell
-                u = gridOffsetX + (u * gridScaleX);
-                v = gridOffsetY + (v * gridScaleY);
-                
-                if (i < 12 && i % 3 === 0) { // Log every third vertex (one per triangle) for first few
-                    console.log("🔲 Vertex", i, "→ Grid[" + gridCol + "," + gridRow + "] UV[" + u.toFixed(3) + "," + v.toFixed(3) + "]");
-                }
+            console.log("📋 Using cellColorizer parameters:");
+            console.log("  - canvas size:", canvasWidth + "x" + canvasHeight);
+            console.log("  - scale:", scale.toFixed(3));
+            console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
+        } else {
+            // Fallback: calculate parameters (same logic as cellColorizer)
+            console.log("⚠️ cellColorizer parameters not available, calculating fallback...");
+            
+            var aspectRatio = patternWidth / patternHeight;
+            
+            if (aspectRatio >= 1) {
+                canvasWidth = 2048;
+                canvasHeight = Math.round(2048 / aspectRatio);
+            } else {
+                canvasHeight = 2048;
+                canvasWidth = Math.round(2048 * aspectRatio);
             }
             
-            uvs.push(u, v);
+            canvasWidth = Math.max(canvasWidth, 512);
+            canvasHeight = Math.max(canvasHeight, 512);
+            
+            var scaleX = canvasWidth / patternWidth;
+            var scaleY = canvasHeight / patternHeight;
+            scale = Math.min(scaleX, scaleY);
+            
+            var scaledWidth = patternWidth * scale;
+            var scaledHeight = patternHeight * scale;
+            offsetX = (canvasWidth - scaledWidth) / 2;
+            offsetY = (canvasHeight - scaledHeight) / 2;
+            
+            console.log("� Fallback parameters:");
+            console.log("  - canvas size:", canvasWidth + "x" + canvasHeight);
+            console.log("  - scale:", scale.toFixed(3));
+            console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
         }
         
-        console.log("Generated", uvs.length / 2, "UV coordinates for basic geometry");
+        // Create UV mapping using EXACT same transformation as cellColorizer
+        for (var i = 0; i < vertexCount; i++) {
+            // Use fold data coordinates instead of geometry positions for consistency
+            if (i < fold.vertices_coords.length) {
+                var vertex = fold.vertices_coords[i];
+                var x = vertex[0];
+                var z = vertex[2];
+            } else {
+                // Fallback to geometry positions if fold data is insufficient
+                var x = positions[i * 3];
+                var z = positions[i * 3 + 2];
+            }
+            
+            // Transform to canvas coordinates (EXACT same as cellColorizer transformPoint)
+            var canvasX = (x - minX) * scale + offsetX;
+            var canvasY = (z - minZ) * scale + offsetY; // Normal coordinate mapping since canvas is already rotated
+            
+            // Normalize to [0,1] UV space
+            var u = canvasX / canvasWidth;
+            var v = canvasY / canvasHeight;
+            
+            // No additional coordinate transformation needed - canvas is already properly oriented
+            
+            // Clamp to [0,1] range
+            u = Math.max(0, Math.min(1, u));
+            v = Math.max(0, Math.min(1, v));
+            
+            uvs[i * 2] = u;
+            uvs[i * 2 + 1] = v;
+            
+            // Debug first few vertices
+            if (i < 5) {
+                console.log("Vertex", i, "3D[" + x.toFixed(3) + ", " + z.toFixed(3) + "] → Canvas[" + canvasX.toFixed(1) + ", " + canvasY.toFixed(1) + "] → UV[" + u.toFixed(3) + ", " + v.toFixed(3) + "]");
+            }
+        }
+        
+        console.log("📊 Generated", uvs.length / 2, "simple UV coordinates");
         
         // Apply UV coordinates to geometry
-        if (geometry.addAttribute) {
-            geometry.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
-        } else if (geometry.setAttribute) {
-            geometry.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
+        if (geometry.attributes.uv) {
+            geometry.attributes.uv.array = uvs;
+            geometry.attributes.uv.needsUpdate = true;
+        } else {
+            geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+        }
+        
+        console.log("✅ Simple UV mapping applied successfully");
+    }
+
+    function updateFaceBasedUVs(){
+        console.log("🎯 updateFaceBasedUVs: Using cellColorizer-compatible UV mapping");
+        
+        if (!geometry) {
+            console.warn("❌ Cannot update UVs: geometry not available");
+            return;
+        }
+        
+        // Use the EXACT same parameters as cellColorizer if available
+        if (globals.cellColorizerCanvasWidth && globals.cellColorizerCanvasHeight && 
+            globals.cellColorizerScale !== null && globals.cellColorizerOffsetX !== null && globals.cellColorizerOffsetY !== null) {
+            
+            console.log("🎯 Using stored cellColorizer parameters for updateFaceBasedUVs");
+            
+            var canvasWidth = globals.cellColorizerCanvasWidth;
+            var canvasHeight = globals.cellColorizerCanvasHeight;
+            var scale = globals.cellColorizerScale;
+            var offsetX = globals.cellColorizerOffsetX;
+            var offsetY = globals.cellColorizerOffsetY;
+            
+            // Get fold data for bounding box (same as cellColorizer)
+            var fold = globals.cellColorizerFoldData || globals.fold;
+            if (!fold || !fold.vertices_coords) {
+                console.warn("❌ No fold data available for updateFaceBasedUVs");
+                console.log("🔍 Available globals for updateFaceBasedUVs:", {
+                    cellColorizerFoldData: !!globals.cellColorizerFoldData,
+                    globalsFold: !!globals.fold
+                });
+                return;
+            }
+            
+            console.log("✅ updateFaceBasedUVs using fold data with", fold.vertices_coords.length, "vertices");
+            
+            // Get same bounding box as cellColorizer
+            var minX = Infinity, minZ = Infinity;
+            var maxX = -Infinity, maxZ = -Infinity;
+            
+            for (var i = 0; i < fold.vertices_coords.length; i++) {
+                var vertex = fold.vertices_coords[i];
+                var x = vertex[0];
+                var z = vertex[2]; // Use Z coordinate (same as cellColorizer)
+                
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minZ = Math.min(minZ, z);
+                maxZ = Math.max(maxZ, z);
+            }
+            
+            console.log("📊 updateFaceBasedUVs parameters:");
+            console.log("  - canvas size:", canvasWidth + "x" + canvasHeight);
+            console.log("  - scale:", scale.toFixed(3));
+            console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
+            console.log("  - bounding box:", {minX, maxX, minZ, maxZ});
+            
+            // Apply UV mapping to geometry vertices
+            var positions = geometry.attributes.position.array;
+            var vertexCount = positions.length / 3;
+            var uvs = new Float32Array(vertexCount * 2);
+            
+            for (var i = 0; i < vertexCount; i++) {
+                // Use fold data coordinates for consistency
+                if (i < fold.vertices_coords.length) {
+                    var vertex = fold.vertices_coords[i];
+                    var x = vertex[0];
+                    var z = vertex[2];
+                } else {
+                    // Fallback to geometry positions
+                    var x = positions[i * 3];
+                    var z = positions[i * 3 + 2];
+                }
+                
+                // Transform to canvas coordinates (EXACT same as cellColorizer)
+                var canvasX = (x - minX) * scale + offsetX;
+                var canvasY = (z - minZ) * scale + offsetY;
+                
+                // Normalize to [0,1] UV space
+                var u = canvasX / canvasWidth;
+                var v = canvasY / canvasHeight;
+                
+                // Clamp to [0,1] range
+                u = Math.max(0, Math.min(1, u));
+                v = Math.max(0, Math.min(1, v));
+                
+                uvs[i * 2] = u;
+                uvs[i * 2 + 1] = v;
+            }
+            
+            // Apply UV coordinates to geometry
+            if (geometry.attributes.uv) {
+                geometry.attributes.uv.array = uvs;
+                geometry.attributes.uv.needsUpdate = true;
+            } else {
+                geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+            }
+            
+            console.log("✅ updateFaceBasedUVs: Applied cellColorizer-compatible UV mapping");
+            
+        } else {
+            console.log("⚠️ updateFaceBasedUVs: cellColorizer parameters not available, using fallback");
+            // Fallback to simple UV mapping
+            createBasicUVMapping();
+        }
+    }
+
+    function createBasicUVMapping() {
+        console.log("� Creating basic UV mapping for geometry");
+        
+        if (!geometry || !geometry.attributes || !geometry.attributes.position) {
+            console.warn("❌ Cannot create basic UV mapping: no position data");
+            return;
+        }
+        
+        var positions = geometry.attributes.position.array;
+        var vertexCount = positions.length / 3;
+        var uvs = new Float32Array(vertexCount * 2);
+        
+        // Simple planar projection
+        for (var i = 0; i < vertexCount; i++) {
+            var x = positions[i * 3];
+            var z = positions[i * 3 + 2];
+            
+            // Normalize coordinates to [0,1] range
+            var u = (x + 1) * 0.5;
+            var v = (z + 1) * 0.5;
+            
+            uvs[i * 2] = Math.max(0, Math.min(1, u));
+            uvs[i * 2 + 1] = Math.max(0, Math.min(1, v));
         }
         
         if (geometry.attributes.uv) {
+            geometry.attributes.uv.array = uvs;
             geometry.attributes.uv.needsUpdate = true;
+        } else {
+            geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
         }
         
-        console.log("✅ Basic UV mapping applied successfully");
+        console.log("✅ Basic UV mapping created for", vertexCount, "vertices");
     }
 
     function getGeometry(){

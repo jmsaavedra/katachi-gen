@@ -1272,6 +1272,23 @@ function initPattern(globals){
         }
         clearAll();
         var allCreaseParams = processFold(fold, returnCreaseParams);
+        
+        // Store fold data in globals for cell colorizer
+        globals.fold = foldData;
+        
+        // Auto-execute cellColorizer if textures are already loaded
+        if (globals.textureLibrary && globals.textureLibrary.length > 0 && globals.cellColorizer && globals.cellColorizer.generateTextureMappedCellImage) {
+            console.log("🎯 Pattern loaded with existing textures, auto-generating texture-mapped cells...");
+            setTimeout(function() {
+                try {
+                    globals.cellColorizer.generateTextureMappedCellImage(true); // Pass true for auto mode
+                    console.log("✅ Auto-generated texture-mapped cells from pattern load");
+                } catch (error) {
+                    console.error("❌ Failed to auto-generate from pattern load:", error);
+                }
+            }, 500); // Short delay to ensure everything is ready
+        }
+        
         generateSvg();
         return allCreaseParams;
     }
