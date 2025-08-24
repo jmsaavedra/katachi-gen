@@ -5,7 +5,7 @@ html{
     overflow: hidden;
     padding:0;
     margin:0;
-    background: transparent;
+    background: black;
     /*min-width: 1025px;*/
 }
 
@@ -16,8 +16,8 @@ body{
     padding:0;
     margin:0;
     overflow: hidden;
-    /* Transparent background */
-    background: transparent;
+    /* Black background */
+    background: black;
     /*min-width: 1025px;*/
     /*-webkit-touch-callout: none; !* iOS Safari *!*/
     /*-webkit-user-select: none;   !* Chrome/Safari/Opera *!*/
