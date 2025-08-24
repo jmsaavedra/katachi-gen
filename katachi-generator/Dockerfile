@@ -47,8 +47,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install Node.js dependencies
-RUN npm ci --only=production
+# Install Node.js dependencies (use npm install since no package-lock.json exists)
+RUN npm install --only=production
 
 # Install Playwright and browsers
 RUN npx playwright install chromium
