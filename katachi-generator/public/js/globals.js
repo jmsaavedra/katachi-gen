@@ -19,8 +19,8 @@ function initGlobals(){
         colorMode: "color",
         calcFaceStrain: false,
         color1: "ffffff", // Changed from ec008b (pink) to white for transparency
-        color2: "dddddd",
-        defaultOpacity: 0.0, // Default opacity for non-textured surfaces (0.0 = transparent)
+        color2: "ffffff", // Backside color set to white
+        defaultOpacity: 1.0, // Default opacity for non-textured surfaces (1.0 = opaque)
         edgesVisible: true,
         mtnsVisible: true,
         valleysVisible: true,

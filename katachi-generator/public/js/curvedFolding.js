@@ -1194,12 +1194,6 @@ function initCurvedFolding(globals) {
     }
 
     function loadSVG(url, isDemo){
-        if (isDemo) {
-            gtag('event', 'demoFile', { 'CC': true });
-        } else {
-            gtag('event', 'uploadCP', { 'CC': true });
-        }
-
         // Some SVG files start with UTF-8 byte order mark (BOM) EF BB BF,
         // which encodes in Base64 to 77u/ -- remove this, as it breaks the
         // XML/SVG parser.
@@ -2737,7 +2731,6 @@ function initCurvedFolding(globals) {
             globals.warn("No crease pattern available for files imported from FOLD format.");
             return;
         }
-        gtag('event', 'saveCP', { 'CC': true });
 
         var serializer = new XMLSerializer();
         var source = serializer.serializeToString($("#svgViewer>svg").get(0));
@@ -2857,14 +2850,6 @@ function initCurvedFolding(globals) {
     }
 
     function setFoldData(fold, isDemo, returnCreaseParams){
-        if (!returnCreaseParams) {
-            if (isDemo) {
-                gtag('event', 'demoFile', { 'CC': true });
-            } else {
-                gtag('event', 'uploadCP', { 'CC': true });
-            }
-        }
-        
         clearAll();
         var result = processFold(fold, returnCreaseParams);
         

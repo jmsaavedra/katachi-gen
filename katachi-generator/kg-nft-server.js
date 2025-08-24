@@ -83,7 +83,7 @@ const server = http.createServer(async (req, res) => {
                     // load templateHTML file from public directory
                     const templatePath = path.join(__dirname, 'public', templateHTML);
                     const template = fs.readFileSync(templatePath, 'utf-8');
-                    const rendered = template.replace('{{dataJson}}', JSON.stringify(data));
+                    const rendered = template.replace('{dataJson}', JSON.stringify(data));
                     
                     // Upload thumbnail to Arweave
                     console.log('Uploading thumbnail to Arweave...');
