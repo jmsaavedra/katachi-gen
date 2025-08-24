@@ -125,18 +125,21 @@ export function useMintOrigami() {
   const executeMint = async (dataOverride?: PreparedMintData) => {
     const dataToUse = dataOverride || preparedData;
     
-    console.log('executeMint: Starting...', {
+    console.log('🚀 [EXECUTE_MINT] Starting execution...', {
       hasPreparedData: !!preparedData,
       hasDataOverride: !!dataOverride,
       hasAddress: !!address,
       dataToUseSuccess: dataToUse?.success,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
     });
     
     if (!dataToUse || !address) {
-      console.error('executeMint: Missing data:', {
+      console.error('❌ [EXECUTE_MINT] Missing required data:', {
         preparedData: preparedData ? 'exists' : 'null',
         dataOverride: dataOverride ? 'exists' : 'null',
-        address: address ? 'exists' : 'null'
+        address: address ? 'exists' : 'null',
+        dataToUse: dataToUse ? 'exists' : 'null',
       });
       throw new Error('No prepared mint data or wallet not connected');
     }
@@ -145,22 +148,116 @@ export function useMintOrigami() {
       setState('pending');
       setError(null);
 
+      // Log the entire data structure for debugging
+      console.log('📊 [EXECUTE_MINT] Full dataToUse structure:', {
+        hasSuccess: 'success' in dataToUse,
+        hasMintData: 'mintData' in dataToUse,
+        topLevelKeys: Object.keys(dataToUse),
+        mintDataKeys: dataToUse.mintData ? Object.keys(dataToUse.mintData) : 'N/A',
+      });
+      
+      // Also log stringified version for complete visibility
+      console.log('📄 [EXECUTE_MINT] Stringified dataToUse:', JSON.stringify(dataToUse, null, 2));
+      
       const { transaction, metadata } = dataToUse.mintData;
       
-      console.log('executeMint: Calling sendTransaction with:', {
-        contractAddress: transaction.to,
-        tokenId: metadata.tokenId,
-        recipient: metadata.recipientAddress,
-        chainId: metadata.chainId,
-        data: transaction.data?.substring(0, 10) + '...' // Log first 10 chars of data
+      // Extensive validation logging
+      console.log('🔍 [EXECUTE_MINT] Transaction validation:', {
+        hasTransaction: !!transaction,
+        transactionType: typeof transaction,
+        transactionKeys: transaction ? Object.keys(transaction) : [],
+        hasTo: !!transaction?.to,
+        toValue: transaction?.to,
+        hasData: !!transaction?.data,
+        dataLength: transaction?.data?.length,
+        dataPrefix: transaction?.data?.substring(0, 10),
+        hasValue: !!transaction?.value,
+        valueRaw: transaction?.value,
       });
       
-      // Use the prepared transaction data directly from MCP server
-      sendTransaction({
+      console.log('🔍 [EXECUTE_MINT] Metadata validation:', {
+        hasMetadata: !!metadata,
+        metadataKeys: metadata ? Object.keys(metadata) : [],
+        contractAddress: metadata?.contractAddress,
+        tokenId: metadata?.tokenId,
+        recipientAddress: metadata?.recipientAddress,
+        chainId: metadata?.chainId,
+      });
+      
+      if (!transaction || !transaction.data) {
+        console.error('❌ [EXECUTE_MINT] Invalid transaction object:', {
+          transaction: transaction || 'undefined',
+          hasTransaction: !!transaction,
+          hasData: !!transaction?.data,
+          transactionKeys: transaction ? Object.keys(transaction) : [],
+          rawTransaction: JSON.stringify(transaction),
+        });
+        throw new Error('Invalid transaction data from server');
+      }
+      
+      // Validate hex format
+      const isValidHex = transaction.data && 
+                        typeof transaction.data === 'string' && 
+                        transaction.data.startsWith('0x');
+      
+      console.log('✅ [EXECUTE_MINT] Hex validation:', {
+        isValidHex,
+        dataType: typeof transaction.data,
+        dataStartsWith0x: transaction.data?.startsWith('0x'),
+        first50Chars: transaction.data?.substring(0, 50),
+      });
+      
+      if (!isValidHex) {
+        console.error('❌ [EXECUTE_MINT] Invalid hex format:', {
+          data: transaction.data,
+          type: typeof transaction.data,
+          startsWith0x: transaction.data?.startsWith('0x'),
+        });
+        throw new Error('Invalid transaction data format - not a valid hex string');
+      }
+      
+      // Prepare transaction parameters
+      const txParams: any = {
         to: transaction.to as `0x${string}`,
         data: transaction.data as `0x${string}`,
-        value: BigInt(transaction.value || '0'),
+      };
+      
+      // Handle value field
+      if (transaction.value && transaction.value !== '0x0' && transaction.value !== '0') {
+        console.log('💰 [EXECUTE_MINT] Adding value to transaction:', {
+          rawValue: transaction.value,
+          parsedValue: BigInt(transaction.value).toString(),
+        });
+        txParams.value = BigInt(transaction.value);
+      } else {
+        console.log('💰 [EXECUTE_MINT] No value needed for transaction (free mint)');
+      }
+      
+      console.log('📤 [EXECUTE_MINT] Final transaction parameters:', {
+        to: txParams.to,
+        dataLength: txParams.data?.length,
+        dataPrefix: txParams.data?.substring(0, 10),
+        hasValue: 'value' in txParams,
+        value: txParams.value?.toString(),
+        fullParams: JSON.stringify(txParams),
       });
+      
+      console.log('🔗 [EXECUTE_MINT] Calling sendTransaction with wagmi...');
+      
+      try {
+        const result = sendTransaction(txParams);
+        console.log('✅ [EXECUTE_MINT] sendTransaction called successfully:', {
+          result,
+          resultType: typeof result,
+        });
+      } catch (sendError) {
+        console.error('❌ [EXECUTE_MINT] sendTransaction threw error:', {
+          error: sendError,
+          message: sendError instanceof Error ? sendError.message : 'Unknown error',
+          stack: sendError instanceof Error ? sendError.stack : undefined,
+        });
+        throw sendError;
+      }
 
       toast.success('Transaction submitted! Please wait for confirmation...');
       
