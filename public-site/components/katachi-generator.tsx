@@ -9,6 +9,7 @@ import { WalletConnect } from '@/components/wallet-connect';
 import { useState, useEffect } from 'react';
 import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight } from 'lucide-react';
 import Image from 'next/image';
+import { CollectionReflection } from '@/components/collection-reflection';
 
 export function KatachiGenerator() {
   const { address } = useAccount();
@@ -283,6 +284,14 @@ export function KatachiGenerator() {
             )}
           </CardContent>
         </Card>
+      )}
+
+      {/* Collection Reflection - AI Interpretation */}
+      {nfts && nfts.ownedNfts && nfts.ownedNfts.length > 0 && (
+        <CollectionReflection 
+          walletAddress={address} 
+          totalNfts={totalNfts}
+        />
       )}
     </div>
   );
