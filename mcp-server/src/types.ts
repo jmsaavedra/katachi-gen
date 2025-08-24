@@ -115,6 +115,7 @@ export type PrepareMintSVGNFTOutput = {
     contractAddress: Address;
     functionName: string;
     recipientAddress: Address;
+    tokenId: string;
     tokenURI: string;
     nftMetadata: Record<string, unknown>;
     estimatedGas: string;

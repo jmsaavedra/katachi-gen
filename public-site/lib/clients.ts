@@ -4,13 +4,15 @@ import { Alchemy, Network } from 'alchemy-sdk';
 import { createPublicClient, http } from 'viem';
 import { shape, shapeSepolia } from 'viem/chains';
 
+// Use read chain for Alchemy client (for fetching NFT data)
 export const alchemy = new Alchemy({
   apiKey: config.alchemyKey,
-  network: config.chainId === shape.id ? Network.SHAPE_MAINNET : Network.SHAPE_SEPOLIA,
+  network: config.readChainId === shape.id ? Network.SHAPE_MAINNET : Network.SHAPE_SEPOLIA,
 });
 
+// RPC client for reading blockchain data
 export function rpcClient() {
-  const chainId = config.chainId;
+  const chainId = config.readChainId;
   const chain = chainId === shape.id ? shape : shapeSepolia;
   const rootUrl = chainId === shape.id ? 'shape-mainnet' : 'shape-sepolia';
 
