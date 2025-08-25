@@ -73,6 +73,24 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Interactive Teaser */}
+      <div className="mt-8 mb-8">
+        <div className="max-w-2xl mx-auto">
+          <h3 className="text-center text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
+            Interactive Preview
+          </h3>
+          <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
+            <iframe
+              src="https://fidcu5xpu6aqe7imvlg55fu2msk3yeftm6jeqljzfrwmh5oc7pda.arweave.net/KgYqdu-ngQJ9DKrN3paaZJW8ELNnkkgtOSxsw_XC-8Y"
+              className="w-full h-96 border-0"
+              title="Katachi Gen Interactive Demo"
+              loading="lazy"
+              sandbox="allow-scripts allow-same-origin"
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="mt-8 space-y-6">
         <div className="flex justify-center">
           {!isConnected ? (
