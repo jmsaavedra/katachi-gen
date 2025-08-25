@@ -37,10 +37,9 @@ function getContentType(filePath) {
     return contentTypeMap[ext] || 'application/octet-stream';
 }
 
-// Function to get wallet address from key file
-async function getWalletAddress(walletPath) {
+// Function to get wallet address from key object
+async function getWalletAddress(walletKey) {
     try {
-        const walletKey = JSON.parse(fs.readFileSync(walletPath, 'utf8'));
         const walletAddress = await arweave.wallets.jwkToAddress(walletKey);
         return walletAddress;
     } catch (error) {
@@ -65,27 +64,44 @@ async function getWalletBalance(walletAddress) {
     }
 }
 
+// Function to load Arweave wallet (same logic as kg-nft-server.js)
+function loadArweaveWallet() {
+    try {
+        // Try environment variable first (for Railway/production)
+        if (process.env.ARWEAVE_WALLET) {
+            console.log('Loading Arweave wallet from environment variable');
+            return JSON.parse(process.env.ARWEAVE_WALLET);
+        }
+        // Fall back to file (for local development)
+        const walletPath = process.env.NODE_ENV === 'production' 
+            ? '../keys/arweave-wallet.json'
+            : './keys/arweave-wallet.json';
+        if (fs.existsSync(walletPath)) {
+            console.log('Loading Arweave wallet from file:', walletPath);
+            return JSON.parse(fs.readFileSync(walletPath, 'utf8'));
+        }
+        throw new Error('No Arweave wallet found in environment or file');
+    } catch (error) {
+        console.error('Error loading Arweave wallet:', error);
+        throw error;
+    }
+}
+
 // Function to upload file to Arweave
-async function uploadFileToArweave(filePath, walletPath) {
+async function uploadFileToArweave(filePath, walletPath = null) {
     try {
         // Check if file exists
         if (!fs.existsSync(filePath)) {
             throw new Error(`File not found: ${filePath}`);
         }
 
-        // Check if wallet file exists
-        if (!fs.existsSync(walletPath)) {
-            throw new Error(`Wallet file not found: ${walletPath}`);
-        }
-
         console.log(`Uploading file: ${filePath}`);
-        console.log(`Using wallet: ${walletPath}`);
 
-        // Load wallet key
-        const walletKey = JSON.parse(fs.readFileSync(walletPath, 'utf8'));
+        // Load wallet key using the new function
+        const walletKey = loadArweaveWallet();
         
         // Get wallet address and balance
-        const walletAddress = await getWalletAddress(walletPath);
+        const walletAddress = await getWalletAddress(walletKey);
         console.log(`Wallet address: ${walletAddress}`);
         
         const balance = await getWalletBalance(walletAddress);
