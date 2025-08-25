@@ -150,7 +150,7 @@ export default function Home() {
           </h3>
           <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg" style={{ width: '750px', height: '750px' }}>
             <iframe
-              src="https://arweave.net/t6I7bSD3F3rl3aGavm070_zVGRVxUouqgsXNkj9S_M4"
+              src="https://arweave.net/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I"
               width="750"
               height="750"
               className="border-0"

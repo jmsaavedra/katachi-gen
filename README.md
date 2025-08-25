@@ -57,6 +57,26 @@ Each Katachi Gen NFT includes two Arweave uploads:
 
 The interactive HTML files are complete web applications that allow anyone to explore your generated origami pattern in 3D, ensuring your digital art remains interactive and accessible forever through Arweave's permanent storage.
 
+## Example Live NFTs
+
+### Interactive 3D Origami Patterns
+
+These are live examples of Katachi Gen NFTs showcasing the interactive 3D origami visualization:
+
+**[🎯 View Live Example 1](https://arweave.net/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I)** | **[🔗 View on Shapescan](https://sepolia.shapescan.xyz/token/0x4c0041C6A3B5bFf81415be201e779d96a146683f/instance/5)**
+
+![Katachi Gen Example 1](./assets/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I.gif)
+
+**[🎯 View Live Example 2](https://arweave.net/3cMSXdijacgjOeyg9pMd56uStDgOwrlqFZ6BnBsvhzQ)** | **[🔗 View on Shapescan](https://sepolia.shapescan.xyz/token/0x4c0041C6A3B5bFf81415be201e779d96a146683f/instance/4?tab=metadata)**
+
+![Katachi Gen Example 2](./assets/3cMSXdijacgjOeyg9pMd56uStDgOwrlqFZ6BnBsvhzQ.gif)
+
+Each NFT features:
+- **Interactive 3D Controls**: Rotate, zoom, and explore your origami pattern
+- **Custom Textures**: Generated from AI-curated NFTs based on your sentiment
+- **Unique Patterns**: Algorithmic origami forms reflecting your on-chain journey
+- **Permanent Storage**: Self-contained HTML stored forever on Arweave
+
 ## Technical Stack
 
 ### Core Technologies
@@ -153,6 +173,7 @@ Built with ❤️ by:
 
 ## Links
 
+- [Original Pitch Deck](https://docs.google.com/presentation/d/1JytpkrENPpTXHxJXqIBsapfNj5kq4cXF7wE6JPykv1E/edit?usp=sharing) - Initial project presentation
 - [Smart Contract Repository](https://github.com/jmsaavedra/katachi-gen-721-contract) - ERC-721 contract source code
 - [View on Shape Mainnet](https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57) - Live contract on Shape
 - [View on Shape Testnet](https://sepolia.shapescan.xyz/token/0x4c0041C6A3B5bFf81415be201e779d96a146683f) - Test deployment
@@ -184,6 +205,5 @@ Built with ❤️ by:
 
 > See [TODO.md](./TODO.md) for detailed implementation plans and technical specifications.
 
----
 
 *Transform your on-chain journey into physical art with Katachi Gen*
