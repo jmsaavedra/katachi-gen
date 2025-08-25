@@ -19,7 +19,7 @@ Katachi Gen transforms your NFT collection into unique 3D origami patterns throu
 
 ## Overview
 
-Katachi Gen transforms blockchain data into physical art. By interpreting your wallet's ShapeL2 participation data, we generate unique, foldable origami patterns that represent your on-chain journey. Each NFT is both a digital collectible and a printable origami pattern that can be brought to life.
+Katachi Gen transforms blockchain data into physical art. By interpreting your wallet's ShapeL2 participation data, we generate unique, foldable origami patterns that represent your on-chain journey. Each NFT is both a digital collectible and a printable origami pattern that can be brought to life. Turn your Shape into an IRL Shape. 
 
 **Katachi (形)** = Shape/Form in Japanese  
 **Gen (現)** = To Appear/Manifest  
