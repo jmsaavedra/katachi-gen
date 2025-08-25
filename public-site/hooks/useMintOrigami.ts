@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { useAccount, useSendTransaction, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useSendTransaction, useWaitForTransactionReceipt, useChainId } from 'wagmi';
 import { toast } from 'sonner';
+import { config } from '@/lib/config';
 
 type MintState = 'idle' | 'preparing' | 'pending' | 'confirming' | 'success' | 'error';
 
@@ -40,10 +41,19 @@ type MintOrigamiData = {
 type PreparedMintData = {
   success: boolean;
   mintData: {
-    transaction: {
+    // New V4 contract structure
+    mintTransaction?: {
       to: string;
       data: string;
       value: string;
+      gas?: string;
+    };
+    // Legacy structure for backwards compatibility
+    transaction?: {
+      to: string;
+      data: string;
+      value: string;
+      gas?: string;
     };
     paymentTransaction?: {
       to: string;
@@ -52,17 +62,20 @@ type PreparedMintData = {
     };
     metadata: {
       contractAddress: string;
-      functionName: string;
+      functionName?: string;
       recipientAddress: string;
-      tokenId: string;
-      tokenURI: string;
-      nftMetadata: Record<string, unknown>;
-      estimatedGas: string;
+      tokenId?: string;
+      tokenURI?: string;
+      nftMetadata?: Record<string, unknown>;
+      estimatedGas?: string;
       chainId: number;
       explorerUrl: string;
+      mintPrice?: string;
+      minterAddress?: string;
     };
     instructions: {
       nextSteps: string[];
+      note?: string;
     };
   };
 };
@@ -74,6 +87,7 @@ export function useMintOrigami() {
   const [error, setError] = useState<string | null>(null);
   
   const { address } = useAccount();
+  const chainId = useChainId();
   
   const { 
     sendTransaction, 
@@ -171,6 +185,27 @@ export function useMintOrigami() {
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV,
     });
+
+    // Check if user is on correct network
+    if (chainId !== config.mintChainId) {
+      const networkName = config.mintChainId === 360 ? 'Shape Mainnet' : 'Shape Sepolia';
+      const currentNetworkName = chainId === 360 ? 'Shape Mainnet' : 
+                                 chainId === 11011 ? 'Shape Sepolia' : 
+                                 `Chain ${chainId}`;
+      const errorMessage = `Wrong network! Please switch to ${networkName} (currently on ${currentNetworkName})`;
+      
+      console.error('❌ [EXECUTE_MINT] Network mismatch:', {
+        expectedChainId: config.mintChainId,
+        currentChainId: chainId,
+        expectedNetwork: networkName,
+        currentNetwork: currentNetworkName
+      });
+      
+      setState('error');
+      setError(errorMessage);
+      toast.error(errorMessage);
+      throw new Error(errorMessage);
+    }
     
     if (!dataToUse || !address) {
       console.error('❌ [EXECUTE_MINT] Missing required data:', {
@@ -197,37 +232,29 @@ export function useMintOrigami() {
       // Also log stringified version for complete visibility
       console.log('📄 [EXECUTE_MINT] Stringified dataToUse:', JSON.stringify(dataToUse, null, 2));
       
-      const { transaction, paymentTransaction, metadata } = dataToUse.mintData;
+      // Handle both new V4 contract structure and legacy structure
+      const transaction = dataToUse.mintData.mintTransaction || dataToUse.mintData.transaction;
+      const { paymentTransaction, metadata } = dataToUse.mintData;
       
-      // Extensive validation logging
-      // Check if we have a payment transaction
+      console.log('🔄 [EXECUTE_MINT] Contract structure detected:', {
+        hasNewMintTransaction: !!dataToUse.mintData.mintTransaction,
+        hasLegacyTransaction: !!dataToUse.mintData.transaction,
+        hasPaymentTransaction: !!paymentTransaction,
+        usingTransaction: transaction ? 'found' : 'missing'
+      });
+      
+      // Note: V4 contract doesn't use separate payment transactions
+      // Payment is included in the mint transaction itself
       if (paymentTransaction) {
-        console.log('💰 [EXECUTE_MINT] Processing payment transaction first:', {
+        console.log('💰 [EXECUTE_MINT] Legacy payment transaction detected (should not happen with V4):', {
           paymentTo: paymentTransaction.to,
           paymentValue: paymentTransaction.value,
-          hasPaymentData: !!paymentTransaction.data,
         });
-
-        // Execute payment transaction first
-        setState('confirming');
-        try {
-          console.log('💰 [EXECUTE_MINT] Sending payment transaction...');
-          await sendTransaction({
-            to: paymentTransaction.to as `0x${string}`,
-            data: paymentTransaction.data as `0x${string}`,
-            value: BigInt(paymentTransaction.value),
-          });
-          
-          // Wait for payment confirmation
-          // Note: This is simplified - in production you might want to wait for confirmation
-          console.log('💰 [EXECUTE_MINT] Payment sent, proceeding with mint...');
-        } catch (error) {
-          console.error('❌ [EXECUTE_MINT] Payment failed:', error);
-          setState('error');
-          setError('Payment transaction failed');
-          toast.error('Payment transaction failed');
-          return;
-        }
+        // This shouldn't happen with the new V4 contract, but handle it for backwards compatibility
+        setState('error');
+        setError('Legacy payment structure detected - please refresh and try again');
+        toast.error('Legacy payment structure detected - please refresh and try again');
+        return;
       }
 
       console.log('🔍 [EXECUTE_MINT] Transaction validation:', {
@@ -290,6 +317,18 @@ export function useMintOrigami() {
         data: transaction.data as `0x${string}`,
       };
       
+      // Handle gas limit from server or set reasonable default
+      if (transaction.gas) {
+        console.log('⛽ [EXECUTE_MINT] Using gas limit from server:', {
+          gasFromServer: transaction.gas,
+          parsedGas: parseInt(transaction.gas, 16)
+        });
+        txParams.gas = BigInt(transaction.gas);
+      } else {
+        console.log('⛽ [EXECUTE_MINT] Using default gas limit: 200000');
+        txParams.gas = BigInt(200000); // Reasonable default for mint
+      }
+      
       // Handle value field
       if (transaction.value && transaction.value !== '0x0' && transaction.value !== '0') {
         console.log('💰 [EXECUTE_MINT] Adding value to transaction:', {
@@ -307,13 +346,32 @@ export function useMintOrigami() {
         dataPrefix: txParams.data?.substring(0, 10),
         hasValue: 'value' in txParams,
         value: txParams.value?.toString(),
-        fullParams: JSON.stringify(txParams),
+        gas: txParams.gas?.toString(),
+        fullParams: JSON.stringify(txParams, (key, value) => 
+          typeof value === 'bigint' ? value.toString() : value
+        ),
       });
       
       console.log('🔗 [EXECUTE_MINT] Calling sendTransaction with wagmi...');
       
       try {
-        const result = sendTransaction(txParams);
+        // IMPORTANT: Remove gas parameter to let wallet handle gas estimation
+        // Wagmi v2 has issues with manual gas limits - causes 10M+ gas fallbacks
+        const finalTxParams = {
+          to: txParams.to,
+          data: txParams.data,
+          value: txParams.value,
+          // Intentionally NOT setting gas - let wallet estimate reasonably
+        };
+        
+        console.log('🔗 [EXECUTE_MINT] Calling sendTransaction (letting wallet estimate gas):', {
+          to: finalTxParams.to,
+          hasData: !!finalTxParams.data,
+          hasValue: !!finalTxParams.value,
+          value: finalTxParams.value?.toString()
+        });
+        
+        const result = sendTransaction(finalTxParams);
         console.log('✅ [EXECUTE_MINT] sendTransaction called successfully:', {
           result,
           resultType: typeof result,
@@ -354,6 +412,32 @@ export function useMintOrigami() {
       isConfirmed, 
       receipt: 'Transaction receipt received' 
     });
+    
+    // Automatically call setTokenURI after mint confirmation
+    if (preparedData?.mintData?.metadata?.tokenId && preparedData?.mintData?.metadata?.tokenURI) {
+      console.log('🔧 [EXECUTE_MINT] Auto-setting token URI after mint confirmation...');
+      
+      // Call setTokenURI API endpoint
+      fetch('/api/set-token-uri', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tokenId: parseInt(preparedData.mintData.metadata.tokenId),
+          tokenURI: preparedData.mintData.metadata.tokenURI,
+          chainId: preparedData.mintData.metadata.chainId
+        })
+      })
+      .then(response => response.json())
+      .then(result => {
+        console.log('✅ [EXECUTE_MINT] Token URI set successfully:', result);
+        toast.success('NFT metadata updated! 🎆', { duration: 3000 });
+      })
+      .catch(error => {
+        console.error('❌ [EXECUTE_MINT] Failed to set token URI:', error);
+        toast.error('Mint succeeded but metadata update failed. Please contact support.');
+      });
+    }
+    
     setState('success');
     
     // Simple success toast - the UI has the proper buttons with links

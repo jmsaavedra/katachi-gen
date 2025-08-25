@@ -9,7 +9,7 @@ Katachi Gen transforms your NFT collection into unique 3D origami patterns throu
 ## 🎯 [Mint Your Katachi Gen NFT at katachi-gen.com](https://katachi-gen.com)
 
 [![Mint Now](https://img.shields.io/badge/MINT%20NOW-katachi--gen.com-blue?style=for-the-badge&logo=ethereum&logoColor=white)](https://katachi-gen.com)
-[![Shape Network](https://img.shields.io/badge/Shape%20Network-Mainnet%20Live-green?style=for-the-badge)](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1)
+[![Shape Network](https://img.shields.io/badge/Shape%20Network-Mainnet%20Live-green?style=for-the-badge)](https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57)
 
 **Live on Shape Mainnet** • Transform your on-chain journey into unique origami art
 
@@ -112,8 +112,8 @@ This creates a deeply personal connection between collectors and their digital a
 ### Deployed Contracts
 Katachi Gen is deployed on both Shape mainnet and testnet:
 
-- **Shape Mainnet**: [`0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1`](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1)
-- **Shape Sepolia Testnet**: [`0x06740C004c98afA7f9F5C38C00B8DAF9c33ABFB3`](https://sepolia.shapescan.xyz/token/0x06740C004c98afA7f9F5C38C00B8DAF9c33ABFB3)
+- **Shape Mainnet**: [`0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57`](https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57)
+- **Shape Sepolia Testnet**: [`0x4c0041C6A3B5bFf81415be201e779d96a146683f`](https://sepolia.shapescan.xyz/token/0x4c0041C6A3B5bFf81415be201e779d96a146683f)
 - **Token Standard**: ERC-721
 - **Token Symbol**: KGEN
 - **Token Name**: KatachiGen
@@ -154,8 +154,8 @@ Built with ❤️ by:
 ## Links
 
 - [Smart Contract Repository](https://github.com/jmsaavedra/katachi-gen-721-contract) - ERC-721 contract source code
-- [View on Shape Mainnet](https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1) - Live contract on Shape
-- [View on Shape Testnet](https://sepolia.shapescan.xyz/token/0x06740C004c98afA7f9F5C38C00B8DAF9c33ABFB3) - Test deployment
+- [View on Shape Mainnet](https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57) - Live contract on Shape
+- [View on Shape Testnet](https://sepolia.shapescan.xyz/token/0x4c0041C6A3B5bFf81415be201e779d96a146683f) - Test deployment
 - [Shapecraft2 Hackathon](https://shape.network/shapecraft)
 - [Shape Network](https://shape.network)
 

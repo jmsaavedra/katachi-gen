@@ -95,7 +95,7 @@ export default function Home() {
               onClick={handleMintClick}
             >
               <Sparkles className="h-5 w-5" />
-              Mint Your Katachi Gen 形現 (0.005 ETH)
+              Mint Your Katachi Gen 形現
             </Button>
           )}
         </div>

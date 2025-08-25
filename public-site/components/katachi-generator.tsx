@@ -942,7 +942,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                     ) : (
                       <>
                         <Sparkles className="h-4 w-4" />
-                        Mint NFT (0.005 ETH)
+                        Mint NFT (.0025 ETH)
                       </>
                     )}
                   </Button>

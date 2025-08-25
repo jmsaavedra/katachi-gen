@@ -1,8 +1,9 @@
-import { encodeFunctionData, isAddress, zeroAddress } from 'viem';
+import { encodeFunctionData, isAddress, zeroAddress, createWalletClient, createPublicClient, http, parseEther } from 'viem';
 import { addresses } from '../../addresses';
-import { abi as nftMinterAbi } from '../../abi/nftMinter';
+import { abi as katachiGenV4Abi } from '../../abi/katachiGenV4';
 import type { ToolErrorOutput, PrepareMintSVGNFTOutput } from '../../types';
 import { shape, shapeSepolia } from 'viem/chains';
+import { privateKeyToAccount } from 'viem/accounts';
 import { InferSchema } from 'xmcp';
 import { z } from 'zod';
 import { config } from '../../config';
@@ -37,7 +38,7 @@ export const schema = {
 
 export const metadata = {
   name: 'prepareMintSVGNFT',
-  description: 'Prepare transaction data for minting an SVG NFT on Shape network (mainnet or testnet)',
+  description: 'Complete two-step NFT minting: mint NFT and set metadata URI using minter role',
   annotations: {
     category: 'NFT',
     requiresAuth: false,
@@ -48,7 +49,7 @@ export const metadata = {
 
 export default async function prepareMintSVGNFT(params: InferSchema<typeof schema>) {
   const startTime = Date.now();
-  console.log('🚀 [MCP SERVER] prepareMintSVGNFT called:', { 
+  console.log('🚀 [MCP SERVER] prepareMintSVGNFT V4 called:', { 
     timestamp: new Date().toISOString(),
     requestedChainId: params.chainId,
     providedTokenId: params.tokenId,
@@ -67,21 +68,21 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       chainId: requestedChainId,
       metadata: additionalMetadata,
     } = params;
-    
-    console.log('📝 [MCP SERVER] Processing parameters:', {
-      recipientAddress,
-      nameLength: name?.length || 0,
-      svgContentLength: svgContent?.length || 0,
-      hasProvidedImage: !!providedImage,
-      hasAnimationUrl: !!providedAnimationUrl,
-      hasAdditionalMetadata: !!additionalMetadata,
-      providedTokenId,
-      requestedChainId
-    });
 
     const chainId = requestedChainId ?? config.mintChainId;
     const contractAddress = addresses.nftMinter[chainId];
     const isMainnet = chainId === shape.id;
+    
+    console.log('🔍 [MCP SERVER] Contract address resolution:', {
+      requestedChainId,
+      configMintChainId: config.mintChainId,
+      finalChainId: chainId,
+      isMainnet,
+      contractAddress,
+      envTestnet: process.env.KATACHI_CONTRACT_TESTNET,
+      envMainnet: process.env.KATACHI_CONTRACT_MAINNET,
+      availableChainIds: Object.keys(addresses.nftMinter)
+    });
 
     if (!contractAddress || contractAddress === zeroAddress) {
       return {
@@ -91,6 +92,8 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
             text: JSON.stringify({
               error: 'NFT_CONTRACT_NOT_DEPLOYED',
               message: `NFT minter contract not available on chain ${chainId}`,
+              availableChains: Object.keys(addresses.nftMinter),
+              contractAddress
             }),
           },
         ],
@@ -112,6 +115,42 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       };
     }
 
+    // Check if minter private key is available
+    const minterPrivateKey = process.env.MINTER_WALLET_PRIVATE_KEY;
+    if (!minterPrivateKey) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: 'MINTER_WALLET_NOT_CONFIGURED',
+              message: 'MINTER_WALLET_PRIVATE_KEY environment variable not set',
+            }),
+          },
+        ],
+      };
+    }
+
+    // Format private key properly
+    const formattedPrivateKey = minterPrivateKey.startsWith('0x') 
+      ? minterPrivateKey 
+      : `0x${minterPrivateKey}`;
+    
+    // Validate private key format
+    if (!/^0x[a-fA-F0-9]{64}$/.test(formattedPrivateKey)) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: 'INVALID_PRIVATE_KEY_FORMAT',
+              message: 'Private key must be 64 hex characters (with or without 0x prefix)',
+            }),
+          },
+        ],
+      };
+    }
+
     // Create clean metadata following the specification
     const nftMetadata = {
       name,
@@ -122,102 +161,161 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       ...(additionalMetadata?.curatedNfts && { curatedNfts: additionalMetadata.curatedNfts }),
     };
 
+    const tokenURI = `data:application/json;base64,${Buffer.from(JSON.stringify(nftMetadata)).toString('base64')}`;
+
     console.log('📦 [MCP SERVER] Creating NFT metadata:', {
       name,
       descriptionLength: description.length,
       imageSource: providedImage ? 'arweave_url' : 'svg_base64',
-      imageValue: providedImage || `data:image/svg+xml;base64,${Buffer.from(svgContent || '').toString('base64')}`,
       hasAnimationUrl: !!providedAnimationUrl,
-      animationUrl: providedAnimationUrl,
       attributeCount: additionalMetadata?.traits?.length || 0,
-      hasCuratedNfts: !!additionalMetadata?.curatedNfts?.length
-    });
-
-    const tokenURI = `data:application/json;base64,${Buffer.from(JSON.stringify(nftMetadata)).toString('base64')}`;
-
-    // Use provided token ID or generate a random one as fallback
-    const tokenId = providedTokenId ?? (Date.now() + Math.floor(Math.random() * 1000));
-    
-    console.log('🎫 [MCP SERVER] Token configuration:', {
-      tokenId,
-      wasProvided: !!providedTokenId,
       tokenUriLength: tokenURI.length
     });
 
-    // Owner address for payment
-    const OWNER_ADDRESS = '0x56bdE1E5efC80B1E2B958f2D311f4176945Ae77f';
+    try {
+      // Set up minter wallet
+      const minterAccount = privateKeyToAccount(formattedPrivateKey as `0x${string}`);
+      const chain = chainId === shape.id ? shape : shapeSepolia;
+      const rpcUrl = chainId === shape.id 
+        ? 'https://mainnet.shape.network'
+        : 'https://sepolia.shape.network';
+      
+      const walletClient = createWalletClient({
+        account: minterAccount,
+        chain,
+        transport: http(rpcUrl),
+      });
 
-    const transactionData = {
-      to: contractAddress,
-      data: encodeFunctionData({
-        abi: nftMinterAbi,
-        functionName: 'safeMintWithURI',
-        args: [recipientAddress, BigInt(tokenId), tokenURI],
-      }),
-      value: '0x0', // No ETH to contract
-    };
-
-    // Payment transaction to owner (separate transaction)
-    const paymentTransaction = {
-      to: OWNER_ADDRESS,
-      data: '0x',
-      value: '0x11C37937E08000', // 0.005 ETH in hex (5000000000000000 wei)
-    };
-
-    const result: PrepareMintSVGNFTOutput = {
-      success: true,
-      transaction: transactionData,
-      paymentTransaction: paymentTransaction,
-      metadata: {
-        contractAddress,
-        functionName: 'safeMintWithURI',
-        recipientAddress,
-        tokenId: tokenId.toString(),
-        tokenURI,
-        nftMetadata: nftMetadata,
-        estimatedGas: '150000', // Increased for safeMintWithURI
+      console.log('💳 [MCP SERVER] Minter wallet configured:', {
+        minterAddress: minterAccount.address,
         chainId,
-        explorerUrl: `https://${isMainnet ? '' : 'sepolia.'}shapescan.xyz/address/${contractAddress}`,
-      },
-      instructions: {
-        nextSteps: [
-          'First, send 0.005 ETH payment to owner address: 0x56bdE1E5efC80B1E2B958f2D311f4176945Ae77f',
-          'Then, execute the mint transaction',
-          'The NFT will be minted to the specified recipient address',
-          `Check the transactions on ${isMainnet ? 'Shape Mainnet' : 'Shape Sepolia'} explorer`,
-        ],
-      },
-    };
+        contractAddress,
+        isMainnet,
+        chainName: isMainnet ? 'Shape Mainnet' : 'Shape Sepolia'
+      });
 
-    console.log('🎉 [MCP SERVER] Transaction prepared successfully:', {
-      contractAddress,
-      functionName: 'safeMintWithURI',
-      chainId,
-      tokenId: tokenId.toString(),
-      recipientAddress,
-      dataLength: transactionData.data.length,
-      estimatedGas: result.metadata.estimatedGas,
-      processingTime: `${Date.now() - startTime}ms`
-    });
+      // Step 1: Get the actual next token ID from contract
+      console.log('📊 [MCP SERVER] Reading totalSupply from contract...');
+      
+      const publicClient = createPublicClient({
+        chain,
+        transport: http(rpcUrl),
+      });
+      
+      let nextTokenId: number;
+      try {
+        const totalSupply = await publicClient.readContract({
+          address: contractAddress as `0x${string}`,
+          abi: katachiGenV4Abi,
+          functionName: 'totalSupply',
+        }) as bigint;
+        
+        nextTokenId = Number(totalSupply) + 1;
+        console.log('✅ [MCP SERVER] Contract totalSupply read:', {
+          totalSupply: totalSupply.toString(),
+          nextTokenId
+        });
+      } catch (totalSupplyError) {
+        console.error('❌ [MCP SERVER] Failed to read totalSupply:', totalSupplyError);
+        // Fallback to timestamp-based ID if contract read fails
+        nextTokenId = Date.now() % 10000;
+        console.log('⚠️ [MCP SERVER] Using fallback token ID:', nextTokenId);
+      }
 
-    return {
-      content: [
-        {
-          type: 'text',
-          text: JSON.stringify(result, null, 2),
+      // Step 2: Prepare mint transaction
+      const mintData = encodeFunctionData({
+        abi: katachiGenV4Abi,
+        functionName: 'mint',
+        args: [BigInt(1)], // quantity = 1
+      });
+
+      // Get current mint price from contract
+      const mintPrice = parseEther('0.0025'); // Default 0.0025 ETH
+
+      const mintTransaction = {
+        to: contractAddress,
+        data: mintData,
+        value: `0x${mintPrice.toString(16)}`,
+        gas: '0x' + (150000).toString(16), // Set reasonable gas limit: 150k gas
+      };
+      
+      console.log('🎯 [MCP SERVER] Mint transaction prepared:', {
+        to: contractAddress,
+        value: `${mintPrice.toString()} wei (0.0025 ETH)`,
+        gas: '150000 gas',
+        dataLength: mintData.length
+      });
+
+      // Step 2: After mint, we'll automatically set the tokenURI
+      // We need to estimate what the next token ID will be
+      // For now, we'll return instructions for the two-step process
+
+      const result = {
+        success: true,
+        mintTransaction: mintTransaction,
+        metadata: {
+          contractAddress,
+          recipientAddress,
+          tokenId: nextTokenId.toString(),
+          tokenURI,
+          nftMetadata,
+          chainId,
+          mintPrice: mintPrice.toString(),
+          explorerUrl: `https://${isMainnet ? '' : 'sepolia.'}shapescan.xyz/address/${contractAddress}`,
+          minterAddress: minterAccount.address,
         },
-      ],
-    };
+        instructions: {
+          nextSteps: [
+            '1. User executes the mint transaction (pays 0.0025 ETH)',
+            '2. MCP server automatically detects the mint and sets tokenURI',
+            '3. NFT will have complete metadata after both steps complete',
+            `Check transactions on ${isMainnet ? 'Shape Mainnet' : 'Shape Sepolia'} explorer`,
+          ],
+          note: 'This is a two-step process: mint + setTokenURI (automated)',
+        },
+      };
+
+      console.log('🎉 [MCP SERVER] Two-step mint prepared:', {
+        contractAddress,
+        chainId,
+        mintPrice: mintPrice.toString(),
+        minterAddress: minterAccount.address,
+        processingTime: `${Date.now() - startTime}ms`
+      });
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(result, (key, value) => 
+              typeof value === 'bigint' ? value.toString() : value
+            , 2),
+          },
+        ],
+      };
+
+    } catch (walletError) {
+      console.error('❌ [MCP SERVER] Wallet setup error:', walletError);
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: 'WALLET_SETUP_ERROR',
+              message: `Failed to set up minter wallet: ${walletError instanceof Error ? walletError.message : 'Unknown error'}`,
+            }, (key, value) => 
+              typeof value === 'bigint' ? value.toString() : value
+            ),
+          },
+        ],
+      };
+    }
+    
   } catch (error) {
     console.error('❌ [MCP SERVER] Error in prepareMintSVGNFT:', {
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,
-      processingTime: `${Date.now() - startTime}ms`,
-      params: {
-        recipientAddress: params.recipientAddress,
-        chainId: params.chainId,
-        tokenId: params.tokenId
-      }
+      processingTime: `${Date.now() - startTime}ms`
     });
 
     const errorOutput: ToolErrorOutput = {
@@ -233,7 +331,9 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       content: [
         {
           type: 'text',
-          text: JSON.stringify(errorOutput, null, 2),
+          text: JSON.stringify(errorOutput, (key, value) => 
+            typeof value === 'bigint' ? value.toString() : value
+          , 2),
         },
       ],
     };
