@@ -75,7 +75,6 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       arweaveId?: string;
       curatedNfts?: Array<{
         name: string;
-        description: string;
         image: string;
         contractAddress: string;
         tokenId: string;
@@ -382,7 +381,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         metadata: {
           // Use metadata from the API response if available, otherwise fallback
           name: result.metadata?.name || `Katachi Gen #${result.thumbnailId?.slice(-8) || 'Unknown'}`,
-          description: result.metadata?.description || `Unique origami pattern generated from ${imageUrls.length} curated NFTs from your collection. Sentiment: ${sentimentData.sentiment}`,
+          description: `Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey on ShapeL2, creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.\n\nhttps://katachi-gen.com`,
           patternType: 'Origami',
           complexity: 'Generated' as const,
           foldLines: 0,
@@ -398,7 +397,6 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           ],
           curatedNfts: sentimentData.filteredNfts.slice(0, 5).map(nft => ({
             name: nft.name || 'Untitled',
-            description: nft.description || '',
             image: nft.imageUrl || '',
             contractAddress: nft.contractAddress,
             tokenId: nft.tokenId
@@ -444,7 +442,6 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         stackMedalsCount: stackMedals?.totalMedals || 0,
         curatedNfts: sentimentData?.filteredNfts?.map(nft => ({
           name: nft.name || 'Untitled',
-          description: nft.description || '',
           image: nft.imageUrl || '',
           contractAddress: nft.contractAddress,
           tokenId: nft.tokenId

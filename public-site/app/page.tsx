@@ -68,14 +68,7 @@ export default function Home() {
         </p>
         <div className="space-y-4 max-w-2xl mx-auto">
           <p className="text-muted-foreground text-lg leading-relaxed">
-            An NFT collection of algorithmically generated 3D Origami forms 
-            representing your on-chain journey on Shape.
-          </p>
-          <p className="text-muted-foreground text-base leading-relaxed">
-            By interpreting your wallet&apos;s ShapeL2 participation data, we generate 
-            unique, foldable origami patterns that represent your on-chain journey. 
-            Each NFT is both a digital collectible and a printable origami pattern 
-            that can be brought to life.
+            Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey on ShapeL2, creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.
           </p>
         </div>
       </div>
