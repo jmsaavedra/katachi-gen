@@ -1,0 +1,123 @@
+{
+  "manifest": "arweave/paths",
+  "version": "0.1.0",
+  "index": {
+    "path": "index.html"
+  },
+  "paths": {
+    "CCapture.all.min.js": {
+      "id": "EXrWG1RiN1n1VV38RNPdHTJoj6p-rdwrIBZZtIq29cc"
+    },
+    "CopyShader.js": {
+      "id": "jLUjOX021gc6XvLQud9_kukyFFnCPWilaoaAPIaS3ig"
+    },
+    "Detector.js": {
+      "id": "WYM7bbgwNrfM98yg_j-R9r3p-6nhsC8WVaAEy96IaVA"
+    },
+    "EffectComposer.js": {
+      "id": "asvwEr_oli9zLIDcYiHE4h7ZsI3yVG8K7mr8ZD5KYm4"
+    },
+    "FileSaver.min.js": {
+      "id": "J3L5xEelHeBhYr0_DFZZ-JdkMUcf4LlIpBJRYgp1ZII"
+    },
+    "MaskPass.js": {
+      "id": "-0betifGYR9qhdBZvQtLmZxNRegPUWRnmVqjY6T9pp0"
+    },
+    "OBJExporter.js": {
+      "id": "ZhWV_q7MMSp2TH0v3ZL888w4hs12vYhQpbq33YO0Cnw"
+    },
+    "OrbitControls.js": {
+      "id": "lpJVT-vYRSnTvwyC-smdkOVHCfCv5Q-7nEoQD4BCPZg"
+    },
+    "OrthographicTrackballControls.js": {
+      "id": "fxiCLHPkVlmm27lIKKCEuj7TATxIeGeCjPHy74I-uys"
+    },
+    "Projector.js": {
+      "id": "L79lqwijRa_BQeF7GzZJiAg0oVahMzKw8M4FmJDJUPk"
+    },
+    "RenderPass.js": {
+      "id": "C0uSg_4fG_VBbk_-fo-yTNS9FPmqRWupSSiQxXyJPu8"
+    },
+    "SSAOShader.js": {
+      "id": "wBl42zjkuU1EKGIq8rlbvugJxEeXMu9LuQbSdSBctcs"
+    },
+    "SVGLoader.js": {
+      "id": "cjmQS-K0dCuXFrVjaCSIGlQ-S6F05ejnn40__kTLRgE"
+    },
+    "SVGRenderer.js": {
+      "id": "Nt8Om95xox4dkHhk6J_B5JFO1hjkQhYp-pYcN2dJfC8"
+    },
+    "ShaderPass.js": {
+      "id": "HQKD_VNov2h89Ef1f2zFAttS-ScewMpK9l_1iRnqJ4Q"
+    },
+    "TrackballControls.js": {
+      "id": "8UGHvVNHVWPF4U-4WZrMSxdGVmXhKUoalRCJNPaM52c"
+    },
+    "VRController.js": {
+      "id": "ThhyVh__RcUNt1bIPBuAKWc-iDD0MPzzoe7etSclA2o"
+    },
+    "WebVR.js": {
+      "id": "xXyv88fCtH53rxSETjHH5TWfV-VSlfFiFTNcl6zT_cg"
+    },
+    "binary_stl_writer.js": {
+      "id": "GBXqka_BBGZvfnhwdWIeoH0sKpLuXIgmZYhJqOGISaI"
+    },
+    "bootstrap.min.css": {
+      "id": "2cff56kJBT7DPWG5qQOhJh-VNYDc1PsguxChZTBxJm8"
+    },
+    "cdt2d.js": {
+      "id": "MekpNJXQPuhPykET9SeB173D3AZkdbkzaxvaBXdXfto"
+    },
+    "datguivr.js": {
+      "id": "yd-_UzzbEq4YBI2DncIkz40HZ6M3ds3IUeKHGxKYtJs"
+    },
+    "datguivr.min.js": {
+      "id": "HJPFy8QNktCE4kV66Id6g5O6WPwfw9udzKXV41kD9bQ"
+    },
+    "earcut.js": {
+      "id": "5WhrGuHRWjjkhJoQ5Ui_7pkMYZGiA4df0jmrkmzoF5U"
+    },
+    "flat-ui.min.css": {
+      "id": "b_gbhdrlHizQ1utgzTP2QuDIwPnzCbe60EwPkWR7JWE"
+    },
+    "flat-ui.min.js": {
+      "id": "bLB6ai322dgxvBcFJV3cGzm7cCQPe85K3Z4oH0ndifw"
+    },
+    "fold.js": {
+      "id": "vbteJi37foAH5biApGiZiOSVU2_w5j8j2j0riF5ji6Y"
+    },
+    "gif.worker.js": {
+      "id": "2POyjfpMcIkIJ-liuJXRZSUEfttTtELym9TqiTqI_Ks"
+    },
+    "jquery-3.2.1.min.js": {
+      "id": "Q1lNtWP9LQoqcJzAbQG2CbMrZf1EMY_0kz0awXabVms"
+    },
+    "jquery-ui.min.css": {
+      "id": "Ro6p7vAXyYTn1--owzcKnZj47etTkv_18mSMF9TYTXY"
+    },
+    "jquery-ui.min.js": {
+      "id": "2KJXYIWaRnIs1I70G-i3uRJjbjSOqKP2ynXuJvpBH8U"
+    },
+    "numeric-1.2.6.js": {
+      "id": "PUxrKgiwWCFVzNVwAlVwGCmO_RIs3ZwMvZlRZ2Z3J2A"
+    },
+    "numeric-1.2.6.min.js": {
+      "id": "GDVZA_KWsI4zsbOORRlwLJtziRT6w-QCHZ7uO55AmT4"
+    },
+    "path-data-polyfill.js": {
+      "id": "BaIyIDEoOjB0bIm24zjnI-HemTIHQUQkioSkxdj1wf0"
+    },
+    "svgpath.js": {
+      "id": "qFef5CH52xUB8rs6WoC80JGUTJDnYe2oBrBTavy5wlY"
+    },
+    "three.js": {
+      "id": "RblKH5p6tsEmjHbYRan1fbjDrEZeGHDp7VRrN5pPZZg"
+    },
+    "three.min.js": {
+      "id": "KWJQNa-80D_XA4yhj9yhGBhaKQv2TwXW3CfVK0uzk-4"
+    },
+    "underscore-min.js": {
+      "id": "rRS_RAYWL76W2dChEmT-ovur19OsYjB-ToOs-ebaxhQ"
+    }
+  }
+}

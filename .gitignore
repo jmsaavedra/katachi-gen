@@ -175,5 +175,7 @@ build/
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 
+keys
+
 # xmcp build artifacts
 .xmcp/
