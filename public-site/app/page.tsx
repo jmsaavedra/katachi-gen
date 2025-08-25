@@ -146,13 +146,13 @@ export default function Home() {
       <div className="mt-12 mb-8">
         <div className="flex flex-col items-center">
           <h3 className="text-center text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
-            Interactive Preview
+            TEST TOKEN PREVIEW <br />(I'm interactive!)
           </h3>
-          <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg" style={{ width: '500px', height: '500px' }}>
+          <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg" style={{ width: '750px', height: '750px' }}>
             <iframe
               src="https://arweave.net/t6I7bSD3F3rl3aGavm070_zVGRVxUouqgsXNkj9S_M4"
-              width="500"
-              height="500"
+              width="750"
+              height="750"
               className="border-0"
               title="Katachi Gen Interactive Demo"
               loading="lazy"

@@ -28,14 +28,15 @@ Katachi Gen transforms blockchain data into physical art. By interpreting your w
 ## How It Works
 
 ### 🎨 Shape to Shape
-At mint time, Katachi Gen:
-1. **Analyzes** your wallet's ShapeL2 participation data
-2. **Generates** a unique 2D origami pattern (FOLD file) 
+After logging in with a wallet holding a Shape Stack NFT:
+1. **Analyzes** your wallet's ShapeL2 participation including medals, collections, and all NFTs.
+2. **Curates** What does collecting art mean to you? What is your favorite thing about collecting on Shape? Answer this question as honestly or humorously as you'd like, and our MCP server will evaluate it for sentiment, and select 5 artworks that heuristically match your input.
+2. **Generates** a unique 2D origami pattern (FOLD file) with texture generated from the AI-curated set of art. 
 3. **Determines** fold complexity based on:
    - Stack rank
    - Shape NFTs owned
    - Other MCP data points
-4. **Creates** a 3D visualization of the folded form
+4. **Mints** an HTML file featuring an interactive 3D visualization of the folded form representing your collecting and sentiment about your journey on Shape.
 
 ### 🖼️ Personalized Art
 Your NFT features:
