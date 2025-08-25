@@ -380,7 +380,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         htmlId: result.htmlId || '',
         metadata: {
           // Use metadata from the API response if available, otherwise fallback
-          name: result.metadata?.name || `Katachi Gen #${result.thumbnailId?.slice(-8) || 'Unknown'}`,
+          name: result.metadata?.name || `Katachi Gen`,
           description: `Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey on ShapeL2, creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.\n\nhttps://katachi-gen.com`,
           patternType: 'Origami',
           complexity: 'Generated' as const,

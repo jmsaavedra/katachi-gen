@@ -43,11 +43,8 @@ export async function POST(request: NextRequest) {
 
     // Create complete token metadata for minting
     if (data.success && data.thumbnailId && data.htmlId) {
-      // Generate clean token number from timestamp or use a simple counter
-      const tokenNumber = Date.now().toString().slice(-6);
-      
       const tokenMetadata = {
-        name: `Katachi Gen #${tokenNumber}`,
+        name: `Katachi Gen`,
         description: `Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey and aesthetic preferences, creating a one-of-a-kind digital origami that captures the essence of your on-chain identity.\n\nhttps://katachi-gen.com`,
         image: `https://arweave.net/${data.thumbnailId}`,
         animation_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,

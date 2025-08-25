@@ -44,6 +44,18 @@ Your NFT features:
 - **Printable files** included in token metadata for physical folding
 - **Unique patterns** that evolve from simple to complex based on your participation
 
+### 🌐 Permanent Interactive Storage
+Each Katachi Gen NFT includes two Arweave uploads:
+- **Thumbnail Image** - A static preview of your unique origami pattern stored permanently on Arweave
+- **Interactive HTML** - A fully interactive 3D visualization that lives forever on the decentralized web
+  - Real-time 3D rendering of your origami pattern
+  - Interactive controls for rotation, zoom, and exploration
+  - Embedded metadata about your NFT collection and sentiment
+  - Self-contained HTML/JavaScript that runs entirely in the browser
+  - Accessible via the `animation_url` field in your NFT metadata
+
+The interactive HTML files are complete web applications that allow anyone to explore your generated origami pattern in 3D, ensuring your digital art remains interactive and accessible forever through Arweave's permanent storage.
+
 ## Technical Stack
 
 ### Core Technologies
