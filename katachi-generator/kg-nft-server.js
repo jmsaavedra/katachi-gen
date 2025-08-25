@@ -151,7 +151,13 @@ const server = http.createServer(async (req, res) => {
                     }));
                     
                 } catch (uploadError) {
-                    console.error('Error uploading to Arweave:', uploadError);
+                    console.error('Error in NFT generation or upload process:', uploadError);
+                    console.error('Error details:', {
+                        message: uploadError.message,
+                        stack: uploadError.stack,
+                        timestamp: new Date().toISOString()
+                    });
+                    
                     // Send response
                     res.setHeader('Content-Type', 'application/json');
                     res.writeHead(500);
@@ -458,41 +464,57 @@ async function generateThumbnail(data) {
         
         // コンソールメッセージ検出でのスクリーンショット関数
         const takeScreenshotOnDetection = async () => {
-            if (screenshotTaken) return null;
-            screenshotTaken = true;
+            if (screenshotTaken) {
+                console.log('🔄 Screenshot already taken, skipping detection capture');
+                return screenshotBuffer;
+            }
             
-            console.log('📸 IMMEDIATE CAPTURE - Console message detected');
-            
-            // スクリーンショット撮影前の状態確認
-            const preScreenshotState = await page.evaluate(() => {
-                const controlsBottom = document.getElementById('controlsBottom');
-                const controlsVisible = controlsBottom ? controlsBottom.style.display !== 'none' : 'element not found';
+            try {
+                console.log('📸 IMMEDIATE CAPTURE - Console message detected');
                 
-                return {
-                    timestamp: new Date().toISOString(),
-                    renderingComplete: window.renderingComplete,
-                    nftRenderComplete: window.nftRenderComplete,
-                    controlsBottomDisplay: controlsBottom ? controlsBottom.style.display : 'not found',
-                    controlsVisible: controlsVisible,
-                    walletText: document.getElementById('walletAddress')?.textContent?.substring(0, 50) || 'not found'
-                };
-            });
-            
-            console.log('📸 SCREENSHOT TIMING - Immediate capture state:', JSON.stringify(preScreenshotState, null, 2));
-            
-            // Take screenshot immediately
-            console.log('📸 Taking screenshot immediately after detection...');
-            const buffer = await page.screenshot({
-                type: 'png',
-                fullPage: false
-            });
-            
-            console.log('📸 Screenshot captured successfully at:', new Date().toISOString());
-            screenshotBuffer = buffer; // グローバル変数に保存
-            return buffer;
+                // スクリーンショット撮影前の状態確認
+                const preScreenshotState = await page.evaluate(() => {
+                    const controlsBottom = document.getElementById('controlsBottom');
+                    const controlsVisible = controlsBottom ? controlsBottom.style.display !== 'none' : 'element not found';
+                    
+                    return {
+                        timestamp: new Date().toISOString(),
+                        renderingComplete: window.renderingComplete,
+                        nftRenderComplete: window.nftRenderComplete,
+                        controlsBottomDisplay: controlsBottom ? controlsBottom.style.display : 'not found',
+                        controlsVisible: controlsVisible,
+                        walletText: document.getElementById('walletAddress')?.textContent?.substring(0, 50) || 'not found'
+                    };
+                });
+                
+                console.log('📸 SCREENSHOT TIMING - Immediate capture state:', JSON.stringify(preScreenshotState, null, 2));
+                
+                // Take screenshot immediately
+                console.log('📸 Taking screenshot immediately after detection...');
+                const buffer = await page.screenshot({
+                    type: 'png',
+                    fullPage: false
+                });
+                
+                if (buffer && buffer.length > 0) {
+                    screenshotTaken = true;
+                    screenshotBuffer = buffer; // グローバル変数に保存
+                    console.log('📸 Screenshot captured successfully at:', new Date().toISOString());
+                    console.log('✅ Screenshot buffer saved, size:', buffer.length, 'bytes');
+                    return buffer;
+                } else {
+                    throw new Error('Screenshot buffer is empty or invalid');
+                }
+            } catch (error) {
+                console.error('Error in takeScreenshotOnDetection:', error);
+                // エラーの場合はフラグをリセットしない（他の手法で再試行を防ぐため）
+                screenshotTaken = false;
+                throw error;
+            }
         };
         
         // コンソールメッセージリスナーを設定（最優先）
+        let consoleProcessing = false; // 重複処理を防ぐフラグ
         page.on('console', async (msg) => {
             const text = msg.text();
             console.log('Browser console:', text);
@@ -502,11 +524,28 @@ async function generateThumbnail(data) {
                 text.includes('Showing origami object - textures applied')) {
                 console.log('🎯 Rendering completion detected via console message');
                 
+                // すでに成功している場合、または処理中の場合はスキップ
+                if (screenshotTaken) {
+                    console.log('🔄 Screenshot already taken, skipping console-triggered capture');
+                    return;
+                }
+                
+                if (consoleProcessing) {
+                    console.log('🔄 Console processing already in progress, skipping duplicate');
+                    return;
+                }
+                
                 try {
-                    await takeScreenshotOnDetection();
-                    console.log('✅ Thumbnail generated successfully via console detection');
+                    consoleProcessing = true;
+                    const result = await takeScreenshotOnDetection();
+                    if (result) {
+                        console.log('✅ Thumbnail generated successfully via console detection');
+                    }
                 } catch (error) {
                     console.error('Error taking immediate screenshot:', error);
+                    // エラーが発生してもプロセスは継続
+                } finally {
+                    consoleProcessing = false;
                 }
             }
         });
@@ -533,8 +572,11 @@ async function generateThumbnail(data) {
                 
                 // まだスクリーンショットが撮られていない場合のみ撮影
                 if (!screenshotTaken) {
+                    console.log('🔍 Flag-based detection triggered, taking screenshot...');
                     await takeScreenshotOnDetection();
                     console.log('✅ Thumbnail generated successfully via flag detection');
+                } else {
+                    console.log('🔄 Screenshot already taken, skipping flag-triggered capture');
                 }
                 
             } catch (consoleError) {
@@ -549,8 +591,11 @@ async function generateThumbnail(data) {
                     console.log('🎯 STRATEGY SUCCESS: nftRenderComplete flag detection');
                     
                     if (!screenshotTaken) {
+                        console.log('🔍 NFT flag-based detection triggered, taking screenshot...');
                         await takeScreenshotOnDetection();
                         console.log('✅ Thumbnail generated successfully via nft flag');
+                    } else {
+                        console.log('🔄 Screenshot already taken, skipping nft flag-triggered capture');
                     }
                     
                 } catch (flagError) {
@@ -570,7 +615,7 @@ async function generateThumbnail(data) {
         
         // フォールバック: まだスクリーンショットが撮られていない場合のみ撮影
         if (!screenshotTaken) {
-            console.log('📸 Taking fallback screenshot...');
+            console.log('📸 Final fallback: Taking screenshot as last resort...');
             
             // スクリーンショット撮影前の状態確認
             const preScreenshotState = await page.evaluate(() => {
@@ -589,23 +634,45 @@ async function generateThumbnail(data) {
             
             console.log('📸 SCREENSHOT TIMING - Fallback capture state:', JSON.stringify(preScreenshotState, null, 2));
             
-            // Take screenshot
-            console.log('📸 Taking fallback screenshot NOW...');
-            screenshotBuffer = await page.screenshot({
-                type: 'png',
-                fullPage: false
-            });
-            
-            console.log('📸 Screenshot captured successfully at:', new Date().toISOString());
-            console.log('✅ Thumbnail generated successfully');
+            try {
+                // Take screenshot
+                console.log('📸 Taking fallback screenshot NOW...');
+                const fallbackBuffer = await page.screenshot({
+                    type: 'png',
+                    fullPage: false
+                });
+                
+                if (fallbackBuffer && fallbackBuffer.length > 0) {
+                    screenshotBuffer = fallbackBuffer;
+                    screenshotTaken = true; // マークして重複を防ぐ
+                    console.log('📸 Screenshot captured successfully at:', new Date().toISOString());
+                    console.log('✅ Thumbnail generated successfully via fallback, size:', fallbackBuffer.length, 'bytes');
+                } else {
+                    throw new Error('Fallback screenshot buffer is empty or invalid');
+                }
+            } catch (fallbackError) {
+                console.error('❌ Fallback screenshot failed:', fallbackError);
+                throw new Error(`All screenshot attempts failed. Last error: ${fallbackError.message}`);
+            }
+        } else {
+            console.log('🔄 Screenshot already taken successfully, skipping fallback');
         }
         
         // 最終的にscreenshotBufferを返す
+        console.log('📊 Final screenshot status check:');
+        console.log('  - screenshotTaken:', screenshotTaken);
+        console.log('  - screenshotBuffer exists:', !!screenshotBuffer);
+        console.log('  - screenshotBuffer type:', typeof screenshotBuffer);
         if (screenshotBuffer) {
+            console.log('  - screenshotBuffer size:', screenshotBuffer.length, 'bytes');
+        }
+        
+        if (screenshotBuffer && screenshotBuffer.length > 0) {
             console.log('✅ Returning screenshot buffer, size:', screenshotBuffer.length, 'bytes');
             return screenshotBuffer;
         } else {
-            throw new Error('Failed to generate screenshot');
+            console.error('❌ Screenshot buffer is null or empty after all attempts');
+            throw new Error('Failed to generate screenshot - buffer is empty after all capture attempts');
         }
         
     } catch (error) {
