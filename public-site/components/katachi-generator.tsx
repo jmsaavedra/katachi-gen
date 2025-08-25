@@ -198,6 +198,13 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     contractAddress: string;
     tokenId: string;
   }>) => {
+    console.log('🎯 [DEBUG] handleSentimentSubmitted called with:', {
+      sentiment: sentiment,
+      sentimentLength: sentiment?.length,
+      filteredNftsCount: filteredNfts?.length,
+      firstNft: filteredNfts?.[0]
+    });
+    
     setSentimentData({
       sentiment,
       filteredNfts: filteredNfts.map(nft => ({
