@@ -254,7 +254,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         sentiment,
         curatedNftsCount: nfts.length
       });
-      setSentimentData({
+      const newSentimentData = {
+        ...sentimentData, // Preserve existing sentiment data
         sentiment,
         filteredNfts: nfts.map(nft => ({
           name: nft.name,
@@ -263,31 +264,143 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           contractAddress: nft.contractAddress,
           tokenId: nft.tokenId
         }))
-      });
+      };
+      
+      setSentimentData(newSentimentData);
+      
+      // Automatically trigger generation with the new data immediately
+      console.log('✅ Curation completed, triggering automatic generation...');
+      await handleGenerateKatachiWithData(newSentimentData);
     } else {
       console.warn('⚠️ [DEBUG] No sentiment provided to handleCurationCompleted');
     }
+  };
+
+  const handleGenerateKatachiWithData = async (dataToUse: {
+    sentiment: string;
+    filteredNfts: Array<{
+      name: string | null;
+      description: string | null;
+      imageUrl: string | null;
+      contractAddress: string;
+      tokenId: string;
+    }>;
+  }) => {
+    console.log('🎯 [DEBUG] handleGenerateKatachiWithData called with:', {
+      hasSentimentData: !!dataToUse,
+      sentiment: dataToUse?.sentiment,
+      filteredNftsCount: dataToUse?.filteredNfts?.length || 0
+    });
     
-    // Wait for sentiment data state to be updated
-    if (sentiment) {
-      let attempts = 0;
-      const maxAttempts = 10;
-      
-      while (!sentimentData?.sentiment && attempts < maxAttempts) {
-        console.log(`🔄 Waiting for sentiment data state update... attempt ${attempts + 1}/${maxAttempts}`);
-        await new Promise(resolve => setTimeout(resolve, 200));
-        attempts++;
-      }
-      
-      if (!sentimentData?.sentiment) {
-        console.error('❌ Sentiment data state not updated after waiting, cannot proceed with generation');
-        return;
-      }
+    if (!addressToUse) {
+      toast.error('Please connect your wallet first');
+      return;
     }
+
+    if (!dataToUse?.sentiment) {
+      console.error('❌ [DEBUG] Missing sentiment data in passed parameter:', {
+        dataToUse,
+        hasSentimentData: !!dataToUse,
+        sentiment: dataToUse?.sentiment
+      });
+      toast.error('Missing sentiment data');
+      return;
+    }
+
+    setIsGenerating(true);
     
-    // Automatically trigger generation after curation completes
-    console.log('✅ Sentiment data confirmed, starting generation...');
-    await handleGenerateKatachi();
+    try {
+      // Use the passed data instead of state
+      const imageUrls = dataToUse.filteredNfts
+        .slice(0, 5)
+        .map(nft => ({ url: nft.imageUrl || '' }))
+        .filter(img => img.url);
+
+      if (imageUrls.length === 0) {
+        throw new Error('No valid NFT images found for pattern generation');
+      }
+
+      console.log('Calling katachi-generator with:', {
+        walletAddress: addressToUse,
+        imageCount: imageUrls.length
+      });
+
+      const response = await fetch('/api/generate-katachi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          walletAddress: addressToUse,
+          images: imageUrls,
+          sentiment: dataToUse.sentiment,
+          seed2: Math.random().toString(),
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Generation failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.error || !result.success) {
+        throw new Error(result.message || 'Pattern generation failed');
+      }
+
+      console.log('Katachi generation result:', {
+        success: result.success,
+        thumbnailId: result.thumbnailId,
+        htmlId: result.htmlId,
+        hasThumbnail: !!result.thumbnailId
+      });
+
+      console.log('🔍 [DEBUG] Raw generate-katachi API result:', {
+        hasMetadata: !!result.metadata,
+        metadataKeys: result.metadata ? Object.keys(result.metadata) : [],
+        attributesCount: result.metadata?.attributes?.length || 0,
+        name: result.metadata?.name,
+        description: result.metadata?.description?.slice(0, 100) + '...'
+      });
+
+      // Create pattern data structure using response from generate-katachi API
+      const patternData = {
+        htmlUrl: result.htmlUrl || '',
+        thumbnailUrl: result.thumbnailUrl || '',
+        thumbnailId: result.thumbnailId || '',
+        htmlId: result.htmlId || '',
+        metadata: {
+          // Use metadata from the API response if available, otherwise fallback
+          name: result.metadata?.name || `Katachi Gen`,
+          description: `Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey on ShapeL2, creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.\n\nhttps://katachi-gen.com`,
+          patternType: 'Origami',
+          complexity: 'Generated' as const,
+          foldLines: 0,
+          colors: ['#000000', '#ffffff'],
+          arweaveId: result.htmlId, // Store HTML Arweave ID for minting
+          // Store the complete metadata from the API for minting
+          attributes: result.metadata?.attributes || [
+            { trait_type: 'Sentiment Filter', value: dataToUse.sentiment },
+            { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
+            { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
+          ]
+        },
+        curated_nfts: dataToUse.filteredNfts.slice(0, 5).map(nft => ({
+          name: nft.name || '',
+          description: nft.description || '',
+          image: nft.imageUrl || '',
+          contractAddress: nft.contractAddress,
+          tokenId: nft.tokenId
+        }))
+      };
+      
+      setGeneratedPattern(patternData);
+      toast.success('Pattern generated successfully!');
+      
+    } catch (error) {
+      console.error('❌ Generation failed:', error);
+      toast.error('Failed to generate katachi');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   const handleGenerateKatachi = async () => {
