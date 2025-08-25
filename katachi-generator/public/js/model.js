@@ -169,23 +169,48 @@ function initModel(globals){
                     opacity: 1.0
                 });
                 
-                // 裏面用の白いマテリアルを作成
+                // 裏面用にテクスチャをクローンして反転させる
+                console.log("🔄 Creating flipped texture for backside");
+                var flippedTexture = textureToUse.clone();
+                flippedTexture.needsUpdate = true;
+                
+                // テクスチャの反転設定（折り紙らしい反転）
+                flippedTexture.wrapS = THREE.RepeatWrapping;
+                flippedTexture.wrapT = THREE.RepeatWrapping;
+                
+                // 折り紙の裏面として自然に見えるように水平反転
+                flippedTexture.repeat.x = -1; // 水平反転（鏡像効果）
+                flippedTexture.repeat.y = 1;  // 垂直はそのまま
+                flippedTexture.offset.x = 1;  // オフセットで位置調整
+                flippedTexture.offset.y = 0;
+                
+                // さらに自然に見せるために色調を少し調整
+                flippedTexture.matrix = new THREE.Matrix3();
+                flippedTexture.matrixAutoUpdate = false;
+                // 反転行列を適用
+                flippedTexture.matrix.set(
+                    -1, 0, 1,  // 水平反転
+                     0, 1, 0,  // 垂直はそのまま
+                     0, 0, 1
+                );
+                
+                // 裏面用のテクスチャマテリアルを作成
                 material2 = new THREE.MeshPhongMaterial({
-                    color: 0xffffff,       // 白色
+                    map: flippedTexture,   // 反転したテクスチャを使用
                     flatShading: true,
                     side: THREE.BackSide,  // 裏面のみ
                     polygonOffset: true,
                     polygonOffsetFactor: polygonOffset,
                     polygonOffsetUnits: 1,
-                    shininess: 25,
-                    specular: 0x222222,
-                    reflectivity: 0.15,
-                    transparent: false,    // 不透明
-                    opacity: 1.0          // 完全に不透明
+                    shininess: 20,         // 表面より少し控えめな光沢
+                    specular: 0x111111,    // より控えめなスペキュラー
+                    reflectivity: 0.1,     // 低い反射率
+                    transparent: false,
+                    opacity: 1.0
                 });
                 
                 console.log("✅ Texture material created successfully");
-                console.log("🎨 裏面マテリアルを白色に設定");
+                console.log("🔄 裏面マテリアルに反転テクスチャを設定（折り紙の裏面効果）");
                 backside.visible = true;  // 裏面を表示
                 
                 // Check if this is a cell-generated texture that needs simple UV mapping
@@ -374,6 +399,11 @@ function initModel(globals){
     function showOrigami(){
         console.log('👁️ Showing origami object - textures applied');
         globals.hideUntilTextured = false;
+        
+        // Hide loading screen when origami is ready
+        console.log('🎬 Hiding loading screen - origami is ready to display');
+        hideLoadingScreen();
+        
         // Restore normal visibility based on settings
         if (frontside) frontside.visible = globals.meshVisible;
         // Always show backside when mesh is visible (白いマテリアルが適用されている)
@@ -392,6 +422,38 @@ function initModel(globals){
                     globals.threeView.startSliderAnimation(0, 100, 5000, true, 5000); // 5s animation, loop enabled, 5s pause
                 }, globals.autoRotateWaitTime + 1000); // Start 1 second after rotation begins
             }
+        }
+    }
+
+    function hideLoadingScreen() {
+        try {
+            console.log('🎬 Model.js requesting loading screen hide');
+            
+            // Use global function if available
+            if (typeof window !== 'undefined' && window.hideLoadingScreenGlobal) {
+                window.hideLoadingScreenGlobal();
+            } else {
+                // Fallback to direct DOM manipulation
+                var loadingScreen = document.getElementById('loadingScreen');
+                if (loadingScreen) {
+                    console.log('🎬 Hiding loading screen with fade-out animation (fallback)');
+                    
+                    // Add fade-out class for smooth animation
+                    document.body.classList.add('fade-out-loading');
+                    
+                    // Remove the loading screen after animation completes
+                    setTimeout(function() {
+                        loadingScreen.style.display = 'none';
+                        document.body.classList.remove('fade-out-loading');
+                        document.body.classList.add('loading-hidden');
+                        console.log('✅ Loading screen hidden successfully (fallback)');
+                    }, 800); // Match the animation duration
+                } else {
+                    console.log('⚠️ Loading screen element not found');
+                }
+            }
+        } catch (error) {
+            console.error('❌ Error hiding loading screen:', error);
         }
     }
 
