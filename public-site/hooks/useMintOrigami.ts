@@ -21,6 +21,21 @@ type MintOrigamiData = {
     contractAddress: string;
     tokenId: string;
   }>;
+  // Arweave data from generate-katachi API
+  arweaveData?: {
+    thumbnailId: string;
+    htmlId: string;
+    thumbnailUrl: string;
+    htmlUrl: string;
+    metadata?: {
+      name: string;
+      description: string;
+      attributes: Array<{
+        trait_type: string;
+        value: string | number;
+      }>;
+    };
+  };
 };
 
 type PreparedMintData = {
@@ -95,12 +110,31 @@ export function useMintOrigami() {
       console.log('prepareMint: API response status:', response.status);
 
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch (parseError) {
+          console.error('prepareMint: Failed to parse error response:', parseError);
+          throw new Error(`API request failed with status ${response.status}`);
+        }
         console.log('prepareMint: API error:', errorData);
-        throw new Error(errorData.details || errorData.error || 'Failed to prepare mint');
+        
+        const errorMessage = (
+          (typeof errorData?.details === 'string' ? errorData.details : '') ||
+          (typeof errorData?.error === 'string' ? errorData.error : '') ||
+          'Failed to prepare mint'
+        );
+        throw new Error(errorMessage);
       }
 
-      const result: PreparedMintData = await response.json();
+      let result: PreparedMintData;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        console.error('prepareMint: Failed to parse success response:', parseError);
+        throw new Error('Failed to parse mint preparation response');
+      }
+      
       console.log('prepareMint: API result:', {
         success: result.success,
         hasTokenId: !!result.mintData?.metadata?.tokenId,

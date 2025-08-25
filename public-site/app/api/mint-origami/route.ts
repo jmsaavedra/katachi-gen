@@ -22,6 +22,21 @@ type MintOrigamiRequest = {
     contractAddress: string;
     tokenId: string;
   }>;
+  // Arweave data from generate-katachi API
+  arweaveData?: {
+    thumbnailId: string;
+    htmlId: string;
+    thumbnailUrl: string;
+    htmlUrl: string;
+    metadata?: {
+      name: string;
+      description: string;
+      attributes: Array<{
+        trait_type: string;
+        value: string | number;
+      }>;
+    };
+  };
 };
 
 
@@ -66,7 +81,7 @@ export async function POST(request: NextRequest) {
   
   try {
     const body: MintOrigamiRequest = await request.json();
-    const { recipientAddress, svgContent, name, description, nftCount, collections, sentimentFilter, stackMedalsCount, curatedNfts } = body;
+    const { recipientAddress, svgContent, name, description, nftCount, collections, sentimentFilter, stackMedalsCount, curatedNfts, arweaveData } = body;
     
     console.log('📝 [MINT API] Request payload:', {
       recipientAddress,
@@ -77,7 +92,8 @@ export async function POST(request: NextRequest) {
       collections,
       hasSentimentFilter: !!sentimentFilter,
       stackMedalsCount,
-      curatedNftsCount: curatedNfts?.length || 0
+      curatedNftsCount: curatedNfts?.length || 0,
+      hasArweaveData: !!arweaveData
     });
 
     if (!recipientAddress || !isAddress(recipientAddress)) {
@@ -129,7 +145,7 @@ export async function POST(request: NextRequest) {
     const nextNftNumber = await getNextTokenId();
     console.log('✅ [MINT API] Next token ID retrieved:', { nextNftNumber });
     
-    // If pattern data is provided, regenerate with correct NFT number
+    // Use Arweave data if provided, otherwise fallback to pattern regeneration
     let finalSvgContent = svgContent;
     let finalName = name;
     let finalDescription = description || `Katachi Gen origami pattern - ${name}`;
@@ -144,8 +160,32 @@ export async function POST(request: NextRequest) {
       }>;
     } | undefined;
     
-    if (nftCount !== undefined && collections !== undefined) {
-      console.log('🎨 [MINT API] Regenerating pattern with final NFT number:', {
+    if (arweaveData?.metadata) {
+      // Use Arweave metadata from generate-katachi API
+      console.log('🌐 [MINT API] Using Arweave metadata from generate-katachi API:', {
+        thumbnailId: arweaveData.thumbnailId,
+        htmlId: arweaveData.htmlId,
+        attributesCount: arweaveData.metadata.attributes?.length || 0
+      });
+      
+      finalName = arweaveData.metadata.name.replace(/#\w+/, `#${nextNftNumber}`);
+      finalDescription = arweaveData.metadata.description;
+      finalMetadata = {
+        traits: (arweaveData.metadata.attributes || []).map(attr => ({
+          trait_type: attr.trait_type,
+          value: attr.value
+        })),
+        ...(curatedNfts && curatedNfts.length > 0 && { curatedNfts }),
+      };
+      
+      console.log('✅ [MINT API] Using Arweave metadata:', {
+        finalName,
+        traitCount: finalMetadata.traits?.length || 0,
+        traits: finalMetadata.traits?.map(t => t.trait_type) || []
+      });
+    } else if (nftCount !== undefined && collections !== undefined) {
+      // Fallback to pattern regeneration for backwards compatibility
+      console.log('🎨 [MINT API] Fallback: Regenerating pattern with final NFT number:', {
         nftCount,
         collections,
         nftNumber: nextNftNumber,
@@ -172,13 +212,13 @@ export async function POST(request: NextRequest) {
         ...(regeneratedPattern.metadata.curatedNfts && { curatedNfts: regeneratedPattern.metadata.curatedNfts }),
       };
       
-      console.log('✅ [MINT API] Pattern regenerated:', {
+      console.log('✅ [MINT API] Pattern regenerated (fallback):', {
         finalName,
-        svgLength: finalSvgContent.length,
-        traitCount: finalMetadata.traits.length
+        svgLength: finalSvgContent?.length || 0,
+        traitCount: finalMetadata?.traits?.length || 0
       });
     } else {
-      console.log('ℹ️ [MINT API] Using original SVG content (no regeneration)');
+      console.log('ℹ️ [MINT API] Using original SVG content (no regeneration or Arweave data)');
     }
 
     const mcpRequest = {
