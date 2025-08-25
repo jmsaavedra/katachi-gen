@@ -16,7 +16,6 @@ type MintOrigamiData = {
   stackMedalsCount?: number;
   curatedNfts?: Array<{
     name: string;
-    description: string;
     image: string;
     contractAddress: string;
     tokenId: string;

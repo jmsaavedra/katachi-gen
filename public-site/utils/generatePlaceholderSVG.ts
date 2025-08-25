@@ -11,7 +11,6 @@ type PatternData = {
   sentimentFilter?: string; // The sentiment/feeling entered by collector
   curatedNfts?: Array<{
     name: string;
-    description: string;
     image: string;
     contractAddress: string;
     tokenId: string;
@@ -29,7 +28,6 @@ type GeneratedPattern = {
     colors: string[];
     curatedNfts?: Array<{
       name: string;
-      description: string;
       image: string;
       contractAddress: string;
       tokenId: string;
