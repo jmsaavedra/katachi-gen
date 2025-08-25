@@ -111,6 +111,7 @@ type TransactionData = {
 export type PrepareMintSVGNFTOutput = {
   success: boolean;
   transaction: TransactionData;
+  paymentTransaction?: TransactionData; // Optional payment transaction to owner
   metadata: {
     contractAddress: Address;
     functionName: string;

@@ -45,6 +45,11 @@ type PreparedMintData = {
       data: string;
       value: string;
     };
+    paymentTransaction?: {
+      to: string;
+      data: string;
+      value: string;
+    };
     metadata: {
       contractAddress: string;
       functionName: string;
@@ -192,9 +197,39 @@ export function useMintOrigami() {
       // Also log stringified version for complete visibility
       console.log('📄 [EXECUTE_MINT] Stringified dataToUse:', JSON.stringify(dataToUse, null, 2));
       
-      const { transaction, metadata } = dataToUse.mintData;
+      const { transaction, paymentTransaction, metadata } = dataToUse.mintData;
       
       // Extensive validation logging
+      // Check if we have a payment transaction
+      if (paymentTransaction) {
+        console.log('💰 [EXECUTE_MINT] Processing payment transaction first:', {
+          paymentTo: paymentTransaction.to,
+          paymentValue: paymentTransaction.value,
+          hasPaymentData: !!paymentTransaction.data,
+        });
+
+        // Execute payment transaction first
+        setState('confirming');
+        try {
+          console.log('💰 [EXECUTE_MINT] Sending payment transaction...');
+          await sendTransaction({
+            to: paymentTransaction.to as `0x${string}`,
+            data: paymentTransaction.data as `0x${string}`,
+            value: BigInt(paymentTransaction.value),
+          });
+          
+          // Wait for payment confirmation
+          // Note: This is simplified - in production you might want to wait for confirmation
+          console.log('💰 [EXECUTE_MINT] Payment sent, proceeding with mint...');
+        } catch (error) {
+          console.error('❌ [EXECUTE_MINT] Payment failed:', error);
+          setState('error');
+          setError('Payment transaction failed');
+          toast.error('Payment transaction failed');
+          return;
+        }
+      }
+
       console.log('🔍 [EXECUTE_MINT] Transaction validation:', {
         hasTransaction: !!transaction,
         transactionType: typeof transaction,

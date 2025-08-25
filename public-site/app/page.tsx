@@ -95,7 +95,7 @@ export default function Home() {
               onClick={handleMintClick}
             >
               <Sparkles className="h-5 w-5" />
-              Mint Your Katachi Gen 形現
+              Mint Your Katachi Gen 形現 (0.005 ETH)
             </Button>
           )}
         </div>
@@ -146,7 +146,7 @@ export default function Home() {
       <div className="mt-12 mb-8">
         <div className="flex flex-col items-center">
           <h3 className="text-center text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
-            TEST TOKEN PREVIEW <br />(I'm interactive!)
+            TEST TOKEN PREVIEW <br />(I&apos;m interactive!)
           </h3>
           <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg" style={{ width: '750px', height: '750px' }}>
             <iframe

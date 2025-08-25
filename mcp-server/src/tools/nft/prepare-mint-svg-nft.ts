@@ -144,6 +144,9 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       tokenUriLength: tokenURI.length
     });
 
+    // Owner address for payment
+    const OWNER_ADDRESS = '0x56bdE1E5efC80B1E2B958f2D311f4176945Ae77f';
+
     const transactionData = {
       to: contractAddress,
       data: encodeFunctionData({
@@ -151,12 +154,20 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
         functionName: 'safeMintWithURI',
         args: [recipientAddress, BigInt(tokenId), tokenURI],
       }),
-      value: '0x0', // No ETH value needed
+      value: '0x0', // No ETH to contract
+    };
+
+    // Payment transaction to owner (separate transaction)
+    const paymentTransaction = {
+      to: OWNER_ADDRESS,
+      data: '0x',
+      value: '0x11C37937E08000', // 0.005 ETH in hex (5000000000000000 wei)
     };
 
     const result: PrepareMintSVGNFTOutput = {
       success: true,
       transaction: transactionData,
+      paymentTransaction: paymentTransaction,
       metadata: {
         contractAddress,
         functionName: 'safeMintWithURI',
@@ -170,9 +181,10 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       },
       instructions: {
         nextSteps: [
-          'Use your wallet to execute this transaction',
+          'First, send 0.005 ETH payment to owner address: 0x56bdE1E5efC80B1E2B958f2D311f4176945Ae77f',
+          'Then, execute the mint transaction',
           'The NFT will be minted to the specified recipient address',
-          `Check the transaction on ${isMainnet ? 'Shape Mainnet' : 'Shape Sepolia'} explorer`,
+          `Check the transactions on ${isMainnet ? 'Shape Mainnet' : 'Shape Sepolia'} explorer`,
         ],
       },
     };
