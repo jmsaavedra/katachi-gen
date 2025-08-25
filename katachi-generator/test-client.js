@@ -3,7 +3,7 @@ const http = require('http');
 // Test data
 const testData = {
     "walletAddress":"0x1234567890abcdef",
-    "seed2":`${Math.random()}`,
+    "seed2":`${Math.floor(Math.random() * 1000)}`,
     "images":[
         {"url":"https://exonemo.com/test/katachi-gen/images/aventurine.avif"},
         {"url":"https://exonemo.com/test/katachi-gen/images/infinitegarden.webp"},
