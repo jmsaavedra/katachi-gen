@@ -1,6 +1,6 @@
-# Katachi Gen - カタチ・ゲン
+# Katachi Gen - 形現
 
-Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey on ShapeL2, creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.
+Katachi Gen transforms your NFT collection into unique 3D origami patterns through AI sentiment analysis and algorithmic curation. Each pattern reflects your personal collecting journey on ShapeL2, creating a one-of-a-kind digital origami, which can be printed and folded. A digital and physical artifact representing a snapshot of your on-chain identity.
 
 🏆 [Shapecraft2 Hackathon](https://shape.network/shapecraft) Submission.
 

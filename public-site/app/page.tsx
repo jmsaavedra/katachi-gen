@@ -145,20 +145,29 @@ export default function Home() {
       {/* Interactive Preview */}
       <div className="mt-12 mb-8">
         <div className="flex flex-col items-center">
-          <h3 className="text-center text-sm font-medium text-muted-foreground mb-4 uppercase tracking-wide">
-            TEST TOKEN PREVIEW <br />(I&apos;m interactive!)
-          </h3>
-          <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg" style={{ width: '750px', height: '750px' }}>
-            <iframe
-              src="https://arweave.net/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I"
+          <a
+            href="https://arweave.net/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative rounded-lg overflow-hidden border bg-card shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
+            style={{ width: '750px', height: '750px', display: 'block' }}
+          >
+            <img
+              src="/assets/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I-landing.gif"
+              alt="Katachi Gen Interactive Demo"
               width="750"
               height="750"
-              className="border-0"
-              title="Katachi Gen Interactive Demo"
-              loading="lazy"
-              sandbox="allow-scripts allow-same-origin"
+              className="w-full h-full object-cover"
             />
-          </div>
+          </a>
+          <a
+            href="https://arweave.net/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 text-sm text-primary hover:underline font-medium"
+          >
+            View live interactive token →
+          </a>
         </div>
       </div>
 
