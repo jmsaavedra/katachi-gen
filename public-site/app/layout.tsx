@@ -123,12 +123,12 @@ export default function RootLayout({
                   <div className="text-xs">
                     Contract:{' '}
                     <Link
-                      href="https://shapescan.xyz/address/0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1"
+                      href="https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57"
                       target="_blank"
                       rel="noreferrer"
                       className="font-mono hover:underline"
                     >
-                      0x3293D7cb0E2548fC51ed884a3088fBD0B6F4b8e1
+                      0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57
                     </Link>
                   </div>
                 </div>
