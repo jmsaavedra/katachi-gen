@@ -1,3 +1,7 @@
+// Mint fee configuration
+export const MINT_FEE = '0.005'; // 0.005 ETH
+export const MINT_FEE_WEI = '5000000000000000'; // 0.005 ETH in wei
+
 export const config = {
   // Separate chain IDs for reading vs minting
   readChainId: Number(process.env.NEXT_PUBLIC_READ_CHAIN_ID),
