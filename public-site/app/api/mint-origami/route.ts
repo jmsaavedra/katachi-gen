@@ -228,16 +228,32 @@ export async function POST(request: NextRequest) {
         name: 'prepareMintSVGNFT',
         arguments: {
           recipientAddress,
-          svgContent: finalSvgContent,
+          // Pass Arweave URLs as metadata instead of SVG content
+          svgContent: `<svg xmlns="http://www.w3.org/2000/svg"><text>Arweave NFT</text></svg>`, // Minimal placeholder
           name: finalName,
           description: finalDescription,
           tokenId: nextNftNumber,
           chainId: config.mintChainId,
+          image: arweaveData?.thumbnailUrl || `https://arweave.net/${arweaveData?.thumbnailId}`,
+          animation_url: arweaveData?.htmlUrl || `https://arweave.net/${arweaveData?.htmlId}`,
           ...(finalMetadata && { metadata: finalMetadata }),
         },
       },
       id: Date.now(),
     };
+
+    console.log('🚨 [MINT API] ACTUAL DATA BEING SENT TO BLOCKCHAIN:', JSON.stringify({
+      name: finalName,
+      description: finalDescription,
+      image: arweaveData?.thumbnailUrl || `https://arweave.net/${arweaveData?.thumbnailId}`,
+      animation_url: arweaveData?.htmlUrl || `https://arweave.net/${arweaveData?.htmlId}`,
+      tokenId: nextNftNumber,
+      metadata: finalMetadata,
+      arweaveData: {
+        thumbnailId: arweaveData?.thumbnailId,
+        htmlId: arweaveData?.htmlId
+      }
+    }, null, 2));
     
     console.log('📡 [MINT API] Sending MCP request:', {
       method: mcpRequest.method,

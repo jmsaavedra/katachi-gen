@@ -14,9 +14,11 @@ export const schema = {
       message: 'Invalid address',
     })
     .describe('The wallet address to mint the NFT to'),
-  svgContent: z.string().describe('SVG content for the NFT'),
+  svgContent: z.string().optional().describe('SVG content for the NFT (optional if using Arweave URLs)'),
   name: z.string().describe('NFT name'),
   description: z.string().optional().describe('NFT description (optional)'),
+  image: z.string().optional().describe('Image URL (Arweave or other) - overrides SVG content if provided'),
+  animation_url: z.string().optional().describe('Animation URL (Arweave HTML) for interactive content'),
   tokenId: z.number().optional().describe('Specific token ID to use (optional, defaults to auto-generated)'),
   chainId: z.number().optional().describe('Chain ID to mint on (defaults to configured chain)'),
   metadata: z.object({
@@ -59,7 +61,9 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       recipientAddress,
       svgContent,
       name,
-      description = 'SVG NFT created via Shape MCP Server',
+      description = 'NFT created via Shape MCP Server',
+      image: providedImage,
+      animation_url: providedAnimationUrl,
       tokenId: providedTokenId,
       chainId: requestedChainId,
       metadata: additionalMetadata,
@@ -69,6 +73,8 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       recipientAddress,
       nameLength: name?.length || 0,
       svgContentLength: svgContent?.length || 0,
+      hasProvidedImage: !!providedImage,
+      hasAnimationUrl: !!providedAnimationUrl,
       hasAdditionalMetadata: !!additionalMetadata,
       providedTokenId,
       requestedChainId
@@ -92,11 +98,27 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       };
     }
 
-    // Create clean metadata following the specification (no system attributes, no extra fields)
+    // Validate that we have either image URL or SVG content
+    if (!providedImage && !svgContent) {
+      return {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify({
+              error: 'MISSING_IMAGE_CONTENT',
+              message: 'Either image URL or svgContent must be provided',
+            }),
+          },
+        ],
+      };
+    }
+
+    // Create clean metadata following the specification
     const nftMetadata = {
       name,
       description,
-      image: `data:image/svg+xml;base64,${Buffer.from(svgContent).toString('base64')}`,
+      image: providedImage || `data:image/svg+xml;base64,${Buffer.from(svgContent || '').toString('base64')}`,
+      ...(providedAnimationUrl && { animation_url: providedAnimationUrl }),
       attributes: additionalMetadata?.traits || [],
       ...(additionalMetadata?.curatedNfts && { curatedNfts: additionalMetadata.curatedNfts }),
     };
@@ -104,7 +126,10 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
     console.log('📦 [MCP SERVER] Creating NFT metadata:', {
       name,
       descriptionLength: description.length,
-      svgBase64Length: Buffer.from(svgContent).toString('base64').length,
+      imageSource: providedImage ? 'arweave_url' : 'svg_base64',
+      imageValue: providedImage || `data:image/svg+xml;base64,${Buffer.from(svgContent || '').toString('base64')}`,
+      hasAnimationUrl: !!providedAnimationUrl,
+      animationUrl: providedAnimationUrl,
       attributeCount: additionalMetadata?.traits?.length || 0,
       hasCuratedNfts: !!additionalMetadata?.curatedNfts?.length
     });

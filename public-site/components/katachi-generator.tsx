@@ -269,11 +269,25 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       console.warn('⚠️ [DEBUG] No sentiment provided to handleCurationCompleted');
     }
     
-    // Wait for React state updates to complete
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // Wait for sentiment data state to be updated
+    if (sentiment) {
+      let attempts = 0;
+      const maxAttempts = 10;
+      
+      while (!sentimentData?.sentiment && attempts < maxAttempts) {
+        console.log(`🔄 Waiting for sentiment data state update... attempt ${attempts + 1}/${maxAttempts}`);
+        await new Promise(resolve => setTimeout(resolve, 200));
+        attempts++;
+      }
+      
+      if (!sentimentData?.sentiment) {
+        console.error('❌ Sentiment data state not updated after waiting, cannot proceed with generation');
+        return;
+      }
+    }
     
     // Automatically trigger generation after curation completes
-    console.log('Curation completed, automatically starting generation...');
+    console.log('✅ Sentiment data confirmed, starting generation...');
     await handleGenerateKatachi();
   };
 
