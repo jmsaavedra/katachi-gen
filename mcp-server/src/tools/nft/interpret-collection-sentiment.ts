@@ -5,6 +5,7 @@ import { alchemy } from '../../clients';
 import { config } from '../../config';
 import type { ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
+import { validateImageCors } from './validate-image-cors';
 import { OwnedNft } from 'alchemy-sdk';
 
 // Define the output type for interpreted NFTs
@@ -216,7 +217,7 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
       }
       if (nftDescription.includes(word)) {
         score += 2;
-        reasons.push(`description matches sentiment`);
+        reasons.push(`sentiment matches NFT description`);
         textMatches.push(`Description: "${word}"`);
       }
       if (collectionName.includes(word)) {
@@ -234,20 +235,18 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
     for (const keyword of themeKeywords) {
       if (nftName.includes(keyword)) {
         score += 2;
-        reasons.push(`matches ${theme} theme`);
+        reasons.push(`${theme} theme: "${keyword}" in name`);
         themeMatches.push(`${theme}: "${keyword}" in name`);
         themeMatched = true;
         break;
       }
       if (nftDescription.includes(keyword)) {
         score += 1;
+        reasons.push(`${theme} theme: "${keyword}" matches sentiment`);
         themeMatches.push(`${theme}: "${keyword}" in description`);
         themeMatched = true;
         break;
       }
-    }
-    if (themeMatched) {
-      reasons.push(`${theme} theme detected`);
     }
   }
   
@@ -269,11 +268,7 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
     visualMatches.push('Minimal style matches calm mood');
   }
   
-  // Collection-based scoring - if multiple from same collection, slight bonus
-  if (nft.balance && parseInt(nft.balance) > 1) {
-    score += 0.5;
-    reasons.push('multiple from collection');
-  }
+  // Removed collection balance scoring as it was confusing and not relevant to sentiment matching
   
   // Visual content analysis
   const imageUrl = nft.image?.originalUrl || nft.image?.thumbnailUrl;
@@ -345,21 +340,68 @@ export default async function interpretCollectionSentiment({
       }))
     );
     
-    // Sort by score and take top N, ensuring max 1 NFT per collection
+    // Sort by score and take top N, ensuring max 2 NFTs per collection and CORS validation
     scoredNfts.sort((a, b) => b.score - a.score);
     
     const selectedNfts: typeof scoredNfts = [];
-    const usedCollections = new Set<string>();
+    const collectionCounts = new Map<string, number>();
+    const maxCandidates = Math.min(scoredNfts.length, count * 4); // Check up to 4x requested count
     
-    for (const nftItem of scoredNfts) {
-      const collectionAddress = nftItem.nft.contract.address.toLowerCase();
+    console.log(`🔍 CORS validating ${maxCandidates} candidate NFTs for sentiment interpretation...`);
+    
+    // Batch CORS validation for performance
+    const corsValidationPromises = scoredNfts.slice(0, maxCandidates).map(async (nftItem, index) => {
+      const imageUrl = nftItem.nft.image?.originalUrl || nftItem.nft.image?.thumbnailUrl;
+      if (!imageUrl) {
+        return { ...nftItem, corsValid: false, corsReason: 'No image URL' };
+      }
       
-      if (!usedCollections.has(collectionAddress) && selectedNfts.length < count) {
-        selectedNfts.push(nftItem);
-        usedCollections.add(collectionAddress);
+      console.log(`🔗 [${index + 1}/${maxCandidates}] Validating CORS: ${imageUrl}`);
+      const corsValid = await validateImageCors(imageUrl, 3000); // 3 second timeout
+      
+      return { 
+        ...nftItem, 
+        corsValid, 
+        corsReason: corsValid ? 'CORS valid' : 'CORS blocked' 
+      };
+    });
+    
+    const corsResults = await Promise.allSettled(corsValidationPromises);
+    
+    // Select from CORS-valid NFTs only
+    for (const result of corsResults) {
+      if (result.status === 'fulfilled') {
+        const nftItem = result.value;
+        const collectionAddress = nftItem.nft.contract.address.toLowerCase();
+        const currentCount = collectionCounts.get(collectionAddress) || 0;
+        
+        if (
+          nftItem.corsValid && 
+          currentCount < 2 && // Allow max 2 per collection
+          selectedNfts.length < count
+        ) {
+          selectedNfts.push(nftItem);
+          collectionCounts.set(collectionAddress, currentCount + 1);
+          console.log(`✅ Selected NFT: ${nftItem.nft.name || 'Unnamed'} (${nftItem.reason})`);
+        } else {
+          if (!nftItem.corsValid) {
+            console.log(`❌ Skipped CORS-blocked NFT: ${nftItem.nft.name || 'Unnamed'}`);
+          } else if (currentCount >= 2) {
+            console.log(`❌ Skipped duplicate collection NFT: ${nftItem.nft.name || 'Unnamed'} (already have 2 from this collection)`);
+          } else if (selectedNfts.length >= count) {
+            console.log(`❌ Skipped NFT (quota full): ${nftItem.nft.name || 'Unnamed'}`);
+          }
+        }
       }
       
       if (selectedNfts.length >= count) break;
+    }
+    
+    console.log(`🎉 Selected ${selectedNfts.length} CORS-validated NFTs out of ${count} requested`);
+    
+    // If we didn't get enough CORS-valid NFTs, log a warning
+    if (selectedNfts.length < count) {
+      console.warn(`⚠️ Only found ${selectedNfts.length} CORS-valid NFTs out of ${count} requested from ${maxCandidates} candidates`);
     }
     
     // Generate interpretation
