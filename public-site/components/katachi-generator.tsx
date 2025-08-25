@@ -31,6 +31,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const [iframeLoading, setIframeLoading] = useState(false);
   const [iframeError, setIframeError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+  const [urlResolved, setUrlResolved] = useState(false);
   const [sentimentData, setSentimentData] = useState<{
     sentiment: string;
     filteredNfts: Array<{
@@ -104,6 +106,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       setIframeLoading(true);
       setIframeError(false);
       setRetryCount(0);
+      setUrlResolved(false); // Reset URL resolved state
       startArweaveCheck();
     }
   }, [generatedPattern?.htmlUrl]);
@@ -127,6 +130,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         // If we got a successful response, content is ready
         if (response && response.ok) {
           console.log('Arweave content is ready!');
+          setUrlResolved(true); // URL is resolved, iframe can now be shown
           setIframeLoading(false);
           setIframeError(false);
           setRetryCount(0);
@@ -139,13 +143,28 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       
       if (attempt < maxRetries) {
         setRetryCount(attempt);
+        
+        // Start countdown
+        setCountdown(retryDelay / 1000);
+        const countdownInterval = setInterval(() => {
+          setCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(countdownInterval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        
         setTimeout(() => {
+          clearInterval(countdownInterval);
           checkArweaveContent(attempt + 1);
         }, retryDelay);
       } else {
         console.error('Max retries reached, content may still be propagating');
+        setUrlResolved(true); // Allow iframe to try anyway after max retries
         setIframeLoading(false);
-        setIframeError(false); // Don't show error, just let iframe try
+        setIframeError(false);
         setRetryCount(0);
       }
     };
@@ -160,8 +179,10 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   };
 
   const handleIframeError = () => {
-    // This will be called by iframe onerror, but we're primarily relying on the timer-based check above
-    console.log('Iframe error event triggered');
+    // Iframe error detected (likely 404), immediately show loading overlay
+    console.log('Iframe error event triggered - showing retry overlay');
+    setIframeLoading(true);
+    setIframeError(false);
   };
 
   // Reset pagination when NFTs change
@@ -188,33 +209,84 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     });
   };
 
-  const handleCurationCompleted = (interpretation: string, themes: string[], nfts: Array<{
-    tokenId: string;
-    contractAddress: string;
-    name: string | null;
-    description: string | null;
-    imageUrl: string | null;
-    reason: string;
-    matchScore: number;
-    matchDetails?: {
-      textMatches: string[];
-      themeMatches: string[];
-      visualMatches: string[];
-      collectionInfo: string;
-    };
-  }>) => {
+  const handleCurationCompleted = async (
+    interpretation: string, 
+    themes: string[], 
+    nfts: Array<{
+      tokenId: string;
+      contractAddress: string;
+      name: string | null;
+      description: string | null;
+      imageUrl: string | null;
+      reason: string;
+      matchScore: number;
+      matchDetails?: {
+        textMatches: string[];
+        themeMatches: string[];
+        visualMatches: string[];
+        collectionInfo: string;
+      };
+    }>,
+    sentiment?: string
+  ) => {
+    console.log('🎯 [DEBUG] handleCurationCompleted called with:', {
+      interpretation: interpretation?.slice(0, 50) + '...',
+      themesCount: themes?.length || 0,
+      nftsCount: nfts?.length || 0,
+      sentiment,
+      currentSentimentData: sentimentData
+    });
+    
     setCuratedNfts(nfts);
     setCurationInterpretation(interpretation);
     setCurationThemes(themes);
+    
+    // If sentiment is provided, update sentiment data with the curated NFTs
+    if (sentiment) {
+      console.log('🎯 [DEBUG] Updating sentiment data with:', {
+        sentiment,
+        curatedNftsCount: nfts.length
+      });
+      setSentimentData({
+        sentiment,
+        filteredNfts: nfts.map(nft => ({
+          name: nft.name,
+          description: nft.description,
+          imageUrl: nft.imageUrl,
+          contractAddress: nft.contractAddress,
+          tokenId: nft.tokenId
+        }))
+      });
+    } else {
+      console.warn('⚠️ [DEBUG] No sentiment provided to handleCurationCompleted');
+    }
+    
+    // Wait a tick to ensure state updates are processed
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Automatically trigger generation after curation completes
+    console.log('Curation completed, automatically starting generation...');
+    await handleGenerateKatachi();
   };
 
   const handleGenerateKatachi = async () => {
+    console.log('🎯 [DEBUG] handleGenerateKatachi called with sentimentData:', {
+      hasSentimentData: !!sentimentData,
+      sentiment: sentimentData?.sentiment,
+      filteredNftsCount: sentimentData?.filteredNfts?.length || 0
+    });
+    
     if (!addressToUse) {
       toast.error('Please connect your wallet first');
       return;
     }
 
     if (!sentimentData?.sentiment) {
+      console.error('❌ [DEBUG] Missing sentiment data:', {
+        sentimentData,
+        hasSentimentData: !!sentimentData,
+        sentiment: sentimentData?.sentiment
+      });
       toast.error('Please share your collection sentiment below first');
       return;
     }
@@ -248,6 +320,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           walletAddress: addressToUse,
           seed2: `${stackMedals?.totalMedals || 0}`,
           sentiment: sentimentData.sentiment,
+          totalNfts: nfts?.totalCount || 0,
+          uniqueCollections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
           images: imageUrls
         }),
       });
@@ -289,14 +363,11 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
             tokenId: nft.tokenId
           })),
           traits: [
-            { trait_type: 'Pattern Type', value: 'Origami' },
-            { trait_type: 'Generation Method', value: 'AI-Generated' },
-            { trait_type: 'Source NFTs', value: imageUrls.length },
             { trait_type: 'Sentiment Filter', value: sentimentData.sentiment },
-            { trait_type: 'Arweave ID', value: result.htmlId || 'Unknown' },
-            { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 },
+            { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
             { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
-            { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 }
+            { trait_type: 'Pattern Type', value: 'Origami' },
+            { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 }
           ]
         }
       };
@@ -343,7 +414,18 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           image: nft.imageUrl || '',
           contractAddress: nft.contractAddress,
           tokenId: nft.tokenId
-        })) || []
+        })) || [],
+        arweaveData: {
+          thumbnailId: generatedPattern.thumbnailId,
+          htmlId: generatedPattern.htmlId,
+          thumbnailUrl: generatedPattern.thumbnailUrl,
+          htmlUrl: generatedPattern.htmlUrl,
+          metadata: {
+            name: generatedPattern.metadata.name,
+            description: generatedPattern.metadata.description,
+            attributes: generatedPattern.metadata.attributes
+          }
+        }
       });
       
       console.log('Mint prepared successfully, executing mint...');
@@ -393,7 +475,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-lg font-medium">あなたのShapeの旅を読み込んでいます...</p>
+            <p className="text-lg font-medium">Shapeの旅を読み込んでいます...</p>
           </div>
         </div>
       )}
@@ -653,22 +735,24 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                     <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/20 p-4 bg-muted/10 relative">
                       {generatedPattern.htmlUrl ? (
                         <>
-                          <iframe
-                            key={`iframe-${retryCount}`}
-                            src={generatedPattern.htmlUrl}
-                            className="h-full w-full rounded-lg border-0"
-                            title="Interactive Katachi Pattern"
-                            sandbox="allow-scripts allow-same-origin"
-                            onLoad={handleIframeLoad}
-                            onError={handleIframeError}
-                          />
-                          {(iframeLoading || retryCount > 0) && (
+                          {urlResolved && (
+                            <iframe
+                              key={`iframe-${retryCount}`}
+                              src={generatedPattern.htmlUrl}
+                              className="h-full w-full rounded-lg border-0"
+                              title="Interactive Katachi Pattern"
+                              sandbox="allow-scripts allow-same-origin"
+                              onLoad={handleIframeLoad}
+                              onError={handleIframeError}
+                            />
+                          )}
+                          {!urlResolved && (
                             <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-lg">
                               <div className="text-center space-y-2">
                                 <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
                                 <div className="text-sm text-muted-foreground">
                                   {retryCount > 0 ? (
-                                    <>Loading pattern... (attempt {retryCount + 1}/10)</>
+                                    <>Waiting for arweave... retrying in {countdown}s</>
                                   ) : (
                                     <>Loading interactive pattern...</>
                                   )}
@@ -711,7 +795,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                         className="underline hover:no-underline text-primary"
                       >
                         Refresh
-                      </button> if 'Not Found'... arweave can be slow
+                      </button>
                     </p>
                   </div>
 

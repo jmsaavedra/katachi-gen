@@ -45,15 +45,16 @@ export async function POST(request: NextRequest) {
     if (data.success && data.thumbnailId && data.htmlId) {
       const tokenMetadata = {
         name: `Katachi Gen #${data.thumbnailId?.slice(-8) || 'Unknown'}`,
-        description: `Unique origami pattern generated from curated NFTs. This interactive 3D artwork represents your on-chain journey on Shape Network.`,
+        description: `An algorithmically generated 3D origami pattern representing your on-chain journey on Shape Network. By interpreting your wallet's participation data, we create unique, foldable origami designs that can be brought to life both digitally and physically.\n\nhttps://katachi-gen.com`,
         image: data.thumbnailUrl || `https://arweave.net/${data.thumbnailId}`,
         animation_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,
         external_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,
         attributes: [
-          { trait_type: 'Pattern Type', value: 'Origami' },
           { trait_type: 'Sentiment Filter', value: body.sentiment || 'Applied' },
-          { trait_type: 'Wallet Address', value: body.walletAddress },
-          { trait_type: 'Seed', value: body.seed2 || '0' }
+          { trait_type: 'Stack Medals', value: body.seed2 || '0' },
+          { trait_type: 'Unique Collections', value: body.uniqueCollections || 0 },
+          { trait_type: 'Pattern Type', value: data.patternType || 'Origami' },
+          { trait_type: 'Total NFTs', value: body.totalNfts || 0 }
         ],
         properties: {
           category: 'art',

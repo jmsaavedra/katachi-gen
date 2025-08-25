@@ -28,7 +28,7 @@ interface CollectionReflectionProps {
   walletAddress: Address | undefined;
   totalNfts: number;
   onSentimentSubmitted?: (sentiment: string, filteredNfts: InterpretedNFT[]) => void;
-  onCurationCompleted?: (interpretation: string, themes: string[], nfts: InterpretedNFT[]) => void;
+  onCurationCompleted?: (interpretation: string, themes: string[], nfts: InterpretedNFT[], sentiment?: string) => void;
 }
 
 export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubmitted, onCurationCompleted }: CollectionReflectionProps) {
@@ -100,7 +100,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
       
       // Notify parent that curation is complete
       if (onCurationCompleted) {
-        onCurationCompleted(data.interpretation || '', data.themes || [], data.selectedNfts || []);
+        onCurationCompleted(data.interpretation || '', data.themes || [], data.selectedNfts || [], sentiment.trim());
       }
       
       // Mark as curated to stop animation
