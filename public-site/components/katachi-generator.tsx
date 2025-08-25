@@ -28,7 +28,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const { data: nfts, isLoading, error } = useNFTsForOwner(addressToUse);
   const { data: stackMedals, isLoading: isLoadingMedals, error: medalsError } = useStackMedals(addressToUse);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [iframeLoading, setIframeLoading] = useState(false);
+  const [, setIframeLoading] = useState(false);
   const [iframeError, setIframeError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [countdown, setCountdown] = useState(0);
@@ -63,6 +63,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const [generatedPattern, setGeneratedPattern] = useState<{
     htmlUrl: string;
     thumbnailUrl: string;
+    thumbnailId: string;
+    htmlId: string;
     metadata: {
       name: string;
       description: string;
@@ -78,7 +80,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         contractAddress: string;
         tokenId: string;
       }>;
-      traits: Array<{
+      attributes: Array<{
         trait_type: string;
         value: string | number;
       }>;
@@ -107,70 +109,69 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       setIframeError(false);
       setRetryCount(0);
       setUrlResolved(false); // Reset URL resolved state
+      
+      const startArweaveCheck = async () => {
+        const checkArweaveContent = async (attempt: number): Promise<void> => {
+          const maxRetries = 20; // Try for about 100 seconds  
+          const retryDelay = 5000; // 5 seconds between retries
+          
+          try {
+            console.log(`Checking Arweave content (attempt ${attempt}/${maxRetries})...`);
+            
+            // Try a simple fetch to see if we get a response
+            const response = await fetch(generatedPattern.htmlUrl, { 
+              method: 'GET',
+              mode: 'cors'  // Try CORS first to get actual response
+            }).catch(() => null);
+            
+            // If we got a successful response, content is ready
+            if (response && response.ok) {
+              console.log('Arweave content is ready!');
+              setUrlResolved(true); // URL is resolved, iframe can now be shown
+              setIframeLoading(false);
+              setIframeError(false);
+              setRetryCount(0);
+              return;
+            }
+            
+          } catch (error) {
+            console.log(`Arweave check failed: ${error}`);
+          }
+          
+          if (attempt < maxRetries) {
+            setRetryCount(attempt);
+            
+            // Start countdown
+            setCountdown(retryDelay / 1000);
+            const countdownInterval = setInterval(() => {
+              setCountdown(prev => {
+                if (prev <= 1) {
+                  clearInterval(countdownInterval);
+                  return 0;
+                }
+                return prev - 1;
+              });
+            }, 1000);
+            
+            setTimeout(() => {
+              clearInterval(countdownInterval);
+              checkArweaveContent(attempt + 1);
+            }, retryDelay);
+          } else {
+            console.error('Max retries reached, content may still be propagating');
+            setUrlResolved(true); // Allow iframe to try anyway after max retries
+            setIframeLoading(false);
+            setIframeError(false);
+            setRetryCount(0);
+          }
+        };
+        
+        checkArweaveContent(1);
+      };
+      
       startArweaveCheck();
     }
   }, [generatedPattern?.htmlUrl]);
-
-  const startArweaveCheck = async () => {
-    if (!generatedPattern?.htmlUrl) return;
-    
-    const checkArweaveContent = async (attempt: number): Promise<void> => {
-      const maxRetries = 20; // Try for about 100 seconds  
-      const retryDelay = 5000; // 5 seconds between retries
-      
-      try {
-        console.log(`Checking Arweave content (attempt ${attempt}/${maxRetries})...`);
-        
-        // Try a simple fetch to see if we get a response
-        const response = await fetch(generatedPattern.htmlUrl, { 
-          method: 'GET',
-          mode: 'cors'  // Try CORS first to get actual response
-        }).catch(() => null);
-        
-        // If we got a successful response, content is ready
-        if (response && response.ok) {
-          console.log('Arweave content is ready!');
-          setUrlResolved(true); // URL is resolved, iframe can now be shown
-          setIframeLoading(false);
-          setIframeError(false);
-          setRetryCount(0);
-          return;
-        }
-        
-      } catch (error) {
-        console.log(`Arweave check failed: ${error}`);
-      }
-      
-      if (attempt < maxRetries) {
-        setRetryCount(attempt);
-        
-        // Start countdown
-        setCountdown(retryDelay / 1000);
-        const countdownInterval = setInterval(() => {
-          setCountdown(prev => {
-            if (prev <= 1) {
-              clearInterval(countdownInterval);
-              return 0;
-            }
-            return prev - 1;
-          });
-        }, 1000);
-        
-        setTimeout(() => {
-          clearInterval(countdownInterval);
-          checkArweaveContent(attempt + 1);
-        }, retryDelay);
-      } else {
-        console.error('Max retries reached, content may still be propagating');
-        setUrlResolved(true); // Allow iframe to try anyway after max retries
-        setIframeLoading(false);
-        setIframeError(false);
-        setRetryCount(0);
-      }
-    };
-    
-    checkArweaveContent(1);
-  };
 
   const handleIframeLoad = () => {
     setIframeLoading(false);
@@ -261,8 +262,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       console.warn('⚠️ [DEBUG] No sentiment provided to handleCurationCompleted');
     }
     
-    // Wait a tick to ensure state updates are processed
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Wait for React state updates to complete
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Automatically trigger generation after curation completes
     console.log('Curation completed, automatically starting generation...');
@@ -343,32 +344,44 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         hasThumbnail: !!result.thumbnailId
       });
 
-      // Create pattern data structure using Arweave URLs
+      console.log('🔍 [DEBUG] Raw generate-katachi API result:', {
+        hasMetadata: !!result.metadata,
+        metadataKeys: result.metadata ? Object.keys(result.metadata) : [],
+        attributesCount: result.metadata?.attributes?.length || 0,
+        name: result.metadata?.name,
+        description: result.metadata?.description?.slice(0, 100) + '...'
+      });
+
+      // Create pattern data structure using response from generate-katachi API
       const patternData = {
         htmlUrl: result.htmlUrl || '',
         thumbnailUrl: result.thumbnailUrl || '',
+        thumbnailId: result.thumbnailId || '',
+        htmlId: result.htmlId || '',
         metadata: {
-          name: `Katachi Gen #${result.thumbnailId?.slice(-8) || 'Unknown'}`,
-          description: `Unique origami pattern generated from ${imageUrls.length} curated NFTs from your collection. Sentiment: ${sentimentData.sentiment}`,
+          // Use metadata from the API response if available, otherwise fallback
+          name: result.metadata?.name || `Katachi Gen #${result.thumbnailId?.slice(-8) || 'Unknown'}`,
+          description: result.metadata?.description || `Unique origami pattern generated from ${imageUrls.length} curated NFTs from your collection. Sentiment: ${sentimentData.sentiment}`,
           patternType: 'Origami',
           complexity: 'Generated' as const,
           foldLines: 0,
           colors: ['#000000', '#ffffff'],
           arweaveId: result.htmlId, // Store HTML Arweave ID for minting
+          // Store the complete metadata from the API for minting
+          attributes: result.metadata?.attributes || [
+            { trait_type: 'Sentiment Filter', value: sentimentData.sentiment },
+            { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
+            { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
+            { trait_type: 'Pattern Type', value: 'Origami' },
+            { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 }
+          ],
           curatedNfts: sentimentData.filteredNfts.slice(0, 5).map(nft => ({
             name: nft.name || 'Untitled',
             description: nft.description || '',
             image: nft.imageUrl || '',
             contractAddress: nft.contractAddress,
             tokenId: nft.tokenId
-          })),
-          traits: [
-            { trait_type: 'Sentiment Filter', value: sentimentData.sentiment },
-            { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
-            { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
-            { trait_type: 'Pattern Type', value: 'Origami' },
-            { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 }
-          ]
+          }))
         }
       };
       
@@ -821,9 +834,9 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
 
                       {/* Traits */}
                       <div className="p-3 bg-muted/30 rounded-lg">
-                        <h5 className="text-xs font-medium text-muted-foreground mb-2">TRAITS ({generatedPattern.metadata.traits.length})</h5>
+                        <h5 className="text-xs font-medium text-muted-foreground mb-2">TRAITS ({generatedPattern.metadata.attributes.length})</h5>
                         <div className="space-y-2 text-sm max-h-48 overflow-y-auto">
-                          {generatedPattern.metadata.traits.map((trait, i) => (
+                          {generatedPattern.metadata.attributes.map((trait, i) => (
                             <div key={i} className="flex justify-between items-center py-1 border-b border-border/30 last:border-b-0">
                               <span className="text-muted-foreground text-xs">{trait.trait_type}</span>
                               <span className="font-mono text-xs ml-2">
