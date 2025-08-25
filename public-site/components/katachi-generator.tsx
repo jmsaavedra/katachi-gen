@@ -5,7 +5,7 @@ import { Address } from 'viem';
 import { useNFTsForOwner } from '@/hooks/web3';
 import { useMintOrigami } from '@/hooks/useMintOrigami';
 import { useStackMedals } from '@/hooks/useStackMedals';
-import { generatePlaceholderPattern } from '@/utils/generatePlaceholderSVG';
+// import { generatePlaceholderPattern } from '@/utils/generatePlaceholderSVG'; // Commented out - using katachi-generator service
 import { chainConfig } from '@/lib/chains';
 import { config } from '@/lib/config';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,11 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const { data: nfts, isLoading, error } = useNFTsForOwner(addressToUse);
   const { data: stackMedals, isLoading: isLoadingMedals, error: medalsError } = useStackMedals(addressToUse);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [iframeLoading, setIframeLoading] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [countdown, setCountdown] = useState(0);
+  const [urlResolved, setUrlResolved] = useState(false);
   const [sentimentData, setSentimentData] = useState<{
     sentiment: string;
     filteredNfts: Array<{
@@ -56,14 +61,16 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const [curationInterpretation, setCurationInterpretation] = useState<string>('');
   const [curationThemes, setCurationThemes] = useState<string[]>([]);
   const [generatedPattern, setGeneratedPattern] = useState<{
-    svgContent: string;
+    htmlUrl: string;
+    thumbnailUrl: string;
     metadata: {
       name: string;
       description: string;
       patternType: string;
-      complexity: 'Basic' | 'Medium' | 'High';
+      complexity: 'Basic' | 'Medium' | 'High' | 'Generated';
       foldLines: number;
       colors: string[];
+      arweaveId?: string;
       curatedNfts?: Array<{
         name: string;
         description: string;
@@ -93,6 +100,91 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  // Handle iframe loading with retries for Arweave propagation
+  useEffect(() => {
+    if (generatedPattern?.htmlUrl) {
+      setIframeLoading(true);
+      setIframeError(false);
+      setRetryCount(0);
+      setUrlResolved(false); // Reset URL resolved state
+      startArweaveCheck();
+    }
+  }, [generatedPattern?.htmlUrl]);
+
+  const startArweaveCheck = async () => {
+    if (!generatedPattern?.htmlUrl) return;
+    
+    const checkArweaveContent = async (attempt: number): Promise<void> => {
+      const maxRetries = 20; // Try for about 100 seconds  
+      const retryDelay = 5000; // 5 seconds between retries
+      
+      try {
+        console.log(`Checking Arweave content (attempt ${attempt}/${maxRetries})...`);
+        
+        // Try a simple fetch to see if we get a response
+        const response = await fetch(generatedPattern.htmlUrl, { 
+          method: 'GET',
+          mode: 'cors'  // Try CORS first to get actual response
+        }).catch(() => null);
+        
+        // If we got a successful response, content is ready
+        if (response && response.ok) {
+          console.log('Arweave content is ready!');
+          setUrlResolved(true); // URL is resolved, iframe can now be shown
+          setIframeLoading(false);
+          setIframeError(false);
+          setRetryCount(0);
+          return;
+        }
+        
+      } catch (error) {
+        console.log(`Arweave check failed: ${error}`);
+      }
+      
+      if (attempt < maxRetries) {
+        setRetryCount(attempt);
+        
+        // Start countdown
+        setCountdown(retryDelay / 1000);
+        const countdownInterval = setInterval(() => {
+          setCountdown(prev => {
+            if (prev <= 1) {
+              clearInterval(countdownInterval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        
+        setTimeout(() => {
+          clearInterval(countdownInterval);
+          checkArweaveContent(attempt + 1);
+        }, retryDelay);
+      } else {
+        console.error('Max retries reached, content may still be propagating');
+        setUrlResolved(true); // Allow iframe to try anyway after max retries
+        setIframeLoading(false);
+        setIframeError(false);
+        setRetryCount(0);
+      }
+    };
+    
+    checkArweaveContent(1);
+  };
+
+  const handleIframeLoad = () => {
+    setIframeLoading(false);
+    setIframeError(false);
+    setRetryCount(0);
+  };
+
+  const handleIframeError = () => {
+    // Iframe error detected (likely 404), immediately show loading overlay
+    console.log('Iframe error event triggered - showing retry overlay');
+    setIframeLoading(true);
+    setIframeError(false);
+  };
+
   // Reset pagination when NFTs change
   useEffect(() => {
     setCurrentPage(1);
@@ -117,33 +209,84 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     });
   };
 
-  const handleCurationCompleted = (interpretation: string, themes: string[], nfts: Array<{
-    tokenId: string;
-    contractAddress: string;
-    name: string | null;
-    description: string | null;
-    imageUrl: string | null;
-    reason: string;
-    matchScore: number;
-    matchDetails?: {
-      textMatches: string[];
-      themeMatches: string[];
-      visualMatches: string[];
-      collectionInfo: string;
-    };
-  }>) => {
+  const handleCurationCompleted = async (
+    interpretation: string, 
+    themes: string[], 
+    nfts: Array<{
+      tokenId: string;
+      contractAddress: string;
+      name: string | null;
+      description: string | null;
+      imageUrl: string | null;
+      reason: string;
+      matchScore: number;
+      matchDetails?: {
+        textMatches: string[];
+        themeMatches: string[];
+        visualMatches: string[];
+        collectionInfo: string;
+      };
+    }>,
+    sentiment?: string
+  ) => {
+    console.log('🎯 [DEBUG] handleCurationCompleted called with:', {
+      interpretation: interpretation?.slice(0, 50) + '...',
+      themesCount: themes?.length || 0,
+      nftsCount: nfts?.length || 0,
+      sentiment,
+      currentSentimentData: sentimentData
+    });
+    
     setCuratedNfts(nfts);
     setCurationInterpretation(interpretation);
     setCurationThemes(themes);
+    
+    // If sentiment is provided, update sentiment data with the curated NFTs
+    if (sentiment) {
+      console.log('🎯 [DEBUG] Updating sentiment data with:', {
+        sentiment,
+        curatedNftsCount: nfts.length
+      });
+      setSentimentData({
+        sentiment,
+        filteredNfts: nfts.map(nft => ({
+          name: nft.name,
+          description: nft.description,
+          imageUrl: nft.imageUrl,
+          contractAddress: nft.contractAddress,
+          tokenId: nft.tokenId
+        }))
+      });
+    } else {
+      console.warn('⚠️ [DEBUG] No sentiment provided to handleCurationCompleted');
+    }
+    
+    // Wait a tick to ensure state updates are processed
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Automatically trigger generation after curation completes
+    console.log('Curation completed, automatically starting generation...');
+    await handleGenerateKatachi();
   };
 
   const handleGenerateKatachi = async () => {
+    console.log('🎯 [DEBUG] handleGenerateKatachi called with sentimentData:', {
+      hasSentimentData: !!sentimentData,
+      sentiment: sentimentData?.sentiment,
+      filteredNftsCount: sentimentData?.filteredNfts?.length || 0
+    });
+    
     if (!addressToUse) {
       toast.error('Please connect your wallet first');
       return;
     }
 
     if (!sentimentData?.sentiment) {
+      console.error('❌ [DEBUG] Missing sentiment data:', {
+        sentimentData,
+        hasSentimentData: !!sentimentData,
+        sentiment: sentimentData?.sentiment
+      });
       toast.error('Please share your collection sentiment below first');
       return;
     }
@@ -152,24 +295,82 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     resetMint(); // Reset any previous mint state
     
     try {
-      // Simulate generation delay for UX
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const patternData = generatePlaceholderPattern({
-        nftCount: nfts?.totalCount || 0,
-        collections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
+      // Get first 5 filtered NFT images for pattern generation
+      const imageUrls = sentimentData.filteredNfts
+        .slice(0, 5)
+        .map(nft => ({ url: nft.imageUrl || '' }))
+        .filter(img => img.url); // Remove empty URLs
+
+      if (imageUrls.length === 0) {
+        throw new Error('No valid NFT images found for pattern generation');
+      }
+
+      console.log('Calling katachi-generator with:', {
         walletAddress: addressToUse,
-        sentimentFilter: sentimentData.sentiment,
-        stackMedalsCount: stackMedals?.totalMedals || 0,
-        // Don't assign nftNumber here - it will be determined at mint time
-        curatedNfts: sentimentData.filteredNfts.map(nft => ({
-          name: nft.name || 'Untitled',
-          description: nft.description || '',
-          image: nft.imageUrl || '',
-          contractAddress: nft.contractAddress,
-          tokenId: nft.tokenId
-        }))
+        imageCount: imageUrls.length
       });
+
+      // Call katachi-generator API
+      const response = await fetch('/api/generate-katachi', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          walletAddress: addressToUse,
+          seed2: `${stackMedals?.totalMedals || 0}`,
+          sentiment: sentimentData.sentiment,
+          totalNfts: nfts?.totalCount || 0,
+          uniqueCollections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
+          images: imageUrls
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      if (result.error || !result.success) {
+        throw new Error(result.message || 'Pattern generation failed');
+      }
+
+      console.log('Katachi generation result:', {
+        success: result.success,
+        thumbnailId: result.thumbnailId,
+        htmlId: result.htmlId,
+        hasThumbnail: !!result.thumbnailId
+      });
+
+      // Create pattern data structure using Arweave URLs
+      const patternData = {
+        htmlUrl: result.htmlUrl || '',
+        thumbnailUrl: result.thumbnailUrl || '',
+        metadata: {
+          name: `Katachi Gen #${result.thumbnailId?.slice(-8) || 'Unknown'}`,
+          description: `Unique origami pattern generated from ${imageUrls.length} curated NFTs from your collection. Sentiment: ${sentimentData.sentiment}`,
+          patternType: 'Origami',
+          complexity: 'Generated' as const,
+          foldLines: 0,
+          colors: ['#000000', '#ffffff'],
+          arweaveId: result.htmlId, // Store HTML Arweave ID for minting
+          curatedNfts: sentimentData.filteredNfts.slice(0, 5).map(nft => ({
+            name: nft.name || 'Untitled',
+            description: nft.description || '',
+            image: nft.imageUrl || '',
+            contractAddress: nft.contractAddress,
+            tokenId: nft.tokenId
+          })),
+          traits: [
+            { trait_type: 'Sentiment Filter', value: sentimentData.sentiment },
+            { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
+            { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
+            { trait_type: 'Pattern Type', value: 'Origami' },
+            { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 }
+          ]
+        }
+      };
       
       setGeneratedPattern(patternData);
       toast.success('Pattern generated successfully!');
@@ -200,7 +401,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       
       const preparedResult = await prepareMint({
         recipientAddress: addressToUse,
-        svgContent: generatedPattern.svgContent,
+        svgContent: generatedPattern.thumbnailUrl,
         name: generatedPattern.metadata.name,
         description: generatedPattern.metadata.description,
         nftCount: nfts?.totalCount || 0,
@@ -213,7 +414,18 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           image: nft.imageUrl || '',
           contractAddress: nft.contractAddress,
           tokenId: nft.tokenId
-        })) || []
+        })) || [],
+        arweaveData: {
+          thumbnailId: generatedPattern.thumbnailId,
+          htmlId: generatedPattern.htmlId,
+          thumbnailUrl: generatedPattern.thumbnailUrl,
+          htmlUrl: generatedPattern.htmlUrl,
+          metadata: {
+            name: generatedPattern.metadata.name,
+            description: generatedPattern.metadata.description,
+            attributes: generatedPattern.metadata.attributes
+          }
+        }
       });
       
       console.log('Mint prepared successfully, executing mint...');
@@ -226,19 +438,12 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     }
   };
 
-  const handleDownloadSVG = () => {
-    if (!generatedPattern) return;
+  const handleDownloadPattern = () => {
+    if (!generatedPattern?.htmlUrl) return;
     
-    const blob = new Blob([generatedPattern.svgContent], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${generatedPattern.metadata.name.replace(/\s+/g, '_')}.svg`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success('SVG downloaded!');
+    // Open the interactive HTML pattern in a new tab
+    window.open(generatedPattern.htmlUrl, '_blank');
+    toast.success('Pattern opened in new tab!');
   };
 
   // Pagination logic
@@ -260,16 +465,30 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     }
   };
 
-  return (
-    <div className="w-full max-w-6xl mx-auto space-y-8">
-      <div className="text-center space-y-4">
-        <h2 className="text-3xl font-light">Mint a Katachi Gen</h2>
-        <p className="text-muted-foreground">
-          Your unique origami pattern based on your Shape journey
-        </p>
-      </div>
+  // Show loading overlay while initial data is loading
+  const isInitialLoading = isLoading || isLoadingMedals;
 
-      <div className="grid md:grid-cols-2 gap-8">
+  return (
+    <>
+      {/* Loading Overlay */}
+      {isInitialLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-3">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-lg font-medium">Shapeの旅を読み込んでいます...</p>
+          </div>
+        </div>
+      )}
+      
+      <div className="w-full max-w-6xl mx-auto space-y-8">
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl font-light">Mint a Katachi Gen</h2>
+          <p className="text-muted-foreground">
+            Your unique origami pattern based on your Shape journey
+          </p>
+        </div>
+
+      <div className="grid md:grid-cols-[1fr_3fr] gap-8">
         {/* NFT Analysis */}
         <Card>
           <CardHeader>
@@ -284,7 +503,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           <CardContent className="space-y-4">
             {/* Chain Info */}
             <div className="text-xs text-muted-foreground bg-muted/30 rounded p-2">
-              📊 Reading from {chainConfig.read.name} • 🎯 Minting to {chainConfig.mint.name}
+              📊 Reading from {chainConfig.read.name}<br />🎯 Minting to {chainConfig.mint.name}
               {config.mintChainId === 360 && !config.allowMainnetMinting && (
                 <div className="text-orange-600 mt-1">⚠️ Mainnet minting disabled for safety</div>
               )}
@@ -481,7 +700,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                 <Button 
                   onClick={handleGenerateKatachi}
                   disabled={isGenerating || isLoading || !sentimentData?.sentiment}
-                  className="w-full max-w-xs"
+                  className={`w-full max-w-xs ${sentimentData?.sentiment && !isGenerating ? 'animate-gradient-button' : ''}`}
                 >
                   {isGenerating ? (
                     <>
@@ -513,16 +732,71 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                   {/* Left Column - SVG Preview */}
                   <div className="space-y-4">
                     <h4 className="font-medium text-sm">Pattern Preview</h4>
-                    <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/20 p-4 bg-muted/10">
-                      <div 
-                        className="h-full w-full rounded-lg overflow-hidden"
-                        dangerouslySetInnerHTML={{ 
-                          __html: generatedPattern.svgContent
-                            .replace(/width="\d+"/, 'width="100%"')
-                            .replace(/height="\d+"/, 'height="100%"')
-                        }}
-                      />
+                    <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/20 p-4 bg-muted/10 relative">
+                      {generatedPattern.htmlUrl ? (
+                        <>
+                          {urlResolved && (
+                            <iframe
+                              key={`iframe-${retryCount}`}
+                              src={generatedPattern.htmlUrl}
+                              className="h-full w-full rounded-lg border-0"
+                              title="Interactive Katachi Pattern"
+                              sandbox="allow-scripts allow-same-origin"
+                              onLoad={handleIframeLoad}
+                              onError={handleIframeError}
+                            />
+                          )}
+                          {!urlResolved && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-lg">
+                              <div className="text-center space-y-2">
+                                <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                                <div className="text-sm text-muted-foreground">
+                                  {retryCount > 0 ? (
+                                    <>Waiting for arweave... retrying in {countdown}s</>
+                                  ) : (
+                                    <>Loading interactive pattern...</>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                          {iframeError && (
+                            <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-lg">
+                              <div className="text-center space-y-2">
+                                <div className="text-sm text-destructive">
+                                  Pattern failed to load. It may still be propagating on Arweave.
+                                </div>
+                                <Button 
+                                  variant="outline" 
+                                  size="sm" 
+                                  onClick={() => window.open(generatedPattern.htmlUrl, '_blank')}
+                                >
+                                  <ExternalLink className="h-4 w-4 mr-1" />
+                                  Open in new tab
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <div className="h-full w-full rounded-lg overflow-hidden flex items-center justify-center bg-gray-100">
+                          <span className="text-muted-foreground">Pattern Loading...</span>
+                        </div>
+                      )}
                     </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      <button 
+                        onClick={() => {
+                          const iframe = document.querySelector('iframe[title="Interactive Katachi Pattern"]') as HTMLIFrameElement;
+                          if (iframe && generatedPattern.htmlUrl) {
+                            iframe.src = generatedPattern.htmlUrl + `?refresh=${Date.now()}`;
+                          }
+                        }}
+                        className="underline hover:no-underline text-primary"
+                      >
+                        Refresh
+                      </button>
+                    </p>
                   </div>
 
                   {/* Right Column - Complete Metadata */}
@@ -618,7 +892,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-4">
                   <Button 
-                    className="flex-1 gap-2" 
+                    className={`flex-1 gap-2 ${generatedPattern && !isMinting && mintState !== 'success' ? 'animate-gradient-button' : ''}`}
                     onClick={handleMintNFT}
                     disabled={isMinting || mintState === 'success'}
                   >
@@ -644,10 +918,10 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                   <Button 
                     variant="outline" 
                     className="flex-1 gap-2" 
-                    onClick={handleDownloadSVG}
+                    onClick={handleDownloadPattern}
                   >
                     <Download className="h-4 w-4" />
-                    Download SVG
+                    Open Interactive Pattern
                   </Button>
                 </div>
               </div>
@@ -735,5 +1009,6 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         </Card>
       )}
     </div>
+    </>
   );
 }

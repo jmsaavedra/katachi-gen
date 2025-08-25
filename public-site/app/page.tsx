@@ -1,17 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { isAddress } from 'viem';
-import { WalletConnect } from '@/components/wallet-connect';
 import { KatachiGenerator } from '@/components/katachi-generator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Code } from 'lucide-react';
+import { useHeader } from '@/contexts/header-context';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 export default function Home() {
   const { isConnected, address: connectedAddress } = useAccount();
+  const { setShowWalletInHeader, setIsInMintView } = useHeader();
   const [showGenerator, setShowGenerator] = useState(false);
   const [testAddress, setTestAddress] = useState('');
   const [testAddressError, setTestAddressError] = useState('');
@@ -22,6 +24,12 @@ export default function Home() {
   // Debug logging
   console.log('NEXT_PUBLIC_ENABLE_TEST_MODE:', process.env.NEXT_PUBLIC_ENABLE_TEST_MODE);
   console.log('isTestModeEnabled:', isTestModeEnabled);
+
+  // Update header state when generator visibility changes
+  useEffect(() => {
+    setShowWalletInHeader(showGenerator);
+    setIsInMintView(showGenerator);
+  }, [showGenerator, setShowWalletInHeader, setIsInMintView]);
   
   const handleTestAddressSubmit = () => {
     if (!testAddress.trim()) {
@@ -35,6 +43,10 @@ export default function Home() {
     }
     
     setTestAddressError('');
+    setShowGenerator(true);
+  };
+  
+  const handleMintClick = () => {
     setShowGenerator(true);
   };
   
@@ -71,15 +83,26 @@ export default function Home() {
       <div className="mt-8 space-y-6">
         <div className="flex justify-center">
           {!isConnected ? (
-            <WalletConnect />
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <Button 
+                  size="lg"
+                  className="gap-2 px-10 py-6 text-lg"
+                  onClick={openConnectModal}
+                >
+                  <Sparkles className="h-5 w-5" />
+                  Connect Wallet
+                </Button>
+              )}
+            </ConnectButton.Custom>
           ) : (
             <Button 
               size="lg" 
-              className="gap-2 px-8"
-              onClick={() => setShowGenerator(true)}
+              className="gap-2 px-10 py-6 text-lg animate-gradient-button"
+              onClick={handleMintClick}
             >
-              <Sparkles className="h-4 w-4" />
-              Mint Your Katachi Gen
+              <Sparkles className="h-5 w-5" />
+              Mint Your Katachi Gen 形現
             </Button>
           )}
         </div>
