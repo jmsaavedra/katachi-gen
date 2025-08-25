@@ -166,10 +166,11 @@ export async function POST(request: NextRequest) {
         attributesCount: arweaveData.metadata.attributes?.length || 0
       });
       
-      finalName = arweaveData.metadata.name.replace(/#\w+/, `#${nextNftNumber}`);
-      finalDescription = arweaveData.metadata.description;
+      // Set the name with the token number
+      finalName = `Katachi Gen #${nextNftNumber}`;
+      finalDescription = `Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey on ShapeL2, creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.\n\nhttps://katachi-gen.com`;
       finalMetadata = {
-        traits: (arweaveData.metadata.attributes || []).map(attr => ({
+        traits: (arweaveData.metadata?.attributes || []).map(attr => ({
           trait_type: attr.trait_type,
           value: attr.value
         })),
