@@ -28,7 +28,6 @@ export const schema = {
     })).optional(),
     curatedNfts: z.array(z.object({
       name: z.string(),
-      description: z.string(),
       image: z.string(),
       contractAddress: z.string(),
       tokenId: z.string(),

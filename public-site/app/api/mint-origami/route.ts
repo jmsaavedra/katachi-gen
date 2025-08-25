@@ -17,7 +17,6 @@ type MintOrigamiRequest = {
   stackMedalsCount?: number;
   curatedNfts?: Array<{
     name: string;
-    description: string;
     image: string;
     contractAddress: string;
     tokenId: string;
@@ -153,7 +152,6 @@ export async function POST(request: NextRequest) {
       traits: Array<{ trait_type: string; value: string | number }>;
       curatedNfts?: Array<{
         name: string;
-        description: string;
         image: string;
         contractAddress: string;
         tokenId: string;
