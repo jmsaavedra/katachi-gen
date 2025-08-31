@@ -22,6 +22,15 @@ const arweave = Arweave.init({
     protocol: 'https'
 });
 
+const origamiPatterns = [
+    {url:"https://arweave.net/DEwA5RuJrMaZo4tHYmtKXV0gPXHJBC0p16HbhFqA15k", maxFolding:95, name:"airplane.svg", patternType:"Airplane"},
+    {url:"https://arweave.net/aeUK83c7uqmpWCUwwwv0Ao-_Ttxs_9XMcrznkjwXOqs", maxFolding:100, name:"birdBase.svg", patternType:"Cubic"},
+    {url:"https://arweave.net/l-mOj-cl7LGG7IjNWnZv1LIFLM_no_6gisnK53XD9Os", maxFolding:70, name:"hypar.svg", patternType:"Hypar"},
+    {url:"https://arweave.net/G3TfyqgWOlSdxjluMhnhswxZANT4waZdBh69HwllFCQ", maxFolding:80, name:"pinwheelBase.svg", patternType:"Pinwheel"},
+    {url:"https://arweave.net/4Y1SaF832toY5ac9fXqkQlaN_xmGqGWaOfcj0txzyg0", maxFolding:97, name:"traditionalCrane.svg", patternType:"Crane"},
+    {url:"https://arweave.net/59F93UIm1IJCWflSrWq_IsENxzvllCxz5QtwBky4xGM", maxFolding:70, name:"FTpoly7.svg", patternType:"Flower"},
+];
+
 // Create HTTP server
 const server = http.createServer(async (req, res) => {
     // CORS configuration
@@ -62,12 +71,24 @@ const server = http.createServer(async (req, res) => {
 
                 // {
                 //  walletAddress:"0x1234567890abcdef", 
+                // seed2:`${Math.floor(Math.random() * 1000)}`,
+                //  patternType:"",
                 //  images:[
                 //        {url:'https://example.com/image1.png'},
                 //        {url:'https://example.com/image2.png'},
                 //        {url:'https://example.com/image3.png'}
                 //   ]}
                 // }
+
+                // Select random origami pattern if not specified
+                if (!data.patternType || data.patternType === "") {
+                    const randomIndex = Math.floor(Math.random() * origamiPatterns.length);
+                    const selectedPattern = origamiPatterns[randomIndex];
+                    data.patternType = selectedPattern.patternType;
+                    console.log('🎲 Selected random origami pattern:', selectedPattern.patternType, 'from', selectedPattern.name);
+                } else {
+                    console.log('📋 Using provided pattern type:', data.patternType);
+                }
 
                 try {
                     // generate thumbnail image
@@ -83,7 +104,7 @@ const server = http.createServer(async (req, res) => {
                     // load templateHTML file from public directory
                     const templatePath = path.join(__dirname, 'public', templateHTML);
                     const template = fs.readFileSync(templatePath, 'utf-8');
-                    const rendered = template.replace('`{dataJson}`', JSON.stringify(data));
+                    const rendered = template.replace('{dataJson}', JSON.stringify(data));
                     
                     // Upload thumbnail to Arweave
                     console.log('Uploading thumbnail to Arweave...');
@@ -124,7 +145,8 @@ const server = http.createServer(async (req, res) => {
                         thumbnailId: thumbnailTxId,
                         htmlId: htmlTxId,
                         thumbnailUrl: `https://arweave.net/${thumbnailTxId}`,
-                        htmlUrl: `https://arweave.net/${htmlTxId}`
+                        htmlUrl: `https://arweave.net/${htmlTxId}`,
+                        patternType: data.patternType
                     }));
                     
                 } catch (uploadError) {
@@ -390,13 +412,25 @@ async function generateThumbnail(data) {
         
         // Inject data into the page
         await page.evaluate((data) => {
+            console.log('🔧 Injecting NFT data into page:', data);
+            
             // Set the data globally so it can be used by the page's JavaScript
             window.nftData = data;
             
+            // Also override the local nftData variable if it exists
+            if (typeof window.nftData !== 'undefined') {
+                window.nftData = data;
+            }
+            
             // Trigger any data loading logic if it exists
             if (typeof window.loadNftData === 'function') {
+                console.log('🔧 Triggering loadNftData function');
                 window.loadNftData(data);
             }
+            
+            // Log for debugging
+            console.log('✅ NFT data injection complete');
+            console.log('📊 Final window.nftData:', window.nftData);
             
             // // Also replace any {{dataJson}} placeholders in the DOM
             // const elements = document.querySelectorAll('*');
