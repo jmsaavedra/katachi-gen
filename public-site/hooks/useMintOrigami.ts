@@ -77,6 +77,7 @@ type PreparedMintData = {
       nextSteps: string[];
       note?: string;
     };
+    pendingMetadataJson?: Record<string, unknown>; // ← NEW: Metadata JSON ready for Arweave upload
   };
 };
 
@@ -413,28 +414,47 @@ export function useMintOrigami() {
       receipt: 'Transaction receipt received' 
     });
     
-    // Automatically call setTokenURI after mint confirmation
-    if (preparedData?.mintData?.metadata?.tokenId && preparedData?.mintData?.metadata?.tokenURI) {
-      console.log('🔧 [EXECUTE_MINT] Auto-setting token URI after mint confirmation...');
+    // New three-step process: mint → upload metadata to Arweave → set token URI
+    if (preparedData?.mintData?.metadata?.tokenId && preparedData?.mintData?.pendingMetadataJson) {
+      console.log('🔧 [EXECUTE_MINT] Starting deferred metadata upload after mint confirmation...');
       
-      // Call setTokenURI API endpoint
-      fetch('/api/set-token-uri', {
+      // Step 1: Upload metadata JSON to Arweave via generator
+      fetch(`${process.env.NEXT_PUBLIC_GENERATOR_URL || 'http://localhost:3001'}/upload-metadata`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tokenId: parseInt(preparedData.mintData.metadata.tokenId),
-          tokenURI: preparedData.mintData.metadata.tokenURI,
-          chainId: preparedData.mintData.metadata.chainId
+          metadataJson: preparedData.mintData.pendingMetadataJson
         })
       })
       .then(response => response.json())
-      .then(result => {
-        console.log('✅ [EXECUTE_MINT] Token URI set successfully:', result);
-        toast.success('NFT metadata updated! 🎆', { duration: 3000 });
+      .then(uploadResult => {
+        if (!uploadResult.success) {
+          throw new Error(`Metadata upload failed: ${uploadResult.error}`);
+        }
+        
+        console.log('✅ [EXECUTE_MINT] Metadata uploaded to Arweave:', uploadResult);
+        toast.success('Metadata uploaded to Arweave! 📁', { duration: 2000 });
+        
+        // Step 2: Set token URI with Arweave URL
+        return fetch('/api/set-token-uri', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tokenId: parseInt(preparedData.mintData.metadata.tokenId || '0'),
+            tokenURI: uploadResult.arweaveUrl,
+            chainId: preparedData.mintData.metadata.chainId
+          })
+        });
+      })
+      .then(response => response.json())
+      .then(setUriResult => {
+        console.log('✅ [EXECUTE_MINT] Token URI set with Arweave URL:', setUriResult);
+        toast.success('NFT metadata finalized! 🎆', { duration: 3000 });
       })
       .catch(error => {
-        console.error('❌ [EXECUTE_MINT] Failed to set token URI:', error);
-        toast.error('Mint succeeded but metadata update failed. Please contact support.');
+        console.error('❌ [EXECUTE_MINT] Failed in deferred metadata process:', error);
+        toast.error('Mint succeeded but metadata setup failed. Please contact support.');
       });
     }
     

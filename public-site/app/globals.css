@@ -53,10 +53,10 @@
 .animate-gradient-button {
   position: relative;
   overflow: hidden;
-  background: oklch(var(--primary));
+  background: oklch(var(--primary)) !important;
   color: oklch(var(--primary-foreground)) !important;
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) !important;
 }
 
 .animate-gradient-button {

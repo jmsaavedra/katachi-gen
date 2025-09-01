@@ -1,20 +1,52 @@
 {
-  "name": "server",
+  "name": "katachi-generator",
   "version": "1.0.0",
-  "main": "kg-nft-server.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node kg-nft-server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "serve": "webpack serve --mode development",
+    "rollup:build": "NODE_ENV=production rollup -c",
+    "rollup:dev": "rollup -c --watch",
+    "rollup:bundle": "rollup -c"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.879.0",
     "arweave": "^1.15.7",
+    "dotenv": "^17.2.1",
     "inliner": "^1.13.1",
     "mime-types": "^3.0.1",
     "playwright-core": "^1.55.0",
-    "puppeteer-core": "^24.17.0"
+    "puppeteer-core": "^24.17.0",
+    "sharp": "^0.34.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.3",
+    "@babel/preset-env": "^7.28.3",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-terser": "^0.4.4",
+    "babel-loader": "^10.0.0",
+    "css-loader": "^7.1.2",
+    "file-loader": "^6.2.0",
+    "html-webpack-inline-source-plugin": "^1.0.0-beta.2",
+    "html-webpack-plugin": "^5.6.0",
+    "raw-loader": "^4.0.2",
+    "rollup": "^4.50.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-html-bundle": "^0.0.3",
+    "style-loader": "^4.0.0",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.95.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.1.0"
   }
 }

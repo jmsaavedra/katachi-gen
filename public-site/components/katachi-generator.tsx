@@ -12,11 +12,10 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useState, useEffect } from 'react';
-import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Download } from 'lucide-react';
+import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
 import Image from 'next/image';
 import { CollectionReflection } from '@/components/collection-reflection';
 import { toast } from 'sonner';
-import { Heart } from 'lucide-react';
 
 interface KatachiGeneratorProps {
   overrideAddress?: Address;
@@ -30,9 +29,9 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const [isGenerating, setIsGenerating] = useState(false);
   const [, setIframeLoading] = useState(false);
   const [iframeError, setIframeError] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [countdown, setCountdown] = useState(0);
   const [urlResolved, setUrlResolved] = useState(false);
+  const [previewDelay, setPreviewDelay] = useState(false);
+  const [previewCountdown, setPreviewCountdown] = useState(0);
   const [sentimentData, setSentimentData] = useState<{
     sentiment: string;
     filteredNfts: Array<{
@@ -45,7 +44,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   } | null>(null);
   const [curatedNfts, setCuratedNfts] = useState<Array<{
     tokenId: string;
-    contractAddress: string;
+    contractAddress: Address;
     name: string | null;
     description: string | null;
     imageUrl: string | null;
@@ -62,6 +61,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const [curationThemes, setCurationThemes] = useState<string[]>([]);
   const [generatedPattern, setGeneratedPattern] = useState<{
     htmlUrl: string;
+    metadataHtmlUrl: string;
     thumbnailUrl: string;
     thumbnailId: string;
     htmlId: string;
@@ -101,81 +101,39 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Handle iframe loading with retries for Arweave propagation
+  // Handle preview delay when generator responds
   useEffect(() => {
     if (generatedPattern?.htmlUrl) {
       setIframeLoading(true);
       setIframeError(false);
-      setRetryCount(0);
       setUrlResolved(false); // Reset URL resolved state
+      setPreviewDelay(false); // Reset preview delay state
+      setPreviewCountdown(0); // Reset preview countdown
       
-      const startArweaveCheck = async () => {
-        const checkArweaveContent = async (attempt: number): Promise<void> => {
-          const maxRetries = 20; // Try for about 100 seconds  
-          const retryDelay = 5000; // 5 seconds between retries
-          
-          try {
-            console.log(`Checking Arweave content (attempt ${attempt}/${maxRetries})...`);
-            
-            // Try a simple fetch to see if we get a response
-            const response = await fetch(generatedPattern.htmlUrl, { 
-              method: 'GET',
-              mode: 'cors'  // Try CORS first to get actual response
-            }).catch(() => null);
-            
-            // If we got a successful response, content is ready
-            if (response && response.ok) {
-              console.log('Arweave content is ready!');
-              setUrlResolved(true); // URL is resolved, iframe can now be shown
-              setIframeLoading(false);
-              setIframeError(false);
-              setRetryCount(0);
-              return;
-            }
-            
-          } catch (error) {
-            console.log(`Arweave check failed: ${error}`);
-          }
-          
-          if (attempt < maxRetries) {
-            setRetryCount(attempt);
-            
-            // Start countdown
-            setCountdown(retryDelay / 1000);
-            const countdownInterval = setInterval(() => {
-              setCountdown(prev => {
-                if (prev <= 1) {
-                  clearInterval(countdownInterval);
-                  return 0;
-                }
-                return prev - 1;
-              });
-            }, 1000);
-            
-            setTimeout(() => {
-              clearInterval(countdownInterval);
-              checkArweaveContent(attempt + 1);
-            }, retryDelay);
-          } else {
-            console.error('Max retries reached, content may still be propagating');
-            setUrlResolved(true); // Allow iframe to try anyway after max retries
-            setIframeLoading(false);
-            setIframeError(false);
-            setRetryCount(0);
-          }
-        };
-        
-        checkArweaveContent(1);
-      };
-      
-      startArweaveCheck();
+      // Start the 5-second preview delay immediately
+      setPreviewDelay(true);
+      setPreviewCountdown(5);
+      setIframeLoading(false);
     }
   }, [generatedPattern?.htmlUrl]);
+
+  // Handle preview delay countdown
+  useEffect(() => {
+    if (previewDelay && previewCountdown > 0) {
+      const timer = setTimeout(() => {
+        setPreviewCountdown(previewCountdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (previewDelay && previewCountdown === 0) {
+      // Delay is over, now show the iframe
+      setUrlResolved(true);
+      setPreviewDelay(false);
+    }
+  }, [previewDelay, previewCountdown]);
 
   const handleIframeLoad = () => {
     setIframeLoading(false);
     setIframeError(false);
-    setRetryCount(0);
   };
 
   const handleIframeError = () => {
@@ -244,7 +202,10 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       currentSentimentData: sentimentData
     });
     
-    setCuratedNfts(nfts);
+    setCuratedNfts(nfts?.map(nft => ({
+      ...nft,
+      contractAddress: nft.contractAddress as Address
+    })) || null);
     setCurationInterpretation(interpretation);
     setCurationThemes(themes);
     
@@ -333,6 +294,9 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           images: imageUrls,
           sentiment: dataToUse.sentiment,
           seed2: Math.random().toString(),
+          stackMedals: stackMedals?.totalMedals || 0,
+          totalNfts: nfts?.totalCount || 0,
+          uniqueCollections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
         }),
       });
 
@@ -363,7 +327,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
 
       // Create pattern data structure using response from generate-katachi API
       const patternData = {
-        htmlUrl: result.htmlUrl || '',
+        htmlUrl: result.previewHtmlUrl || result.htmlUrl || '', // Use preview URL for iframe
+        metadataHtmlUrl: result.htmlUrl || '', // Keep original for metadata/tokenURI
         thumbnailUrl: result.thumbnailUrl || '',
         thumbnailId: result.thumbnailId || '',
         htmlId: result.htmlId || '',
@@ -393,6 +358,18 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       };
       
       setGeneratedPattern(patternData);
+      
+      // Log final metadata that will be used for minting
+      const finalMetadata = {
+        name: patternData.metadata.name,
+        description: patternData.metadata.description,
+        attributes: patternData.metadata.attributes,
+        image: patternData.thumbnailUrl,
+        animation_url: patternData.metadataHtmlUrl, // Use Arweave URL for metadata
+        external_url: patternData.metadataHtmlUrl, // Use Arweave URL for metadata
+      };
+      console.log('🎯 FINAL METADATA FOR MINTING:', JSON.stringify(finalMetadata, null, 2));
+      
       toast.success('Pattern generated successfully!');
       
     } catch (error) {
@@ -452,7 +429,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         },
         body: JSON.stringify({
           walletAddress: addressToUse,
-          seed2: `${stackMedals?.totalMedals || 0}`,
+          seed2: Math.random().toString(),
+          stackMedals: stackMedals?.totalMedals || 0,
           sentiment: sentimentData.sentiment,
           totalNfts: nfts?.totalCount || 0,
           uniqueCollections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
@@ -487,7 +465,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
 
       // Create pattern data structure using response from generate-katachi API
       const patternData = {
-        htmlUrl: result.htmlUrl || '',
+        htmlUrl: result.previewHtmlUrl || result.htmlUrl || '', // Use preview URL for iframe
+        metadataHtmlUrl: result.htmlUrl || '', // Keep original for metadata/tokenURI
         thumbnailUrl: result.thumbnailUrl || '',
         thumbnailId: result.thumbnailId || '',
         htmlId: result.htmlId || '',
@@ -518,6 +497,18 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       };
       
       setGeneratedPattern(patternData);
+      
+      // Log final metadata that will be used for minting
+      const finalMetadata = {
+        name: patternData.metadata.name,
+        description: patternData.metadata.description,
+        attributes: patternData.metadata.attributes,
+        image: patternData.thumbnailUrl,
+        animation_url: patternData.metadataHtmlUrl, // Use Arweave URL for metadata
+        external_url: patternData.metadataHtmlUrl, // Use Arweave URL for metadata
+      };
+      console.log('🎯 FINAL METADATA FOR MINTING:', JSON.stringify(finalMetadata, null, 2));
+      
       toast.success('Pattern generated successfully!');
     } catch (err) {
       toast.error('Failed to generate pattern');
@@ -563,7 +554,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           thumbnailId: generatedPattern.thumbnailId,
           htmlId: generatedPattern.htmlId,
           thumbnailUrl: generatedPattern.thumbnailUrl,
-          htmlUrl: generatedPattern.htmlUrl,
+          htmlUrl: generatedPattern.metadataHtmlUrl, // Use Arweave URL for minting
           metadata: {
             name: generatedPattern.metadata.name,
             description: generatedPattern.metadata.description,
@@ -580,14 +571,6 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       console.error('Mint error:', err);
       toast.error(`Mint failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
     }
-  };
-
-  const handleDownloadPattern = () => {
-    if (!generatedPattern?.htmlUrl) return;
-    
-    // Open the interactive HTML pattern in a new tab
-    window.open(generatedPattern.htmlUrl, '_blank');
-    toast.success('Pattern opened in new tab!');
   };
 
   // Pagination logic
@@ -632,204 +615,94 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           </p>
         </div>
 
-      <div className="grid md:grid-cols-[1fr_3fr] gap-8">
-        {/* NFT Analysis */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              Your Shape Journey
-            </CardTitle>
-            <CardDescription>
-              Analysis of your on-chain participation
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Chain Info */}
-            <div className="text-xs text-muted-foreground bg-muted/30 rounded p-2">
-              📊 Reading from {chainConfig.read.name}<br />🎯 Minting to {chainConfig.mint.name}
+      {/* Your Shape Journey - Full Width */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-xl">
+                <Package className="h-6 w-6" />
+                Your Shape Journey
+              </CardTitle>
+              <CardDescription>
+                Analysis of your on-chain participation
+              </CardDescription>
+            </div>
+            <div className="text-xs text-muted-foreground text-right">
+              <div>📊 Reading from {chainConfig.read.name}</div>
+              <div>🎯 Minting to {chainConfig.mint.name}</div>
               {config.mintChainId === 360 && !config.allowMainnetMinting && (
                 <div className="text-orange-600 mt-1">⚠️ Mainnet minting disabled for safety</div>
               )}
             </div>
-            
-            {isLoading ? (
-              <>
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </>
-            ) : error ? (
-              <p className="text-destructive">Failed to load NFTs</p>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-muted-foreground">Total NFTs</span>
-                  <span className="font-mono font-semibold">{nfts?.totalCount || 0}</span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-muted-foreground">Unique Collections</span>
-                  <span className="font-mono font-semibold">
-                    {nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-muted-foreground">Pattern Complexity</span>
-                  <span className="font-mono font-semibold">
-                    {nfts?.totalCount ? (nfts.totalCount > 10 ? 'High' : nfts.totalCount > 5 ? 'Medium' : 'Basic') : 'Basic'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-muted-foreground">Stack Medal Count</span>
-                  {isLoadingMedals ? (
-                    <Skeleton className="h-4 w-8" />
-                  ) : medalsError ? (
-                    <span className="font-mono font-semibold text-destructive">Error</span>
-                  ) : (
-                    <span className="font-mono font-semibold">{stackMedals?.totalMedals || 0}</span>
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Collection Reflection - AI Interpretation */}
-        {nfts && nfts.ownedNfts && nfts.ownedNfts.length > 0 && (
-          <div>
-            <CollectionReflection 
-              walletAddress={addressToUse} 
-              totalNfts={totalNfts}
-              onSentimentSubmitted={handleSentimentSubmitted}
-              onCurationCompleted={handleCurationCompleted}
-            />
           </div>
-        )}
-      </div>
-
-      {/* Curated NFTs Section - Full width above Origami Pattern */}
-      {curatedNfts && curatedNfts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Heart className="h-5 w-5" />
-              Curated Collection
-            </CardTitle>
-            <CardDescription>
-              {curationInterpretation}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Themes */}
-            {curationThemes.length > 0 && (
-              <div className="flex gap-2 flex-wrap">
-                {curationThemes.map((theme) => (
-                  <span key={theme} className="text-xs px-3 py-1 bg-primary/10 text-primary rounded-full font-medium">
-                    {theme}
-                  </span>
-                ))}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          
+          {isLoading ? (
+            <>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+            </>
+          ) : error ? (
+            <p className="text-destructive">Failed to load NFTs</p>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg">
+                <span className="font-mono font-semibold text-lg">{nfts?.totalCount || 0}</span>
+                <span className="text-muted-foreground text-sm">Total NFTs</span>
               </div>
-            )}
-
-            {/* Curated NFTs in Individual Rows */}
-            <div className="space-y-4">
-              {curatedNfts.map((nft, index) => (
-                <div key={`${nft.contractAddress}-${nft.tokenId}-${index}`} className="border rounded-lg p-4">
-                  <div className="flex gap-4">
-                    {/* NFT Image */}
-                    <div className="flex-shrink-0">
-                      <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted relative group">
-                        {nft.imageUrl ? (
-                          <Image
-                            src={nft.imageUrl}
-                            alt={nft.name || 'NFT'}
-                            fill
-                            className="object-cover transition-transform group-hover:scale-105"
-                            sizes="80px"
-                            unoptimized
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                            <Heart className="h-6 w-6" />
-                          </div>
-                        )}
-                        
-                        {/* Match Score Badge */}
-                        <div className="absolute top-1 right-1 bg-black/80 text-white px-1.5 py-0.5 rounded text-xs font-medium">
-                          {Math.round(nft.matchScore * 10)}%
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* NFT Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <h4 className="font-medium text-sm">{nft.name || 'Unnamed NFT'}</h4>
-                            <p className="text-xs text-muted-foreground">
-                              Token #{nft.tokenId} • Rank #{index + 1}
-                            </p>
-                          </div>
-                          <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">
-                            Score: {nft.matchScore.toFixed(2)}
-                          </span>
-                        </div>
-                        
-                        <div className="text-xs text-muted-foreground">
-                          <p className="truncate" title={nft.contractAddress}>
-                            Collection: {nft.contractAddress.slice(0, 6)}...{nft.contractAddress.slice(-4)}
-                          </p>
-                        </div>
-                        
-                        <div className="bg-muted/50 rounded p-2">
-                          <p className="text-xs">{nft.reason}</p>
-                        </div>
-
-                        {/* Match Details */}
-                        {nft.matchDetails && (
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-border/50">
-                            {nft.matchDetails.textMatches.length > 0 && (
-                              <div>
-                                <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                                  📝 Text: {nft.matchDetails.textMatches.length}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {nft.matchDetails.themeMatches.length > 0 && (
-                              <div>
-                                <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
-                                  🎭 Themes: {nft.matchDetails.themeMatches.length}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {nft.matchDetails.visualMatches.length > 0 && (
-                              <div>
-                                <p className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1">
-                                  🎨 Visual: {nft.matchDetails.visualMatches.length}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg">
+                <span className="font-mono font-semibold text-lg">
+                  {nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0}
+                </span>
+                <span className="text-muted-foreground text-sm">Unique Collections</span>
+              </div>
+              <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg">
+                <span className="font-mono font-semibold text-lg">
+                  {nfts?.totalCount ? (nfts.totalCount > 10 ? 'High' : nfts.totalCount > 5 ? 'Medium' : 'Basic') : 'Basic'}
+                </span>
+                <span className="text-muted-foreground text-sm">Pattern Complexity</span>
+              </div>
+              <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg">
+                {isLoadingMedals ? (
+                  <Skeleton className="h-6 w-8" />
+                ) : medalsError ? (
+                  <span className="font-mono font-semibold text-lg text-destructive">Error</span>
+                ) : (
+                  <span className="font-mono font-semibold text-lg">{stackMedals?.totalMedals || 0}</span>
+                )}
+                <span className="text-muted-foreground text-sm">Stack Medals</span>
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Collection Reflection - AI Interpretation - Full Width */}
+      {nfts && nfts.ownedNfts && nfts.ownedNfts.length > 0 && (
+        <CollectionReflection 
+          walletAddress={addressToUse} 
+          totalNfts={totalNfts}
+          onSentimentSubmitted={handleSentimentSubmitted}
+          onCurationCompleted={handleCurationCompleted}
+          curatedNfts={curatedNfts || undefined}
+          curationInterpretation={curationInterpretation}
+          curationThemes={curationThemes}
+        />
       )}
 
+
       {/* Pattern Generation - moved below the grid */}
+      {sentimentData && (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            Origami Pattern
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <Sparkles className="h-6 w-6 text-yellow-500 animate-pulse" />
+            <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 bg-clip-text text-transparent">
+              Step 2: Generate and Mint
+            </span>
           </CardTitle>
           <CardDescription>
             Your unique Katachi Gen NFT
@@ -881,7 +754,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                         <>
                           {urlResolved && (
                             <iframe
-                              key={`iframe-${retryCount}`}
+                              key={`iframe-${generatedPattern.htmlId}`}
                               src={generatedPattern.htmlUrl}
                               className="h-full w-full rounded-lg border-0"
                               title="Interactive Katachi Pattern"
@@ -895,8 +768,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                               <div className="text-center space-y-2">
                                 <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
                                 <div className="text-sm text-muted-foreground">
-                                  {retryCount > 0 ? (
-                                    <>Waiting for arweave... retrying in {countdown}s</>
+                                  {previewDelay ? (
+                                    <>Generating your Katachi Gen... {previewCountdown}s</>
                                   ) : (
                                     <>Loading interactive pattern...</>
                                   )}
@@ -1036,46 +909,39 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-4">
                   <Button 
-                    className={`flex-1 gap-2 ${generatedPattern && !isMinting && mintState !== 'success' ? 'animate-gradient-button' : ''}`}
+                    className={`flex-1 gap-2 py-6 text-lg ${generatedPattern && !isMinting && mintState !== 'success' ? 'animate-gradient-button' : ''}`}
                     onClick={handleMintNFT}
                     disabled={isMinting || mintState === 'success'}
                   >
                     {isMinting ? (
                       <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <Loader2 className="h-5 w-5 animate-spin" />
                         {mintState === 'preparing' ? 'Preparing...' : 
                          mintState === 'pending' ? 'Confirm in Wallet' :
                          mintState === 'confirming' ? 'Minting...' : 'Minting'}
                       </>
                     ) : mintState === 'success' ? (
                       <>
-                        <Sparkles className="h-4 w-4" />
+                        <Sparkles className="h-5 w-5" />
                         Minted!
                       </>
                     ) : (
                       <>
-                        <Sparkles className="h-4 w-4" />
-                        Mint NFT (.0025 ETH)
+                        <Sparkles className="h-5 w-5" />
+                        MINT for .0025 ETH
                       </>
                     )}
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    className="flex-1 gap-2" 
-                    onClick={handleDownloadPattern}
-                  >
-                    <Download className="h-4 w-4" />
-                    Open Interactive Pattern
                   </Button>
                 </div>
               </div>
             )}
         </CardContent>
       </Card>
+      )}
 
       {/* NFT Grid Preview with Pagination */}
-      {nfts && nfts.ownedNfts && nfts.ownedNfts.length > 0 && (
-        <Card>
+      {sentimentData && nfts && nfts.ownedNfts && nfts.ownedNfts.length > 0 && (
+        <Card style={{ display: 'none' }}>
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>Your NFT Collection</span>

@@ -34,12 +34,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log('Katachi generator response:', {
-      success: data.success,
-      thumbnailId: data.thumbnailId,
-      htmlId: data.htmlId,
-      hasThumbnail: !!data.thumbnailId
-    });
+    console.log('Katachi generator FULL response!:', JSON.stringify(data, null, 2));
 
     // Create complete token metadata for minting
     if (data.success && data.thumbnailId && data.htmlId) {
@@ -51,7 +46,7 @@ export async function POST(request: NextRequest) {
         external_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,
         attributes: [
           { trait_type: 'Sentiment Filter', value: body.sentiment || 'Applied' },
-          { trait_type: 'Stack Medals', value: body.seed2 || '0' },
+          { trait_type: 'Stack Medals', value: body.stackMedals || 0 },
           { trait_type: 'Unique Collections', value: body.uniqueCollections || 0 },
           { trait_type: 'Pattern Type', value: data.patternType || 'Origami' },
           { trait_type: 'Total NFTs', value: body.totalNfts || 0 }
@@ -68,9 +63,15 @@ export async function POST(request: NextRequest) {
         }
       };
 
-      console.log('Token Ready for minting:', JSON.stringify(tokenMetadata, null, 2));
+      
+      // Return the complete token metadata instead of just the basic data
+      return NextResponse.json({
+        ...data,
+        metadata: tokenMetadata
+      });
     }
 
+    // If we couldn't create metadata, return just the basic data
     return NextResponse.json(data);
   } catch (error) {
     console.error('Error in generate-katachi API:', error);

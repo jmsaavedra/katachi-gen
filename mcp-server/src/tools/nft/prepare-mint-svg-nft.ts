@@ -161,15 +161,15 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
       ...(additionalMetadata?.curatedNfts && { curatedNfts: additionalMetadata.curatedNfts }),
     };
 
-    const tokenURI = `data:application/json;base64,${Buffer.from(JSON.stringify(nftMetadata)).toString('base64')}`;
-
-    console.log('📦 [MCP SERVER] Creating NFT metadata:', {
+    // For now, we'll prepare the metadata for Arweave upload after mint confirmation
+    // Instead of creating base64 data URI immediately
+    console.log('📦 [MCP SERVER] Preparing NFT metadata for deferred Arweave upload:', {
       name,
       descriptionLength: description.length,
       imageSource: providedImage ? 'arweave_url' : 'svg_base64',
       hasAnimationUrl: !!providedAnimationUrl,
       attributeCount: additionalMetadata?.traits?.length || 0,
-      tokenUriLength: tokenURI.length
+      metadataSize: JSON.stringify(nftMetadata).length
     });
 
     try {
@@ -257,29 +257,30 @@ export default async function prepareMintSVGNFT(params: InferSchema<typeof schem
           contractAddress,
           recipientAddress,
           tokenId: nextTokenId.toString(),
-          tokenURI,
-          nftMetadata,
           chainId,
           mintPrice: mintPrice.toString(),
           explorerUrl: `https://${isMainnet ? '' : 'sepolia.'}shapescan.xyz/address/${contractAddress}`,
           minterAddress: minterAccount.address,
+          // Remove tokenURI and nftMetadata from here - will be set after Arweave upload
         },
+        pendingMetadataJson: nftMetadata, // ← NEW: Metadata ready for Arweave upload
         instructions: {
           nextSteps: [
             '1. User executes the mint transaction (pays 0.0025 ETH)',
-            '2. MCP server automatically detects the mint and sets tokenURI',
-            '3. NFT will have complete metadata after both steps complete',
+            '2. System uploads metadata to Arweave after mint confirmation',
+            '3. System automatically sets tokenURI with Arweave URL',
             `Check transactions on ${isMainnet ? 'Shape Mainnet' : 'Shape Sepolia'} explorer`,
           ],
-          note: 'This is a two-step process: mint + setTokenURI (automated)',
+          note: 'This is a three-step process: mint → upload metadata to Arweave → setTokenURI (automated)',
         },
       };
 
-      console.log('🎉 [MCP SERVER] Two-step mint prepared:', {
+      console.log('🎉 [MCP SERVER] Three-step mint prepared (deferred metadata upload):', {
         contractAddress,
         chainId,
         mintPrice: mintPrice.toString(),
         minterAddress: minterAccount.address,
+        metadataSize: JSON.stringify(nftMetadata).length,
         processingTime: `${Date.now() - startTime}ms`
       });
 
