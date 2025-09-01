@@ -1,7 +1,7 @@
 // Thumbnail generation using Playwright
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require('playwright-core');
+const { chromium } = require('playwright');
 const { templateHTML } = require('../config');
 
 /**
@@ -10,35 +10,10 @@ const { templateHTML } = require('../config');
 async function generateThumbnail(data) {
     let browser;
     try {
-        // Try to find Chrome/Chromium executable
-        const possiblePaths = [
-            '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-            '/Applications/Chromium.app/Contents/MacOS/Chromium',
-            '/usr/bin/google-chrome-stable',
-            '/usr/bin/google-chrome',
-            '/usr/bin/chromium-browser',
-            '/usr/bin/chromium',
-            '/snap/bin/chromium',
-            process.env.CHROME_EXECUTABLE_PATH
-        ].filter(Boolean);
+        console.log('🚀 Launching Chromium with Playwright');
 
-        let executablePath = null;
-        for (const chromePath of possiblePaths) {
-            if (fs.existsSync(chromePath)) {
-                executablePath = chromePath;
-                break;
-            }
-        }
-
-        if (!executablePath) {
-            throw new Error('Chrome/Chromium not found. Please install Chrome or set CHROME_EXECUTABLE_PATH environment variable.');
-        }
-
-        console.log('🚀 Using Chrome at:', executablePath);
-
-        // Launch browser
+        // Launch browser with built-in Chromium
         browser = await chromium.launch({
-            executablePath: executablePath,
             headless: true,
             args: [
                 '--no-sandbox',
