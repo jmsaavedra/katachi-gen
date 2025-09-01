@@ -1,0 +1,7 @@
+# Blocked Contract Addresses
+# NFTs from these contracts will be filtered out during sentiment-based curation
+# Add one contract address per line
+# Lines starting with # are comments and will be ignored
+
+0x274b9f633e968a31e8f9831308170720d1072135
+0x0602b0fad4d305b2C670808Dd9f77B0A68E36c5B

@@ -7,6 +7,8 @@ import type { ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
 import { validateImageCors } from './validate-image-cors';
 import { OwnedNft } from 'alchemy-sdk';
+import fs from 'fs';
+import path from 'path';
 
 // Define the output type for interpreted NFTs
 export interface InterpretedNFTsOutput {
@@ -100,6 +102,25 @@ const VISUAL_CHARACTERISTICS = {
   abstract: ['abstract', 'geometric', 'pattern', 'fractal', 'generative', 'algorithmic'],
   realistic: ['photo', 'realistic', 'portrait', 'landscape', 'detailed'],
 };
+
+// Load blocked contracts from file
+function loadBlockedContracts(): string[] {
+  try {
+    const filePath = path.join(process.cwd(), 'blocked-contracts.txt');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    
+    return fileContent
+      .split('\n')
+      .filter(line => line.trim() && !line.trim().startsWith('#')) // Remove empty lines and comments
+      .map(addr => addr.trim().toLowerCase());
+  } catch (error) {
+    console.warn('Could not load blocked-contracts.txt, using empty list:', error);
+    return [];
+  }
+}
+
+// Blocked contract addresses - NFTs from these contracts will be filtered out
+const BLOCKED_CONTRACTS = loadBlockedContracts();
 
 // Color keywords mapping
 const COLOR_KEYWORDS = {
@@ -368,6 +389,12 @@ export default async function interpretCollectionSentiment({
       
       console.log(`🔍 [${index + 1}/${scoredNfts.length}] Evaluating: ${nftItem.nft.name || 'Unnamed'} (score: ${nftItem.score.toFixed(2)})`);
       console.log(`    ContentType: ${contentType || 'unknown'}`);
+      
+      // Filter out blocked contracts
+      if (BLOCKED_CONTRACTS.includes(collectionAddress)) {
+        console.log(`🚫 Skipped (blocked contract): ${nftItem.nft.name || 'Unnamed'} from ${collectionAddress}`);
+        continue;
+      }
       
       // Filter out non-image content types and unknown types
       if (!contentType || !contentType.startsWith('image/')) {

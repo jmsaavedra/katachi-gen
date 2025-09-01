@@ -128,6 +128,9 @@ Each selected NFT includes comprehensive match analysis:
 - Cannot detect objects in artwork (e.g., "apple" mentioned but can't see actual apples in images)
 - Color detection relies on metadata/filenames rather than true color analysis
 
+**Blocked Contracts:**
+The sentiment interpretation tool filters out NFTs from specific contract addresses listed in `blocked-contracts.txt`. This ensures that undesirable or spam collections don't appear in curated results. To add or remove blocked contracts, edit the `blocked-contracts.txt` file with one contract address per line. Lines starting with `#` are treated as comments.
+
 **Example Scoring:**
 User Input: *"Collecting makes me feel peaceful and connected to nature"*
 - NFT "Zen Garden #42" with green trees in description:
@@ -248,6 +251,7 @@ src/
 ├── middleware.ts           # Auth/logging if needed
 ├── types.ts                # Shared outputs
 └── xmcp.config.ts          # xmcp server config
+blocked-contracts.txt       # List of NFT contracts to filter out
 ```
 
 Categories keep things modular. Add a tool to /tools/gasback/ and xmcp auto-picks it up. No monolith mess.

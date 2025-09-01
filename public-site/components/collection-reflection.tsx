@@ -149,14 +149,14 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                 value={sentiment}
                 onChange={(e) => setSentiment(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && sentiment.trim() && !isLoading) {
+                  if (e.key === 'Enter' && !e.shiftKey && sentiment.trim() && !isLoading && !isCurated) {
                     e.preventDefault();
                     handleSubmit();
                   }
                 }}
-                className="min-h-[80px] w-3/5"
+                className={`min-h-[80px] w-3/5 text-center ${isCurated ? 'opacity-75 cursor-not-allowed' : ''}`}
                 style={{ fontSize: '1.125rem', lineHeight: '1.75rem' }}
-                disabled={isLoading}
+                disabled={isLoading || isCurated}
               />
             </div>
           </div>
@@ -231,27 +231,34 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                     <div className="flex gap-4">
                       {/* NFT Image */}
                       <div className="flex-shrink-0">
-                        <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted relative group">
-                          {nft.imageUrl ? (
-                            <Image
-                              src={nft.imageUrl}
-                              alt={nft.name || 'NFT'}
-                              fill
-                              className="object-cover transition-transform group-hover:scale-105"
-                              sizes="80px"
-                              unoptimized
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                              <Heart className="h-6 w-6" />
+                        <a 
+                          href={`https://opensea.io/assets/shape/${nft.contractAddress}/${nft.tokenId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block"
+                        >
+                          <div className="w-32 h-32 rounded-lg overflow-hidden bg-muted relative group cursor-pointer">
+                            {nft.imageUrl ? (
+                              <Image
+                                src={nft.imageUrl}
+                                alt={nft.name || 'NFT'}
+                                fill
+                                className="object-cover transition-transform group-hover:scale-105"
+                                sizes="128px"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                <Heart className="h-8 w-8" />
+                              </div>
+                            )}
+                            
+                            {/* Match Score Badge */}
+                            <div className="absolute top-1 right-1 bg-black/80 text-white px-1.5 py-0.5 rounded text-xs font-medium">
+                              {Math.round(nft.matchScore * 10)}%
                             </div>
-                          )}
-                          
-                          {/* Match Score Badge */}
-                          <div className="absolute top-1 right-1 bg-black/80 text-white px-1.5 py-0.5 rounded text-xs font-medium">
-                            {Math.round(nft.matchScore * 10)}%
                           </div>
-                        </div>
+                        </a>
                       </div>
                       
                       {/* NFT Details */}

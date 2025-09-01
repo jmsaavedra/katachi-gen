@@ -7,7 +7,7 @@ import { KatachiGenerator } from '@/components/katachi-generator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Code } from 'lucide-react';
+import { Sparkles, Code, ChevronRight, ChevronLeft } from 'lucide-react';
 import Image from 'next/image';
 import { useHeader } from '@/contexts/header-context';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
@@ -18,6 +18,7 @@ export default function Home() {
   const [showGenerator, setShowGenerator] = useState(false);
   const [testAddress, setTestAddress] = useState('');
   const [testAddressError, setTestAddressError] = useState('');
+  const [currentIframeIndex, setCurrentIframeIndex] = useState(0);
   
   // Check if test mode is enabled via environment variable
   const isTestModeEnabled = process.env.NEXT_PUBLIC_ENABLE_TEST_MODE === 'true';
@@ -94,7 +95,7 @@ export default function Home() {
               {({ openConnectModal }) => (
                 <Button 
                   size="lg"
-                  className="gap-3 px-24 py-8 text-xl animate-gradient-button w-80"
+                  className="gap-3 px-24 py-8 text-xl animate-gradient-button w-full max-w-md"
                   onClick={openConnectModal}
                 >
                   <Sparkles className="h-6 w-6" />
@@ -105,7 +106,7 @@ export default function Home() {
           ) : (
             <Button 
               size="lg" 
-              className="gap-3 px-24 py-8 text-xl animate-gradient-button w-80"
+              className="gap-3 px-24 py-8 text-xl animate-gradient-button w-full max-w-md"
               onClick={handleMintClick}
             >
               <Sparkles className="h-6 w-6" />
@@ -116,12 +117,12 @@ export default function Home() {
         
         {/* Test Mode */}
         {isTestModeEnabled && (
-          <Card className="w-full max-w-md mx-auto border-dashed border-muted-foreground/20 bg-muted/30">
-            <CardContent className="pt-6">
+          <Card className="w-full max-w-md mx-auto mt-10 border-dashed border-muted-foreground/20 bg-muted/30">
+            <CardContent className="pt-0 pb-4">
               <div className="space-y-3">
                 <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                   <Code className="h-4 w-4" />
-                  Test Mode
+                  Try in Explore Mode
                 </div>
                 <p className="text-xs text-muted-foreground/80">
                   Test with any wallet address (bypasses wallet connection)
@@ -152,7 +153,7 @@ export default function Home() {
                   
                   <div className="mt-3 space-y-2">
                     <p className="text-xs text-muted-foreground/80 text-center">
-                      Or, explore a top collector wallet:
+                      Or, explore a random top collector wallet:
                     </p>
                     <Button
                       size="sm"
@@ -186,22 +187,95 @@ export default function Home() {
 
       {/* Interactive Preview */}
       <div className="mt-12 mb-8">
-        <div className="flex flex-col items-center">
+        {/* Desktop: Show both iframes side by side */}
+        <div className="hidden md:flex flex-col items-center">
+          <div className="flex gap-6 justify-center">
+            <div className="flex flex-col items-center">
+              <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
+                <iframe
+                  src="https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
+                  width="600"
+                  height="600"
+                  className="border-0 bg-transparent"
+                  title="Katachi Gen Interactive Demo 1"
+                  allowFullScreen
+                />
+              </div>
+              <a
+                href="https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 text-sm text-primary hover:underline font-medium"
+              >
+                View live interactive token →
+              </a>
+            </div>
+            <div className="flex flex-col items-center">
+              <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
+                <iframe
+                  src="https://storage.katachi-gen.com/katachi_1756737150668.html"
+                  width="600"
+                  height="600"
+                  className="border-0 bg-transparent"
+                  title="Katachi Gen Interactive Demo 2"
+                  allowFullScreen
+                />
+              </div>
+              <a
+                href="https://storage.katachi-gen.com/katachi_1756737150668.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-4 text-sm text-primary hover:underline font-medium"
+              >
+                View live interactive token →
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile: Show one iframe with pagination */}
+        <div className="md:hidden flex flex-col items-center">
           <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
             <iframe
-              src="https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
-              width="750"
-              height="750"
+              src={currentIframeIndex === 0 
+                ? "https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
+                : "https://storage.katachi-gen.com/katachi_1756737150668.html"
+              }
+              width="350"
+              height="350"
               className="border-0 bg-transparent"
-              title="Katachi Gen Interactive Demo"
+              title={`Katachi Gen Interactive Demo ${currentIframeIndex + 1}`}
               allowFullScreen
             />
           </div>
+          <div className="flex items-center gap-4 mt-4">
+            {currentIframeIndex > 0 && (
+              <button
+                onClick={() => setCurrentIframeIndex(0)}
+                className="flex items-center gap-1 text-sm text-primary hover:underline font-medium"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Previous
+              </button>
+            )}
+            {currentIframeIndex < 1 && (
+              <button
+                onClick={() => setCurrentIframeIndex(1)}
+                className="flex items-center gap-1 text-sm text-primary hover:underline font-medium"
+              >
+                Next
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           <a
-            href="https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
+            href={currentIframeIndex === 0 
+              ? "https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
+              : "https://storage.katachi-gen.com/katachi_1756737150668.html"
+            }
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-4 text-sm text-primary hover:underline font-medium"
+            className="mt-2 text-sm text-primary hover:underline font-medium"
           >
             View live interactive token →
           </a>
