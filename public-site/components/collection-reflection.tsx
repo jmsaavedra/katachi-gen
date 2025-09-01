@@ -123,15 +123,15 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   }
 
   return (
-    <Card>
+    <Card className={!isCurated ? "pulse-blue-border" : ""}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-xl">
-          <Heart className="h-6 w-6 text-red-500 animate-pulse" />
+        <CardTitle className="flex items-center gap-2 text-2xl">
+          <Heart className="h-7 w-7 text-red-500 animate-pulse" />
           <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 bg-clip-text text-transparent">
             Step 1: Sentiment Filter
           </span>
         </CardTitle>
-        <CardDescription className="text-lg">
+        <CardDescription className="text-base">
           Share your feelings about collecting on Shape. Our AI will interpret your words and curate 5 pieces for your Katachi Gen Shape.
         </CardDescription>
       </CardHeader>

@@ -608,37 +608,47 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       )}
       
       <div className="w-full max-w-6xl mx-auto space-y-8">
-        <div className="text-center space-y-4">
-          <h2 className="text-3xl font-light">Mint a Katachi Gen</h2>
-          <p className="text-muted-foreground">
-            Your unique origami pattern based on your Shape journey
-          </p>
+        <div className="space-y-4">
+          <div className="flex gap-2 flex-wrap">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border text-xs">
+              <span>📊</span>
+              <span className="text-muted-foreground">Reading from</span>
+              <span className="font-medium">{chainConfig.read.name}</span>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border text-xs">
+              <span>🎯</span>
+              <span className="text-muted-foreground">Minting to</span>
+              <span className="font-medium">{chainConfig.mint.name}</span>
+            </div>
+            {config.mintChainId === 360 && !config.allowMainnetMinting && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700 text-xs text-orange-600 dark:text-orange-400">
+                <span>⚠️</span>
+                <span className="font-medium">Mainnet minting disabled for safety</span>
+              </div>
+            )}
+          </div>
+          <div className="text-center">
+            <h2 className="text-3xl font-light">Mint a Katachi Gen</h2>
+            <p className="text-muted-foreground">
+              Your unique origami pattern based on your Shape journey
+            </p>
+          </div>
         </div>
 
       {/* Your Shape Journey - Full Width */}
       <Card>
-        <CardHeader>
+        <CardHeader className="pt-1 pb-0">
           <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="flex items-center gap-2 text-xl">
-                <Package className="h-6 w-6" />
-                Your Shape Journey
-              </CardTitle>
-              <CardDescription>
-                Analysis of your on-chain participation
-              </CardDescription>
-            </div>
-            <div className="text-xs text-muted-foreground text-right">
-              <div>📊 Reading from {chainConfig.read.name}</div>
-              <div>🎯 Minting to {chainConfig.mint.name}</div>
-              {config.mintChainId === 360 && !config.allowMainnetMinting && (
-                <div className="text-orange-600 mt-1">⚠️ Mainnet minting disabled for safety</div>
-              )}
-            </div>
+            <CardTitle className="flex items-center gap-1.5 text-sm">
+              <Package className="h-4 w-4" />
+              Your Shape Journey
+            </CardTitle>
+            <CardDescription className="text-xs">
+              Analysis of your on-chain participation
+            </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4">
-          
+        <CardContent className="pt-0 pb-2">
           {isLoading ? (
             <>
               <Skeleton className="h-4 w-full" />
@@ -649,31 +659,31 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
             <p className="text-destructive">Failed to load NFTs</p>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg">
-                <span className="font-mono font-semibold text-lg">{nfts?.totalCount || 0}</span>
-                <span className="text-muted-foreground text-sm">Total NFTs</span>
+              <div className="flex flex-col items-center py-1.5 px-2 bg-muted/30 rounded-lg">
+                <span className="font-mono font-semibold text-sm">{nfts?.totalCount || 0}</span>
+                <span className="text-muted-foreground text-xs">Total NFTs</span>
               </div>
-              <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg">
-                <span className="font-mono font-semibold text-lg">
+              <div className="flex flex-col items-center py-1.5 px-2 bg-muted/30 rounded-lg">
+                <span className="font-mono font-semibold text-sm">
                   {nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0}
                 </span>
-                <span className="text-muted-foreground text-sm">Unique Collections</span>
+                <span className="text-muted-foreground text-xs">Unique Collections</span>
               </div>
-              <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg">
-                <span className="font-mono font-semibold text-lg">
+              <div className="flex flex-col items-center py-1.5 px-2 bg-muted/30 rounded-lg">
+                <span className="font-mono font-semibold text-sm">
                   {nfts?.totalCount ? (nfts.totalCount > 10 ? 'High' : nfts.totalCount > 5 ? 'Medium' : 'Basic') : 'Basic'}
                 </span>
-                <span className="text-muted-foreground text-sm">Pattern Complexity</span>
+                <span className="text-muted-foreground text-xs">Pattern Complexity</span>
               </div>
-              <div className="flex flex-col items-center p-4 bg-muted/30 rounded-lg">
+              <div className="flex flex-col items-center py-1.5 px-2 bg-muted/30 rounded-lg">
                 {isLoadingMedals ? (
-                  <Skeleton className="h-6 w-8" />
+                  <Skeleton className="h-4 w-8" />
                 ) : medalsError ? (
-                  <span className="font-mono font-semibold text-lg text-destructive">Error</span>
+                  <span className="font-mono font-semibold text-sm text-destructive">Error</span>
                 ) : (
-                  <span className="font-mono font-semibold text-lg">{stackMedals?.totalMedals || 0}</span>
+                  <span className="font-mono font-semibold text-sm">{stackMedals?.totalMedals || 0}</span>
                 )}
-                <span className="text-muted-foreground text-sm">Stack Medals</span>
+                <span className="text-muted-foreground text-xs">Stack Medals</span>
               </div>
             </div>
           )}
@@ -696,10 +706,10 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
 
       {/* Pattern Generation - moved below the grid */}
       {sentimentData && (
-      <Card>
+      <Card className={sentimentData && mintState !== 'success' ? "pulse-blue-border" : ""}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <Sparkles className="h-6 w-6 text-yellow-500 animate-pulse" />
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <Sparkles className="h-7 w-7 text-yellow-500 animate-pulse" />
             <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 bg-clip-text text-transparent">
               Step 2: Generate and Mint
             </span>
