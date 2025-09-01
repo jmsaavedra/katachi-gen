@@ -25,6 +25,8 @@ export interface InterpretedNFTsOutput {
       thumbnailUrl?: string;
       pngUrl?: string;
       originalUrl?: string;
+      contentType?: string;
+      size?: number;
     };
     reason: string;
     matchScore: number;
@@ -212,8 +214,8 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
   const themeMatches: string[] = [];
   const visualMatches: string[] = [];
   
-  // Direct word matches in sentiment
-  const sentimentWords = lowerSentiment.split(/\s+/);
+  // Direct word matches in sentiment - deduplicate words to avoid redundant reasons
+  const sentimentWords = [...new Set(lowerSentiment.split(/\s+/))];
   for (const word of sentimentWords) {
     if (word.length > 3) { // Skip short words
       if (nftName.includes(word)) {
@@ -328,8 +330,10 @@ export default async function interpretCollectionSentiment({
       allNfts = allNfts.concat(nftsResponse.ownedNfts);
       pageKey = nftsResponse.pageKey;
       
-      // Limit to 500 NFTs for performance
-      if (allNfts.length >= 500) break;
+      console.log(`📄 Fetched ${nftsResponse.ownedNfts.length} NFTs (total: ${allNfts.length})`);
+      
+      // Limit to 2000 NFTs for performance
+      if (allNfts.length >= 2000) break;
     } while (pageKey);
     
     if (allNfts.length === 0) {
@@ -352,80 +356,34 @@ export default async function interpretCollectionSentiment({
     
     const selectedNfts: typeof scoredNfts = [];
     const collectionCounts = new Map<string, number>();
-    const maxCandidates = Math.min(scoredNfts.length, count * 4); // Check up to 4x requested count
     
-    // CORS validation commented out - including all NFTs regardless of CORS status
-    /*
-    console.log(`🔍 CORS validating ${maxCandidates} candidate NFTs for sentiment interpretation...`);
+    // Select NFTs continuously until we reach the target count
+    console.log(`🎯 Selecting ${count} image NFTs based on sentiment match scores...`);
+    console.log(`📊 Available candidates: ${scoredNfts.length} total NFTs to evaluate`);
     
-    // Batch CORS validation for performance
-    const corsValidationPromises = scoredNfts.slice(0, maxCandidates).map(async (nftItem, index) => {
-      const imageUrl = nftItem.nft.image?.cachedUrl || nftItem.nft.image?.pngUrl || nftItem.nft.image?.thumbnailUrl || nftItem.nft.image?.originalUrl;
-      if (!imageUrl) {
-        return { ...nftItem, corsValid: false, corsReason: 'No image URL' };
-      }
-      
-      console.log(`🔗 [${index + 1}/${maxCandidates}] Validating CORS: ${imageUrl}`);
-      const corsValid = await validateImageCors(imageUrl, 3000); // 3 second timeout
-      
-      return { 
-        ...nftItem, 
-        corsValid, 
-        corsReason: corsValid ? 'CORS valid' : 'CORS blocked' 
-      };
-    });
-    
-    const corsResults = await Promise.allSettled(corsValidationPromises);
-    
-    // Select from CORS-valid NFTs only
-    for (const result of corsResults) {
-      if (result.status === 'fulfilled') {
-        const nftItem = result.value;
-        const collectionAddress = nftItem.nft.contract.address.toLowerCase();
-        const currentCount = collectionCounts.get(collectionAddress) || 0;
-        
-        if (
-          nftItem.corsValid && 
-          currentCount < 2 && // Allow max 2 per collection
-          selectedNfts.length < count
-        ) {
-          selectedNfts.push(nftItem);
-          collectionCounts.set(collectionAddress, currentCount + 1);
-          console.log(`✅ Selected NFT: ${nftItem.nft.name || 'Unnamed'} (${nftItem.reason})`);
-        } else {
-          if (!nftItem.corsValid) {
-            console.log(`❌ Skipped CORS-blocked NFT: ${nftItem.nft.name || 'Unnamed'}`);
-          } else if (currentCount >= 2) {
-            console.log(`❌ Skipped duplicate collection NFT: ${nftItem.nft.name || 'Unnamed'} (already have 2 from this collection)`);
-          } else if (selectedNfts.length >= count) {
-            console.log(`❌ Skipped NFT (quota full): ${nftItem.nft.name || 'Unnamed'}`);
-          }
-        }
-      }
-      
-      if (selectedNfts.length >= count) break;
-    }
-    */
-    
-    // Select NFTs without CORS filtering
-    console.log(`🎯 Selecting top ${count} NFTs based on sentiment match scores...`);
-    console.log(`📊 Available candidates: ${scoredNfts.length}, checking top ${maxCandidates}`);
-    
-    for (const [index, nftItem] of scoredNfts.slice(0, maxCandidates).entries()) {
+    for (const [index, nftItem] of scoredNfts.entries()) {
       const collectionAddress = nftItem.nft.contract.address.toLowerCase();
       const currentCount = collectionCounts.get(collectionAddress) || 0;
+      const contentType = nftItem.nft.image?.contentType;
       
-      console.log(`🔍 [${index + 1}/${maxCandidates}] Evaluating: ${nftItem.nft.name || 'Unnamed'} (score: ${nftItem.score.toFixed(2)}, collection: ${collectionAddress})`);
+      console.log(`🔍 [${index + 1}/${scoredNfts.length}] Evaluating: ${nftItem.nft.name || 'Unnamed'} (score: ${nftItem.score.toFixed(2)})`);
+      console.log(`    ContentType: ${contentType || 'unknown'}`);
+      
+      // Filter out non-image content types and unknown types
+      if (!contentType || !contentType.startsWith('image/')) {
+        console.log(`❌ Skipped (non-image): ${nftItem.nft.name || 'Unnamed'} (${contentType || 'unknown'})`);
+        continue;
+      }
       
       if (
-        currentCount < 2 && // Allow max 2 per collection
+        currentCount < 1 && // Allow max 1 per collection
         selectedNfts.length < count
       ) {
         selectedNfts.push(nftItem);
         collectionCounts.set(collectionAddress, currentCount + 1);
         console.log(`✅ Selected NFT: ${nftItem.nft.name || 'Unnamed'} (${nftItem.reason})`);
       } else {
-        if (currentCount >= 2) {
+        if (currentCount >= 1) {
           console.log(`❌ Skipped (collection limit): ${nftItem.nft.name || 'Unnamed'} (already have ${currentCount} from this collection)`);
         } else if (selectedNfts.length >= count) {
           console.log(`❌ Skipped (count limit reached): ${nftItem.nft.name || 'Unnamed'}`);
@@ -439,7 +397,7 @@ export default async function interpretCollectionSentiment({
     
     // If we didn't get enough NFTs, log a warning
     if (selectedNfts.length < count) {
-      console.warn(`⚠️ Only found ${selectedNfts.length} NFTs out of ${count} requested from ${maxCandidates} candidates`);
+      console.warn(`⚠️ Only found ${selectedNfts.length} image NFTs out of ${count} requested from ${scoredNfts.length} total candidates`);
     }
     
     // Generate interpretation
@@ -461,6 +419,8 @@ export default async function interpretCollectionSentiment({
           thumbnailUrl: item.nft.image?.thumbnailUrl || undefined,
           pngUrl: item.nft.image?.pngUrl || undefined,
           originalUrl: item.nft.image?.originalUrl || undefined,
+          contentType: item.nft.image?.contentType || undefined,
+          size: item.nft.image?.size || undefined,
         },
         reason: item.reason,
         matchScore: Math.round(item.score * 100) / 100,
