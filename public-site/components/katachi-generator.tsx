@@ -978,7 +978,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-4">
                   <Button 
-                    className={`flex-1 gap-2 py-6 text-lg ${generatedPattern && !isMinting && mintState !== 'success' && !overrideAddress ? 'animate-gradient-button' : ''}`}
+                    className={`flex-1 gap-2 py-8 text-lg ${generatedPattern && !isMinting && mintState !== 'success' && !overrideAddress ? 'animate-gradient-button' : ''}`}
                     onClick={handleMintNFT}
                     disabled={isMinting || mintState === 'success' || !!overrideAddress}
                   >

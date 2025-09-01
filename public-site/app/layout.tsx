@@ -38,10 +38,22 @@ export const metadata: Metadata = {
     'japanese art',
     'hackathon',
   ],
+  authors: [
+    { name: 'sembo', url: 'https://x.com/1000b' },
+    { name: 'quietloops', url: 'https://x.com/quietloops' },
+  ],
+  creator: 'sembo & quietloops',
+  publisher: 'Katachi Gen',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   metadataBase: new URL('https://katachi-gen.vercel.app'),
   alternates: {
     canonical: '/',
   },
+  category: 'NFT Collection',
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -50,6 +62,15 @@ export const metadata: Metadata = {
     description:
       'An NFT collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape.',
     siteName: 'Katachi Gen',
+    images: [
+      {
+        url: '/lp-1.png',
+        width: 1200,
+        height: 630,
+        alt: 'Katachi Gen - Transform your Shape journey into unique origami NFTs',
+        type: 'image/png',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
@@ -58,6 +79,7 @@ export const metadata: Metadata = {
       'Transform your on-chain journey into unique origami NFTs. A Shapecraft2 Hackathon submission.',
     site: '@Shape_L2',
     creator: '@1000b',
+    images: ['/lp-1.png'],
   },
   robots: {
     index: true,
@@ -90,6 +112,17 @@ export const metadata: Metadata = {
     ],
   },
   manifest: '/site.webmanifest',
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
+  other: {
+    'theme-color': '#000000',
+    'color-scheme': 'dark light',
+    'twitter:image': 'https://katachi-gen.vercel.app/lp-1.png',
+    'twitter:image:alt': 'Katachi Gen - Transform your Shape journey into unique origami NFTs',
+    'og:image:width': '1200',
+    'og:image:height': '630',
+  },
 };
 
 export default function RootLayout({
@@ -97,8 +130,43 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Katachi Gen",
+    "alternateName": "Shape Revealed",
+    "url": "https://katachi-gen.vercel.app",
+    "description": "An NFT collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape.",
+    "creator": [
+      {
+        "@type": "Person",
+        "name": "sembo",
+        "url": "https://x.com/1000b"
+      },
+      {
+        "@type": "Person", 
+        "name": "quietloops",
+        "url": "https://x.com/quietloops"
+      }
+    ],
+    "inLanguage": "en-US",
+    "about": {
+      "@type": "Thing",
+      "name": "NFT Collection",
+      "description": "Generative origami art based on blockchain data"
+    },
+    "genre": ["NFT", "Generative Art", "Origami", "Blockchain"],
+    "keywords": "katachi gen, origami nft, shape network, generative art, web3, blockchain"
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <HeaderProvider>
@@ -106,7 +174,7 @@ export default function RootLayout({
               {/* Testnet Header */}
               {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && (
                 <div className="bg-blue-600 text-white text-center text-xs font-medium h-5 flex items-center justify-center">
-                  Currently Minting on Shape Sepolia Testnet
+                  Currently Minting on Shape Sepolia. Mainnet soon 🚀
                 </div>
               )}
               
@@ -120,19 +188,19 @@ export default function RootLayout({
                   <div>
                     Made with 🤍 by{' '}
                     <Link
-                      href="https://x.com/1000b"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      sembo
-                    </Link>
-                    {' '}and{' '}
-                    <Link
                       href="https://x.com/quietloops"
                       target="_blank"
                       rel="noreferrer"
                     >
                       quietloops
+                    </Link>
+                    {' '}and{' '}
+                    <Link
+                      href="https://x.com/1000b"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      sembo
                     </Link>
                     .
                   </div>
