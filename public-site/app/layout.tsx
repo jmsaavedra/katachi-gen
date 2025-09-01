@@ -4,6 +4,7 @@ import { HeaderProvider } from '@/contexts/header-context';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
+import { Github } from 'lucide-react';
 import './globals.css';
 
 const geistSans = Geist({
@@ -127,16 +128,29 @@ export default function RootLayout({
                     </Link>
                     .
                   </div>
-                  <div className="text-xs">
-                    Contract:{' '}
-                    <Link
-                      href="https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="font-mono hover:underline"
-                    >
-                      0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57
-                    </Link>
+                  <div className="text-xs space-x-4">
+                    <span>
+                      Contract:{' '}
+                      <Link
+                        href="https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-mono hover:underline"
+                      >
+                        0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57
+                      </Link>
+                    </span>
+                    <span>
+                      <Link
+                        href="https://github.com/jmsaavedra/katachi-gen"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:underline inline-flex items-center gap-1"
+                      >
+                        <Github className="h-3 w-3" />
+                        View on GitHub
+                      </Link>
+                    </span>
                   </div>
                 </div>
               </div>

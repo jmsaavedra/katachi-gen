@@ -14,11 +14,15 @@ export function HeaderWrapper() {
           <span className="text-xl font-light">Katachi Gen</span>
           <span className="text-xl opacity-70">形現</span>
         </Link>
-        {showWalletInHeader && (
-          <div className="flex items-center gap-2">
-            <WalletConnect />
-          </div>
-        )}
+        <div className="flex items-center gap-4">
+          <Link 
+            href="/about" 
+            className="px-4 py-2 border border-border rounded-md text-sm font-medium text-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          >
+            About
+          </Link>
+          {showWalletInHeader && <WalletConnect />}
+        </div>
       </div>
     </header>
   );

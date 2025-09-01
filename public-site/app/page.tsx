@@ -75,23 +75,29 @@ export default function Home() {
           Shape Revealed
         </p>
         <div className="space-y-4 max-w-2xl mx-auto">
-          <p className="text-muted-foreground text-lg leading-relaxed">
+          <p className="text-muted-foreground text-xl leading-relaxed">
             Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey on ShapeL2, creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.
           </p>
         </div>
       </div>
 
       <div className="mt-8 space-y-6">
+        <p className="text-center text-muted-foreground text-xl leading-relaxed max-w-md mx-auto">
+          <strong>Katachi</strong> (形) = Shape/Form in Japanese<br/>
+          <strong>Gen</strong> (現) = To Appear/Manifest<br/>
+          Together: <strong>Shape Revealed</strong>
+        </p><br></br>
+        
         <div className="flex justify-center">
           {!isConnected ? (
             <ConnectButton.Custom>
               {({ openConnectModal }) => (
                 <Button 
                   size="lg"
-                  className="gap-2 px-10 py-6 text-lg animate-gradient-button"
+                  className="gap-3 px-24 py-8 text-xl animate-gradient-button w-80"
                   onClick={openConnectModal}
                 >
-                  <Sparkles className="h-5 w-5" />
+                  <Sparkles className="h-6 w-6" />
                   Connect Wallet
                 </Button>
               )}
@@ -99,10 +105,10 @@ export default function Home() {
           ) : (
             <Button 
               size="lg" 
-              className="gap-2 px-10 py-6 text-lg animate-gradient-button"
+              className="gap-3 px-24 py-8 text-xl animate-gradient-button w-80"
               onClick={handleMintClick}
             >
-              <Sparkles className="h-5 w-5" />
+              <Sparkles className="h-6 w-6" />
               Mint Your Katachi Gen 形現
             </Button>
           )}
