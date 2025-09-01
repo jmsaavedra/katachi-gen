@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Sparkles, Heart } from 'lucide-react';
+import Image from 'next/image';
 import { Address } from 'viem';
 
 interface InterpretedNFT {
@@ -29,9 +30,12 @@ interface CollectionReflectionProps {
   totalNfts: number;
   onSentimentSubmitted?: (sentiment: string, filteredNfts: InterpretedNFT[]) => void;
   onCurationCompleted?: (interpretation: string, themes: string[], nfts: InterpretedNFT[], sentiment?: string) => void;
+  curatedNfts?: InterpretedNFT[];
+  curationInterpretation?: string;
+  curationThemes?: string[];
 }
 
-export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubmitted, onCurationCompleted }: CollectionReflectionProps) {
+export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubmitted, onCurationCompleted, curatedNfts = [], curationInterpretation = '', curationThemes = [] }: CollectionReflectionProps) {
   // Random 5-word sentences for development testing
   const devSentences = [
     'I love creative community vibes',
@@ -121,19 +125,21 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Heart className="h-5 w-5" />
-          Sentiment Filter
+        <CardTitle className="flex items-center gap-2 text-xl">
+          <Heart className="h-6 w-6 text-red-500 animate-pulse" />
+          <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 bg-clip-text text-transparent">
+            Step 1: Sentiment Filter
+          </span>
         </CardTitle>
-        <CardDescription>
-          Share your feelings about collecting on Shape and our AI will interpret your words to curate 5 pieces to be applied to your Katachi Gen Shape.
+        <CardDescription className="text-lg">
+          Share your feelings about collecting on Shape. Our AI will interpret your words and curate 5 pieces for your Katachi Gen Shape.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Input Form - Always visible */}
         <div className="space-y-6">
           <div className="space-y-4 pt-4">
-            <label className="text-base font-bold block text-center">
+            <label className="text-lg font-bold block text-center">
               What does collecting art mean to you?<br />
               What&apos;s your favorite thing about collecting on Shape?
             </label>
@@ -147,13 +153,13 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                   handleSubmit();
                 }
               }}
-              className="min-h-[80px]"
+              className="min-h-[80px] text-base"
               disabled={isLoading}
             />
           </div>
 
-          <div className="flex items-end gap-4 pb-2">
-            <div className="flex-1">
+          <div className="flex justify-center pb-2">
+            <div className="flex-1" style={{ display: 'none' }}>
               <label className="text-sm font-medium mb-2 block">
                 Number of NFTs to curate
               </label>
@@ -169,32 +175,141 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
               </Select>
             </div>
 
-            <Button 
-              onClick={handleSubmit}
-              disabled={isLoading || !sentiment.trim() || isCurated}
-              className={`gap-2 ${!isLoading && sentiment.trim() && !error && !isCurated ? 'animate-gradient-button' : ''}`}
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Interpreting...
-                </>
-              ) : isCurated ? (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Curated
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4" />
-                  Curate Collection
-                </>
-              )}
-            </Button>
+            {!isCurated && (
+              <Button 
+                onClick={handleSubmit}
+                disabled={isLoading || !sentiment.trim() || isCurated}
+                className={`gap-3 text-lg px-8 py-6 ${!isLoading && sentiment.trim() && !error && !isCurated ? 'animate-gradient-button' : ''}`}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Interpreting...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-5 w-5" />
+                    Curate Collection
+                  </>
+                )}
+              </Button>
+            )}
           </div>
 
           {error && (
-            <p className="text-sm text-destructive">{error}</p>
+            <p className="text-base text-destructive text-center">{error}</p>
+          )}
+
+          {/* Curated Collection Results */}
+          {isCurated && curatedNfts && curatedNfts.length > 0 && (
+            <div className="space-y-6 pt-6 border-t">
+              {/* Interpretation */}
+              {curationInterpretation && (
+                <div>
+                  <p className="text-base text-muted-foreground">{curationInterpretation}</p>
+                </div>
+              )}
+              
+              {/* Themes */}
+              {curationThemes.length > 0 && (
+                <div className="flex gap-2 flex-wrap">
+                  {curationThemes.map((theme) => (
+                    <span key={theme} className="text-xs px-3 py-1 bg-primary/10 text-primary rounded-full font-medium">
+                      {theme}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              {/* Curated NFTs in Individual Rows */}
+              <div className="space-y-4">
+                {curatedNfts.map((nft, index) => (
+                  <div key={`${nft.contractAddress}-${nft.tokenId}-${index}`} className="border rounded-lg p-4">
+                    <div className="flex gap-4">
+                      {/* NFT Image */}
+                      <div className="flex-shrink-0">
+                        <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted relative group">
+                          {nft.imageUrl ? (
+                            <Image
+                              src={nft.imageUrl}
+                              alt={nft.name || 'NFT'}
+                              fill
+                              className="object-cover transition-transform group-hover:scale-105"
+                              sizes="80px"
+                              unoptimized
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                              <Heart className="h-6 w-6" />
+                            </div>
+                          )}
+                          
+                          {/* Match Score Badge */}
+                          <div className="absolute top-1 right-1 bg-black/80 text-white px-1.5 py-0.5 rounded text-xs font-medium">
+                            {Math.round(nft.matchScore * 10)}%
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* NFT Details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <h4 className="font-medium text-sm">{nft.name || 'Unnamed NFT'}</h4>
+                              <p className="text-xs text-muted-foreground">
+                                Token #{nft.tokenId} • Rank #{index + 1}
+                              </p>
+                            </div>
+                            <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">
+                              Score: {nft.matchScore.toFixed(2)}
+                            </span>
+                          </div>
+                          
+                          <div className="text-xs text-muted-foreground">
+                            <p className="truncate" title={nft.contractAddress}>
+                              Collection: {nft.contractAddress.slice(0, 6)}...{nft.contractAddress.slice(-4)}
+                            </p>
+                          </div>
+                          
+                          <div className="bg-muted/50 rounded p-2">
+                            <p className="text-xs">{nft.reason}</p>
+                          </div>
+                          {/* Match Details */}
+                          {nft.matchDetails && (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-border/50">
+                              {nft.matchDetails.textMatches.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
+                                    📝 Text: {nft.matchDetails.textMatches.length}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {nft.matchDetails.themeMatches.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
+                                    🎭 Themes: {nft.matchDetails.themeMatches.length}
+                                  </p>
+                                </div>
+                              )}
+                              
+                              {nft.matchDetails.visualMatches.length > 0 && (
+                                <div>
+                                  <p className="text-xs font-medium text-purple-600 dark:text-purple-400 mb-1">
+                                    🎨 Visual: {nft.matchDetails.visualMatches.length}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
 
         </div>
