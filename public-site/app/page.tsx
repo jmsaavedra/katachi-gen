@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Code, ChevronRight, ChevronLeft } from 'lucide-react';
-import Image from 'next/image';
 import { useHeader } from '@/contexts/header-context';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
