@@ -40,7 +40,10 @@ const req = http.request(options, (res) => {
     res.on('end', () => {
         try {
             const response = JSON.parse(data);
-            console.log('Response received:');
+            console.log('📨 Full Response JSON:');
+            console.log(JSON.stringify(response, null, 2));
+            
+            console.log('\n📋 Response Summary:');
             console.log('Success:', response.success);
             console.log('Message:', response.message);
             
@@ -52,6 +55,10 @@ const req = http.request(options, (res) => {
             if (response.htmlId) {
                 console.log('HTML ID:', response.htmlId);
                 console.log('HTML URL:', response.htmlUrl);
+            }
+            
+            if (response.patternType) {
+                console.log('Pattern Type:', response.patternType);
             }
             
             // Backwards compatibility
