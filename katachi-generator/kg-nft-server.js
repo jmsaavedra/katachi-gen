@@ -1,10 +1,13 @@
+require('dotenv').config();
 const http = require('http');
+const https = require('https');
 const url = require('url');
 const fs = require('fs');
 const path = require('path');
 const Arweave = require('arweave');
 const { chromium } = require('playwright-core');
 const { uploadFileToArweave } = require('./arweave-uploader');
+const sharp = require('sharp');
 
 // Server port configuration
 const port = process.env.PORT || 3001;
@@ -13,6 +16,13 @@ const arweaveWalletPath = process.env.NODE_ENV === 'production'
   ? '../keys/arweave-wallet.json'
   : './keys/arweave-wallet.json';
 const walletAddress = 'WJBf3OFtVmHVaIwMzIGq4nBseTRobFUiJmc2OW52-Dk';
+
+// Testing mode - set to true to save files locally instead of uploading to Arweave  
+const TESTING_MODE = process.env.HTML_FILE_TESTING_MODE === 'true' || process.env.NODE_ENV === 'development';
+console.log('🔧 Environment variables check:');
+console.log('  HTML_FILE_TESTING_MODE:', process.env.HTML_FILE_TESTING_MODE);
+console.log('  NODE_ENV:', process.env.NODE_ENV);
+console.log('  TESTING_MODE (computed):', TESTING_MODE);
 
 // Wallet loading with environment variable support
 function loadArweaveWallet() {
@@ -90,7 +100,12 @@ const server = http.createServer(async (req, res) => {
                 const data = JSON.parse(body);
                 
                 // Process POST data here
-                console.log('Received data:', data);
+                console.log('Received data summary:', {
+                    walletAddress: data.walletAddress,
+                    patternType: data.patternType,
+                    seed2: data.seed2,
+                    imageCount: data.images ? data.images.length : 0
+                });
 
                 // {
                 //  walletAddress:"0x1234567890abcdef", 
@@ -114,9 +129,14 @@ const server = http.createServer(async (req, res) => {
                 }
 
                 try {
-                    // generate thumbnail image
+                    // Process images to embed them as base64 before generating anything
+                    console.log('🎨 Pre-processing images for self-contained HTML...');
+                    const processedData = await processImagesAsBase64(data);
+                    console.log('🎨 Image processing completed, proceeding with generation...');
+                    
+                    // generate thumbnail image (using processed data with base64 images)
                     console.log('Generating thumbnail...');
-                    const thumbnailBuffer = await generateThumbnail(data);
+                    const thumbnailBuffer = await generateThumbnail(processedData);
                     console.log('Thumbnail generated, size:', thumbnailBuffer.length, 'bytes');
                     
                     // Save thumbnail (optional)
@@ -127,49 +147,104 @@ const server = http.createServer(async (req, res) => {
                     // load templateHTML file from public directory
                     const templatePath = path.join(__dirname, 'public', templateHTML);
                     const template = fs.readFileSync(templatePath, 'utf-8');
-                    const rendered = template.replace('{dataJson}', JSON.stringify(data));
+                    const rendered = template.replace('___NFT_DATA_PLACEHOLDER___', JSON.stringify(processedData));
                     
-                    // Upload thumbnail to Arweave
-                    console.log('Uploading thumbnail to Arweave...');
-                    const thumbnailTxId = await uploadFileToArweave(thumbnailPath, arweaveWalletPath);
-                    console.log('Thumbnail uploaded to Arweave:', thumbnailTxId);
+                    // Debug: Check if replacement worked
+                    const templateContainsPlaceholder = template.includes('___NFT_DATA_PLACEHOLDER___');
+                    const renderedContainsPlaceholder = rendered.includes('___NFT_DATA_PLACEHOLDER___');
                     
-                    // Create temporary HTML file for upload
-                    const htmlFilename = `nft_${timestamp}.html`;
-                    const htmlPath = path.join(__dirname, 'temp', htmlFilename);
+                    console.log('🔍 Template replacement debug:');
+                    console.log('  - Template contains placeholder:', templateContainsPlaceholder);
+                    console.log('  - Rendered contains placeholder:', renderedContainsPlaceholder);
                     
-                    // Create temp directory if it doesn't exist
-                    const tempDir = path.dirname(htmlPath);
-                    if (!fs.existsSync(tempDir)) {
-                        fs.mkdirSync(tempDir, { recursive: true });
+                    if (!templateContainsPlaceholder) {
+                        console.error('❌ Template does not contain ___NFT_DATA_PLACEHOLDER___ - template may be corrupt');
+                    } else if (renderedContainsPlaceholder) {
+                        console.error('❌ Template replacement failed - placeholder still exists in rendered output');
+                    } else {
+                        console.log('✅ Template replacement successful - placeholder removed from output');
                     }
                     
-                    // Write HTML to temporary file
-                    fs.writeFileSync(htmlPath, rendered, 'utf-8');
+                    let thumbnailTxId, htmlTxId, thumbnailUrl, htmlUrl;
                     
-                    // Upload HTML to Arweave
-                    console.log('Uploading HTML to Arweave...');
-                    const htmlTxId = await uploadFileToArweave(htmlPath, arweaveWalletPath);
-                    console.log('HTML uploaded to Arweave:', htmlTxId);
-                    
-                    // Clean up temporary HTML file
-                    try {
-                        fs.unlinkSync(htmlPath);
-                    } catch (cleanupError) {
-                        console.warn('Could not clean up temporary HTML file:', cleanupError.message);
+                    if (TESTING_MODE) {
+                        // Testing mode: Save files locally
+                        console.log('🧪 TESTING MODE: Saving files locally instead of uploading to Arweave');
+                        
+                        // Save HTML file locally for testing
+                        const htmlFilename = `nft_${timestamp}.html`;
+                        const htmlPath = path.join(__dirname, 'temp', htmlFilename);
+                        
+                        // Create temp directory if it doesn't exist
+                        const tempDir = path.dirname(htmlPath);
+                        if (!fs.existsSync(tempDir)) {
+                            fs.mkdirSync(tempDir, { recursive: true });
+                        }
+                        
+                        // Write HTML to file
+                        fs.writeFileSync(htmlPath, rendered, 'utf-8');
+                        console.log('📄 HTML saved locally:', htmlPath);
+                        
+                        // Use local file URLs for testing
+                        thumbnailTxId = `test_thumb_${timestamp}`;
+                        htmlTxId = `test_html_${timestamp}`;
+                        thumbnailUrl = `http://localhost:${port}/thumbnails/${thumbnailFilename}`;
+                        htmlUrl = `http://localhost:${port}/temp/${htmlFilename}`;
+                        
+                        console.log('🔗 Local HTML URL:', htmlUrl);
+                        
+                    } else {
+                        // Production mode: Upload to Arweave
+                        console.log('☁️ PRODUCTION MODE: Uploading to Arweave...');
+                        
+                        // Upload thumbnail to Arweave
+                        console.log('Uploading thumbnail to Arweave...');
+                        thumbnailTxId = await uploadFileToArweave(thumbnailPath, arweaveWalletPath);
+                        console.log('Thumbnail uploaded to Arweave:', thumbnailTxId);
+                        
+                        // Create temporary HTML file for upload
+                        const htmlFilename = `nft_${timestamp}.html`;
+                        const htmlPath = path.join(__dirname, 'temp', htmlFilename);
+                        
+                        // Create temp directory if it doesn't exist
+                        const tempDir = path.dirname(htmlPath);
+                        if (!fs.existsSync(tempDir)) {
+                            fs.mkdirSync(tempDir, { recursive: true });
+                        }
+                        
+                        // Write HTML to temporary file
+                        fs.writeFileSync(htmlPath, rendered, 'utf-8');
+                        
+                        // Upload HTML to Arweave
+                        console.log('Uploading HTML to Arweave...');
+                        htmlTxId = await uploadFileToArweave(htmlPath, arweaveWalletPath);
+                        console.log('HTML uploaded to Arweave:', htmlTxId);
+                        
+                        // Set URLs
+                        thumbnailUrl = `https://arweave.net/${thumbnailTxId}`;
+                        htmlUrl = `https://arweave.net/${htmlTxId}`;
+                        
+                        // Clean up temporary HTML file
+                        try {
+                            fs.unlinkSync(htmlPath);
+                        } catch (cleanupError) {
+                            console.warn('Could not clean up temporary HTML file:', cleanupError.message);
+                        }
                     }
                     
-                    // Send response with both transaction IDs
+                    // Send response with both transaction IDs and image stats
                     res.setHeader('Content-Type', 'application/json');
                     res.writeHead(200);
                     res.end(JSON.stringify({
                         success: true,
-                        message: 'NFT generated and uploaded successfully',
+                        message: TESTING_MODE ? 'NFT generated and saved locally for testing' : 'NFT generated and uploaded successfully',
                         thumbnailId: thumbnailTxId,
                         htmlId: htmlTxId,
-                        thumbnailUrl: `https://arweave.net/${thumbnailTxId}`,
-                        htmlUrl: `https://arweave.net/${htmlTxId}`,
-                        patternType: data.patternType
+                        thumbnailUrl: thumbnailUrl,
+                        htmlUrl: htmlUrl,
+                        patternType: processedData.patternType,
+                        imageStats: processedData.imageStats,
+                        testingMode: TESTING_MODE
                     }));
                     
                 } catch (uploadError) {
@@ -236,6 +311,10 @@ const server = http.createServer(async (req, res) => {
                 }));
             }
         } 
+        // Serve NFT HTML files from temp directory for public preview
+        else if (urlPath.startsWith('/temp/')) {
+            await serveTempFile(req, res, urlPath);
+        }
         // Serve static files from public directory
         else {
             await serveStaticFile(req, res, urlPath);
@@ -355,6 +434,72 @@ async function serveStaticFile(req, res, requestPath) {
     }
 }
 
+// Function to serve NFT HTML files from temp directory for public preview
+async function serveTempFile(req, res, requestPath) {
+    try {
+        // Remove leading slash and extract filename from /temp/filename.html
+        const cleanPath = requestPath.startsWith('/') ? requestPath.slice(1) : requestPath;
+        
+        // Extract just the filename from temp/filename.html
+        const filename = path.basename(cleanPath);
+        
+        // Construct absolute path to file in temp directory
+        const fullPath = path.join(__dirname, 'temp', filename);
+        
+        // Security check: ensure the file is a .html file and within temp directory
+        if (!filename.endsWith('.html')) {
+            res.writeHead(404);
+            res.end('Only HTML files are accessible');
+            return;
+        }
+        
+        // Security check: prevent directory traversal
+        const resolvedPath = path.resolve(fullPath);
+        const tempDir = path.resolve(__dirname, 'temp');
+        if (!resolvedPath.startsWith(tempDir)) {
+            res.writeHead(403);
+            res.end('Access denied');
+            return;
+        }
+        
+        // Check if file exists
+        if (!fs.existsSync(resolvedPath)) {
+            res.writeHead(404);
+            res.end('NFT preview file not found');
+            return;
+        }
+        
+        // Get file stats
+        const stats = fs.statSync(resolvedPath);
+        
+        // Set headers for HTML content
+        res.setHeader('Content-Type', 'text/html');
+        res.setHeader('Content-Length', stats.size);
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+        
+        // Create read stream and pipe to response
+        const readStream = fs.createReadStream(resolvedPath);
+        readStream.pipe(res);
+        
+        readStream.on('error', (error) => {
+            console.error('Error reading temp file:', error);
+            if (!res.headersSent) {
+                res.writeHead(500);
+                res.end('Internal server error');
+            }
+        });
+        
+        console.log('📄 Served NFT preview:', filename);
+        
+    } catch (error) {
+        console.error('Error serving temp file:', error);
+        if (!res.headersSent) {
+            res.writeHead(500);
+            res.end('Internal server error');
+        }
+    }
+}
+
 // Function to generate thumbnail using Playwright
 async function generateThumbnail(data) {
     let browser;
@@ -415,9 +560,15 @@ async function generateThumbnail(data) {
         
         console.log('New page created from context');
         
-        // Enable console logging from the page
+        // Enable console logging from the page (filtered to avoid base64 spam)
         page.on('console', msg => {
-            console.log('PAGE LOG:', msg.text());
+            const text = msg.text();
+            // Filter out potentially long base64 strings and data dumps
+            if (text.length > 200 || text.includes('data:image') || text.includes('base64')) {
+                console.log('PAGE LOG: [Filtered - potentially large data]');
+            } else {
+                console.log('PAGE LOG:', text);
+            }
         });
         
         // Enable error logging from the page
@@ -433,9 +584,27 @@ async function generateThumbnail(data) {
         await page.goto(templateUrl, { waitUntil: 'networkidle' });
         console.log('Template page loaded, injecting data...');
         
+        // Log data before injection to debug serialization issues
+        console.log('🔧 About to inject NFT data - wallet:', data.walletAddress, 'imageCount:', data.images?.length);
+        if (data.images && data.images.length > 0) {
+            console.log('🔧 First image data preview:', {
+                originalUrl: data.images[0].originalUrl?.substring(0, 100),
+                urlType: data.images[0].url?.substring(0, 50),
+                urlLength: data.images[0].url?.length
+            });
+        }
+        
         // Inject data into the page
         await page.evaluate((data) => {
-            console.log('🔧 Injecting NFT data into page:', data);
+            console.log('🔧 Injecting NFT data into page - wallet:', data.walletAddress, 'imageCount:', data.images?.length);
+            
+            // Log what we actually received
+            if (data.images && data.images.length > 0) {
+                console.log('🔧 Received image data in page:', {
+                    firstImageUrlType: data.images[0].url?.substring(0, 50),
+                    firstImageUrlLength: data.images[0].url?.length
+                });
+            }
             
             // Set the data globally so it can be used by the page's JavaScript
             window.nftData = data;
@@ -453,7 +622,11 @@ async function generateThumbnail(data) {
             
             // Log for debugging
             console.log('✅ NFT data injection complete');
-            console.log('📊 Final window.nftData:', window.nftData);
+            console.log('📊 Final window.nftData summary:', {
+                walletAddress: window.nftData?.walletAddress,
+                imageCount: window.nftData?.images?.length,
+                hasImages: !!(window.nftData?.images?.length > 0)
+            });
             
             // // Also replace any {{dataJson}} placeholders in the DOM
             // const elements = document.querySelectorAll('*');
@@ -738,6 +911,313 @@ async function saveThumbnail(buffer, filename) {
         console.error('Error saving thumbnail:', error);
         throw error;
     }
+}
+
+// Function to compress an image buffer using Sharp
+async function compressImage(buffer, options = {}) {
+    const {
+        maxWidth = 1024,
+        maxHeight = 1024, 
+        quality = 80,
+        format = 'jpeg'
+    } = options;
+    
+    try {
+        console.log(`🗜️ Compressing image: original size ${buffer.length} bytes`);
+        
+        const compressedBuffer = await sharp(buffer)
+            .resize(maxWidth, maxHeight, { 
+                fit: 'inside',
+                withoutEnlargement: true 
+            })
+            .jpeg({ quality })
+            .toBuffer();
+        
+        const compressionRatio = (buffer.length / compressedBuffer.length).toFixed(2);
+        console.log(`✅ Compression complete: ${compressedBuffer.length} bytes (${compressionRatio}x smaller)`);
+        
+        return {
+            buffer: compressedBuffer,
+            originalSize: buffer.length,
+            compressedSize: compressedBuffer.length,
+            compressionRatio: parseFloat(compressionRatio),
+            format: 'jpeg'
+        };
+        
+    } catch (error) {
+        console.warn(`⚠️ Image compression failed: ${error.message}, using original`);
+        return {
+            buffer: buffer,
+            originalSize: buffer.length,
+            compressedSize: buffer.length,
+            compressionRatio: 1.0,
+            format: 'original'
+        };
+    }
+}
+
+// Function to download an image with retry strategies
+async function downloadImageAsBase64(imageUrl, maxRetries = 3) {
+    console.log(`📥 Downloading image: ${imageUrl}`);
+    
+    // Different retry strategies to handle various server requirements
+    const retryStrategies = [
+        {
+            name: 'Basic Request',
+            options: {
+                timeout: 15000,
+                headers: {}
+            }
+        },
+        {
+            name: 'Browser User-Agent',
+            options: {
+                timeout: 20000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                }
+            }
+        },
+        {
+            name: 'Full Browser Headers',
+            options: {
+                timeout: 25000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'Sec-Fetch-Dest': 'image',
+                    'Sec-Fetch-Mode': 'no-cors',
+                    'Sec-Fetch-Site': 'cross-site'
+                }
+            }
+        },
+        {
+            name: 'HTTPS Fallback',
+            options: {
+                timeout: 30000,
+                forceHttps: true,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8'
+                }
+            }
+        }
+    ];
+    
+    for (let attempt = 0; attempt < Math.min(maxRetries, retryStrategies.length); attempt++) {
+        const strategy = retryStrategies[attempt];
+        console.log(`🔄 Attempt ${attempt + 1}: ${strategy.name} for ${imageUrl}`);
+        
+        try {
+            const result = await downloadWithStrategy(imageUrl, strategy.options);
+            if (result) {
+                console.log(`✅ Downloaded ${imageUrl} using ${strategy.name}`);
+                return result;
+            }
+        } catch (error) {
+            console.warn(`❌ ${strategy.name} failed for ${imageUrl}: ${error.message}`);
+        }
+        
+        // Wait a bit between retries
+        if (attempt < maxRetries - 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+    }
+    
+    console.error(`❌ All ${maxRetries} attempts failed for ${imageUrl}`);
+    return null;
+}
+
+// Single download attempt with specific strategy
+function downloadWithStrategy(imageUrl, options) {
+    return new Promise((resolve, reject) => {
+        // Handle HTTPS fallback
+        let finalUrl = imageUrl;
+        if (options.forceHttps && imageUrl.startsWith('http:')) {
+            finalUrl = imageUrl.replace('http:', 'https:');
+        }
+        
+        const client = finalUrl.startsWith('https:') ? https : http;
+        const urlObj = new URL(finalUrl);
+        
+        const requestOptions = {
+            hostname: urlObj.hostname,
+            port: urlObj.port,
+            path: urlObj.pathname + urlObj.search,
+            method: 'GET',
+            headers: {
+                'Host': urlObj.hostname,
+                ...options.headers
+            },
+            timeout: options.timeout || 15000
+        };
+        
+        const request = client.request(requestOptions, (response) => {
+            // Handle redirects
+            if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
+                console.log(`🔄 Redirect ${response.statusCode} for ${finalUrl} -> ${response.headers.location}`);
+                return downloadWithStrategy(response.headers.location, options)
+                    .then(resolve)
+                    .catch(reject);
+            }
+            
+            if (response.statusCode !== 200) {
+                reject(new Error(`HTTP ${response.statusCode}`));
+                return;
+            }
+            
+            const contentType = response.headers['content-type'];
+            if (!contentType || !contentType.startsWith('image/')) {
+                reject(new Error(`Invalid content type: ${contentType}`));
+                return;
+            }
+            
+            const chunks = [];
+            let totalSize = 0;
+            // No size limit since we'll compress the images after download
+            
+            response.on('data', (chunk) => {
+                totalSize += chunk.length;
+                chunks.push(chunk);
+            });
+            
+            response.on('end', async () => {
+                try {
+                    const buffer = Buffer.concat(chunks);
+                    
+                    // Compress the image before base64 encoding
+                    const compressionResult = await compressImage(buffer);
+                    const finalBuffer = compressionResult.buffer;
+                    
+                    const base64 = finalBuffer.toString('base64');
+                    const dataUri = `data:image/jpeg;base64,${base64}`;
+                    resolve({
+                        dataUri,
+                        size: finalBuffer.length,
+                        originalSize: totalSize,
+                        contentType: 'image/jpeg',
+                        compressionStats: compressionResult
+                    });
+                } catch (error) {
+                    reject(new Error(`Processing failed: ${error.message}`));
+                }
+            });
+            
+            response.on('error', (error) => {
+                reject(new Error(`Response error: ${error.message}`));
+            });
+        });
+        
+        request.on('error', (error) => {
+            reject(new Error(`Request error: ${error.message}`));
+        });
+        
+        request.on('timeout', () => {
+            request.destroy();
+            reject(new Error(`Timeout after ${options.timeout}ms`));
+        });
+        
+        request.end();
+    });
+}
+
+// Function to process all images in the data and convert URLs to base64
+async function processImagesAsBase64(data) {
+    if (!data.images || !Array.isArray(data.images)) {
+        console.log('📭 No images to process');
+        return data;
+    }
+    
+    console.log(`🎨 Processing ${data.images.length} images for base64 conversion...`);
+    
+    const processedImages = [];
+    let successCount = 0;
+    let failCount = 0;
+    
+    // Process images in parallel with a concurrency limit
+    const batchSize = 3; // Download max 3 images at once
+    for (let i = 0; i < data.images.length; i += batchSize) {
+        const batch = data.images.slice(i, i + batchSize);
+        
+        const batchPromises = batch.map(async (image, index) => {
+            if (!image.url) {
+                console.warn(`⚠️ Image ${i + index} has no URL, skipping`);
+                failCount++;
+                return null;
+            }
+            
+            const downloadResult = await downloadImageAsBase64(image.url);
+            if (downloadResult && downloadResult.dataUri) {
+                successCount++;
+                return {
+                    ...image,
+                    originalUrl: image.url,
+                    url: downloadResult.dataUri, // Replace URL with base64 data URI
+                    embedded: true,
+                    downloadStats: {
+                        compressedSize: downloadResult.size,
+                        originalSize: downloadResult.originalSize,
+                        contentType: downloadResult.contentType,
+                        compressionRatio: downloadResult.compressionStats?.compressionRatio || 1.0
+                    }
+                };
+            } else {
+                failCount++;
+                console.warn(`⚠️ Keeping original URL for failed image: ${image.url}`);
+                return {
+                    ...image,
+                    embedded: false
+                }; // Keep original URL if download failed
+            }
+        });
+        
+        const batchResults = await Promise.all(batchPromises);
+        processedImages.push(...batchResults.filter(result => result !== null));
+    }
+    
+    console.log(`🎨 Image processing complete: ${successCount} embedded, ${failCount} failed`);
+    
+    // Log summary of embedded images with compression stats
+    if (successCount > 0) {
+        const totalCompressedSize = processedImages
+            .filter(img => img.embedded && img.downloadStats)
+            .reduce((sum, img) => sum + img.downloadStats.compressedSize, 0);
+        
+        const totalOriginalSize = processedImages
+            .filter(img => img.embedded && img.downloadStats)
+            .reduce((sum, img) => sum + img.downloadStats.originalSize, 0);
+        
+        const overallRatio = totalOriginalSize > 0 ? (totalOriginalSize / totalCompressedSize).toFixed(2) : 1;
+        
+        console.log(`📊 Image compression summary:`);
+        console.log(`  - Original total size: ${(totalOriginalSize / 1024 / 1024).toFixed(2)}MB`);
+        console.log(`  - Compressed total size: ${(totalCompressedSize / 1024 / 1024).toFixed(2)}MB`);
+        console.log(`  - Overall compression ratio: ${overallRatio}x smaller`);
+    }
+    
+    // Log details of failed images for debugging
+    if (failCount > 0) {
+        console.log('❌ Failed image URLs:');
+        processedImages
+            .filter(img => img.embedded === false)
+            .forEach(img => console.log(`  - ${img.url}`));
+    }
+    
+    // Return data with processed images
+    return {
+        ...data,
+        images: processedImages,
+        imageStats: {
+            total: data.images.length,
+            embedded: successCount,
+            failed: failCount
+        }
+    };
 }
 
 function uploadToArweave(data) {
