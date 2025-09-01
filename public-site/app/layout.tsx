@@ -86,6 +86,13 @@ export default function RootLayout({
         <Providers>
           <HeaderProvider>
             <div className="bg-background min-h-screen font-[family-name:var(--font-geist-sans)]">
+              {/* Testnet Header */}
+              {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && (
+                <div className="bg-blue-600 text-white text-center text-xs font-medium h-5 flex items-center justify-center">
+                  Currently Minting on Shape Sepolia Testnet
+                </div>
+              )}
+              
               <HeaderWrapper />
 
               <main className="container mx-auto px-4 py-8">{children}</main>
