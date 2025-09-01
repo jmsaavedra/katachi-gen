@@ -124,7 +124,7 @@ export default function RootLayout({
                       target="_blank"
                       rel="noreferrer"
                     >
-                      Sembo
+                      sembo
                     </Link>
                     {' '}and{' '}
                     <Link
@@ -134,26 +134,31 @@ export default function RootLayout({
                     >
                       quietloops
                     </Link>
-                    . Built on{' '}
-                    <Link
-                      href="https://shape.network"
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Shape
-                    </Link>
                     .
                   </div>
-                  <div className="text-xs space-x-4">
+                  <div className="text-xs">
                     <span>
                       Contract:{' '}
                       <Link
-                        href="https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57"
+                        href="https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57?tab=contract"
                         target="_blank"
                         rel="noreferrer"
                         className="font-mono hover:underline"
                       >
-                        0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57
+                        <span className="md:hidden">0xE5CE...0f57</span>
+                        <span className="hidden md:inline">0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57</span>
+                      </Link>
+                    </span>
+                  </div>
+                  <div className="text-xs flex justify-center items-center space-x-4">
+                    <span>
+                      Built on{' '}
+                      <Link
+                        href="https://shape.network"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Shape
                       </Link>
                     </span>
                     <span>

@@ -125,8 +125,8 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   return (
     <Card className={!isCurated ? "pulse-blue-border" : ""}>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <Heart className="h-7 w-7 text-red-500 animate-pulse" />
+        <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
+          <Heart className="h-6 w-6 md:h-7 md:w-7 text-red-500 animate-pulse" />
           <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 bg-clip-text text-transparent">
             Step 1: Sentiment Filter
           </span>
@@ -139,9 +139,14 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
         {/* Input Form - Always visible */}
         <div className="space-y-6">
           <div className="space-y-4 pt-4">
-            <label className="text-2xl font-bold block text-center">
-              What does collecting art mean to you?<br />
-              What&apos;s your favorite thing about collecting on Shape?
+            <label className="text-lg md:text-2xl font-bold block text-center">
+              <span className="inline md:hidden">
+                What does collecting art mean to you? What&apos;s your favorite thing about collecting on Shape?
+              </span>
+              <span className="hidden md:inline">
+                What does collecting art mean to you?<br />
+                What&apos;s your favorite thing about collecting on Shape?
+              </span>
             </label>
             <div className="flex justify-center">
               <Textarea
@@ -154,7 +159,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                     handleSubmit();
                   }
                 }}
-                className={`min-h-[80px] w-3/5 text-center ${isCurated ? 'opacity-75 cursor-not-allowed' : ''}`}
+                className={`min-h-[80px] w-full md:w-3/5 text-center ${isCurated ? 'opacity-75 cursor-not-allowed' : ''}`}
                 style={{ fontSize: '1.125rem', lineHeight: '1.75rem' }}
                 disabled={isLoading || isCurated}
               />
@@ -205,7 +210,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
 
           {/* Curated Collection Results */}
           {isCurated && curatedNfts && curatedNfts.length > 0 && (
-            <div className="space-y-6 pt-6 border-t">
+            <div className="space-y-6 pt-6 border-t -mx-6 px-6 md:mx-0 md:px-0">
               {/* Interpretation */}
               {curationInterpretation && (
                 <div>
@@ -225,9 +230,9 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
               )}
               
               {/* Curated NFTs in Individual Rows */}
-              <div className="space-y-4">
+              <div className="space-y-4 -mx-6 md:mx-0">
                 {curatedNfts.map((nft, index) => (
-                  <div key={`${nft.contractAddress}-${nft.tokenId}-${index}`} className="border rounded-lg p-4">
+                  <div key={`${nft.contractAddress}-${nft.tokenId}-${index}`} className="border border-x-0 md:border-x rounded-none md:rounded-lg p-4">
                     <div className="flex gap-4">
                       {/* NFT Image */}
                       <div className="flex-shrink-0">
@@ -259,19 +264,34 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                             </div>
                           </div>
                         </a>
+                        {/* Mobile only: Title under image */}
+                        <div className="mt-2 w-32 md:hidden">
+                          <h4 className="font-medium text-sm leading-tight">{nft.name || 'Unnamed NFT'}</h4>
+                          <p className="text-xs text-muted-foreground">
+                            Token #{nft.tokenId} • Rank #{index + 1}
+                          </p>
+                        </div>
                       </div>
                       
                       {/* NFT Details */}
                       <div className="flex-1 min-w-0">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
-                            <div>
+                            {/* Desktop: Title in header */}
+                            <div className="hidden md:block">
                               <h4 className="font-medium text-sm">{nft.name || 'Unnamed NFT'}</h4>
                               <p className="text-xs text-muted-foreground">
                                 Token #{nft.tokenId} • Rank #{index + 1}
                               </p>
                             </div>
-                            <span className="text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">
+                            {/* Mobile: Just score chip */}
+                            <div className="md:hidden">
+                              <div className="inline-block bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-medium">
+                                Score: {nft.matchScore.toFixed(2)}
+                              </div>
+                            </div>
+                            {/* Desktop: Score chip */}
+                            <span className="hidden md:inline text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">
                               Score: {nft.matchScore.toFixed(2)}
                             </span>
                           </div>

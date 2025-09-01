@@ -196,7 +196,7 @@ export default function About() {
                   </Link>
                 </div>
                 <div className="space-y-2">
-                  <p className="font-medium">Sembo</p>
+                  <p className="font-medium">sembo</p>
                   <Link
                     href="https://x.com/1000b"
                     target="_blank"

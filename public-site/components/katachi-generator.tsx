@@ -708,8 +708,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       {sentimentData && (
       <Card className={sentimentData && mintState !== 'success' ? "pulse-blue-border" : ""}>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <Sparkles className="h-7 w-7 text-yellow-500 animate-pulse" />
+          <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
+            <Sparkles className="h-6 w-6 md:h-7 md:w-7 text-yellow-500 animate-pulse" />
             <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 bg-clip-text text-transparent">
               Step 2: Generate and Mint
             </span>
@@ -754,8 +754,67 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
               </div>
             ) : (
               <div className="space-y-6">
-                {/* Two Column Layout */}
-                <div className="grid md:grid-cols-2 gap-8">
+                {/* Mobile: Full width iframe */}
+                <div className="md:hidden space-y-4 -mx-6">
+                  <h4 className="font-medium text-sm px-6">Interactive NFT Preview</h4>
+                  <div className="aspect-square border-2 border-dashed border-muted-foreground/20 bg-muted/10 relative">
+                    {generatedPattern.htmlUrl ? (
+                      <>
+                        {urlResolved && (
+                          <iframe
+                            key={`iframe-${generatedPattern.htmlId}`}
+                            src={generatedPattern.htmlUrl}
+                            className="h-full w-full border-0"
+                            title="Interactive Katachi Pattern"
+                            sandbox="allow-scripts allow-same-origin"
+                            onLoad={handleIframeLoad}
+                            onError={handleIframeError}
+                          />
+                        )}
+                        {!urlResolved && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-white/90">
+                            <div className="text-center space-y-2">
+                              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                              <div className="text-sm text-muted-foreground">
+                                {previewDelay ? (
+                                  <>Generating your Katachi Gen... {previewCountdown}s</>
+                                ) : (
+                                  <>Loading interactive pattern...</>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {iframeError && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-white/90">
+                            <div className="text-center space-y-2">
+                              <div className="text-sm text-destructive">
+                                Pattern failed to load. It may still be propagating on Arweave.
+                              </div>
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => window.open(generatedPattern.htmlUrl, '_blank')}
+                              >
+                                Open in New Tab
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center space-y-2">
+                          <Hash className="h-12 w-12 text-muted-foreground mx-auto" />
+                          <div className="text-sm text-muted-foreground">Pattern will appear here</div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Desktop: Two Column Layout */}
+                <div className="hidden md:grid md:grid-cols-2 gap-8">
                   {/* Left Column - SVG Preview */}
                   <div className="space-y-4">
                     <h4 className="font-medium text-sm">Interactive NFT Preview</h4>
@@ -936,10 +995,13 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                         Minted!
                       </>
                     ) : overrideAddress ? (
-                      <>
-                        <Eye className="h-5 w-5" />
-                        Explore Mode - Connect Wallet to Mint
-                      </>
+                      <span className="flex flex-col items-center gap-1">
+                        <span className="flex items-center gap-2">
+                          <Eye className="h-4 w-4 md:h-5 md:w-5" />
+                          <span className="text-sm md:text-lg">Explore Mode</span>
+                        </span>
+                        <span className="text-xs md:text-sm">Connect Wallet to Mint</span>
+                      </span>
                     ) : (
                       <>
                         <Sparkles className="h-5 w-5" />
