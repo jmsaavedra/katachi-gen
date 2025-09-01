@@ -233,8 +233,8 @@ export async function POST(request: NextRequest) {
           description: finalDescription,
           tokenId: nextNftNumber,
           chainId: config.mintChainId,
-          image: arweaveData?.thumbnailUrl || `https://arweave.net/${arweaveData?.thumbnailId}`,
-          animation_url: arweaveData?.htmlUrl || `https://arweave.net/${arweaveData?.htmlId}`,
+          image: `https://arweave.net/${arweaveData?.thumbnailId}`,
+          animation_url: `https://arweave.net/${arweaveData?.htmlId}`,
           ...(finalMetadata && { metadata: finalMetadata }),
         },
       },
@@ -244,8 +244,8 @@ export async function POST(request: NextRequest) {
     console.log('🚨 [MINT API] ACTUAL DATA BEING SENT TO BLOCKCHAIN:', JSON.stringify({
       name: finalName,
       description: finalDescription,
-      image: arweaveData?.thumbnailUrl || `https://arweave.net/${arweaveData?.thumbnailId}`,
-      animation_url: arweaveData?.htmlUrl || `https://arweave.net/${arweaveData?.htmlId}`,
+      image: `https://arweave.net/${arweaveData?.thumbnailId}`,
+      animation_url: `https://arweave.net/${arweaveData?.htmlId}`,
       tokenId: nextNftNumber,
       metadata: finalMetadata,
       arweaveData: {
