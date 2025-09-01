@@ -149,6 +149,34 @@ export default function Home() {
                     <Sparkles className="h-3 w-3" />
                     Test Generate
                   </Button>
+                  
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-muted-foreground/80 text-center">
+                      Or, explore a top collector wallet:
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        const topWallets = [
+                          '0x136bbfe37988f82f8585ed155615b75371489d45',
+                          '0x53bebd20781aaa3a831f45b3c6889010a706ff9f',
+                          '0x72fe3c398c9a030b9b2be1fe1ff07701167571d4',
+                          '0xee49f82e58a1c2b306720d0c68047cbf70c11fb5',
+                          '0x51360d99966724b2603182cc367ab9621d96eed2',
+                          '0xc68c7771ec6a6e5d67d62aa9c6f22df69865e401'
+                        ];
+                        const randomWallet = topWallets[Math.floor(Math.random() * topWallets.length)];
+                        setTestAddress(randomWallet);
+                        setTestAddressError('');
+                        // Immediately navigate to the generator view
+                        setShowGenerator(true);
+                      }}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      Explore
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -159,24 +187,18 @@ export default function Home() {
       {/* Interactive Preview */}
       <div className="mt-12 mb-8">
         <div className="flex flex-col items-center">
-          <a
-            href="https://arweave.net/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative rounded-lg overflow-hidden border bg-card shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
-            style={{ width: '750px', height: '750px', display: 'block' }}
-          >
-            <Image
-              src="/assets/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I-landing.gif"
-              alt="Katachi Gen Interactive Demo"
-              width={750}
-              height={750}
-              className="w-full h-full object-cover"
-              unoptimized
+          <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
+            <iframe
+              src="https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
+              width="750"
+              height="750"
+              className="border-0 bg-transparent"
+              title="Katachi Gen Interactive Demo"
+              allowFullScreen
             />
-          </a>
+          </div>
           <a
-            href="https://arweave.net/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I"
+            href="https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
             target="_blank"
             rel="noopener noreferrer"
             className="mt-4 text-sm text-primary hover:underline font-medium"

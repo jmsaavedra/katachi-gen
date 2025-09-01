@@ -139,23 +139,26 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
         {/* Input Form - Always visible */}
         <div className="space-y-6">
           <div className="space-y-4 pt-4">
-            <label className="text-lg font-bold block text-center">
+            <label className="text-2xl font-bold block text-center">
               What does collecting art mean to you?<br />
               What&apos;s your favorite thing about collecting on Shape?
             </label>
-            <Textarea
-              placeholder='e.g., "I love feeling connected to such a creative community." or "i like turtles."'
-              value={sentiment}
-              onChange={(e) => setSentiment(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey && sentiment.trim() && !isLoading) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              className="min-h-[80px] text-base"
-              disabled={isLoading}
-            />
+            <div className="flex justify-center">
+              <Textarea
+                placeholder='e.g., "I love feeling connected to such a creative community." or "i like turtles."'
+                value={sentiment}
+                onChange={(e) => setSentiment(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && sentiment.trim() && !isLoading) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                className="min-h-[80px] w-3/5"
+                style={{ fontSize: '1.125rem', lineHeight: '1.75rem' }}
+                disabled={isLoading}
+              />
+            </div>
           </div>
 
           <div className="flex justify-center pb-2">
