@@ -8282,16 +8282,27 @@ function initImporter(globals){
                         console.log('✅ Found pattern with specified type:', dataToProcess.patternType, '(index:', patternIndex, ')');
                     } else {
                         console.log('⚠️ Pattern type not found:', dataToProcess.patternType, '- falling back to random selection');
-                        // Fall back to random selection
+                        // Fall back to improved random selection using LCG (Linear Congruential Generator)
                         var patternSeed = (dataToProcess.walletAddress || 'default-wallet') + '_' + (dataToProcess.seed2 || 'default-seed');
-                        var patternHash = 0;
+                        
+                        // Create a better hash from the seed
+                        var hash = 0;
                         for (var i = 0; i < patternSeed.length; i++) {
                             var char = patternSeed.charCodeAt(i);
-                            patternHash = ((patternHash << 5) - patternHash + char) & 0xffffffff;
+                            hash = ((hash * 31) + char) >>> 0; // Use 31 multiplier and unsigned shift
                         }
-                        patternHash = Math.abs(patternHash);
-                        patternIndex = patternHash % origamiPatterns.length;
+                        
+                        // Use Linear Congruential Generator for better distribution
+                        // Parameters: a = 1664525, c = 1013904223, m = 2^32
+                        var rng = hash;
+                        rng = (rng * 1664525 + 1013904223) >>> 0;
+                        rng = (rng * 1664525 + 1013904223) >>> 0; // Second iteration for better mixing
+                        
+                        // Convert to [0, 1) range and then to pattern index
+                        var randomFloat = (rng >>> 0) / 4294967296; // 2^32
+                        patternIndex = Math.floor(randomFloat * origamiPatterns.length);
                         selectedPattern = origamiPatterns[patternIndex];
+                        console.log('🎲 LCG-based selection: hash=' + hash + ', rng=' + rng + ', randomFloat=' + randomFloat + ', index=' + patternIndex);
                     }
                 } else {
                     console.log('🎲 No pattern type specified - using random selection');
@@ -8300,15 +8311,23 @@ function initImporter(globals){
                     var patternSeed = (dataToProcess.walletAddress || 'default-wallet') + '_' + (dataToProcess.seed2 || 'default-seed');
                     console.log('🌱 Using pattern seed:', patternSeed);
                     
-                    // Create a more robust hash function for consistent pattern selection
-                    var patternHash = 0;
+                    // Create a better hash from the seed
+                    var hash = 0;
                     for (var i = 0; i < patternSeed.length; i++) {
                         var char = patternSeed.charCodeAt(i);
-                        patternHash = ((patternHash << 5) - patternHash + char) & 0xffffffff;
+                        hash = ((hash * 31) + char) >>> 0; // Use 31 multiplier and unsigned shift
                     }
-                    // Ensure positive value for modulo operation
-                    patternHash = Math.abs(patternHash);
-                    patternIndex = patternHash % origamiPatterns.length;
+                    
+                    // Use Linear Congruential Generator for better distribution
+                    // Parameters: a = 1664525, c = 1013904223, m = 2^32
+                    var rng = hash;
+                    rng = (rng * 1664525 + 1013904223) >>> 0;
+                    rng = (rng * 1664525 + 1013904223) >>> 0; // Second iteration for better mixing
+                    
+                    // Convert to [0, 1) range and then to pattern index
+                    var randomFloat = (rng >>> 0) / 4294967296; // 2^32
+                    patternIndex = Math.floor(randomFloat * origamiPatterns.length);
+                    console.log('🎲 LCG-based selection: hash=' + hash + ', rng=' + rng + ', randomFloat=' + randomFloat + ', index=' + patternIndex);
                     selectedPattern = origamiPatterns[patternIndex];
                 }
                 

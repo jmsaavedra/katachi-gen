@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useState, useEffect } from 'react';
-import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Eye } from 'lucide-react';
 import Image from 'next/image';
 import { CollectionReflection } from '@/components/collection-reflection';
 import { toast } from 'sonner';
@@ -748,7 +748,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                 <div className="grid md:grid-cols-2 gap-8">
                   {/* Left Column - SVG Preview */}
                   <div className="space-y-4">
-                    <h4 className="font-medium text-sm">Pattern Preview</h4>
+                    <h4 className="font-medium text-sm">Interactive NFT Preview</h4>
                     <div className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/20 p-4 bg-muted/10 relative">
                       {generatedPattern.htmlUrl ? (
                         <>
@@ -909,9 +909,9 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-4">
                   <Button 
-                    className={`flex-1 gap-2 py-6 text-lg ${generatedPattern && !isMinting && mintState !== 'success' ? 'animate-gradient-button' : ''}`}
+                    className={`flex-1 gap-2 py-6 text-lg ${generatedPattern && !isMinting && mintState !== 'success' && !overrideAddress ? 'animate-gradient-button' : ''}`}
                     onClick={handleMintNFT}
-                    disabled={isMinting || mintState === 'success'}
+                    disabled={isMinting || mintState === 'success' || !!overrideAddress}
                   >
                     {isMinting ? (
                       <>
@@ -924,6 +924,11 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                       <>
                         <Sparkles className="h-5 w-5" />
                         Minted!
+                      </>
+                    ) : overrideAddress ? (
+                      <>
+                        <Eye className="h-5 w-5" />
+                        Explore Mode - Connect Wallet to Mint
                       </>
                     ) : (
                       <>

@@ -20,6 +20,15 @@ export default function Home() {
   const [testAddressError, setTestAddressError] = useState('');
   const [currentIframeIndex, setCurrentIframeIndex] = useState(0);
   
+  // Gallery URLs
+  const galleryUrls = [
+    "https://storage.katachi-gen.com/nfts/nft_1756716744296.html",
+    "https://storage.katachi-gen.com/katachi_1756739536308.html",
+    "https://storage.katachi-gen.com/katachi_1756739728214.html",
+    "https://storage.katachi-gen.com/katachi_1756737150668.html",
+    "https://storage.katachi-gen.com/katachi_1756739206552.html"
+  ];
+  
   // Check if test mode is enabled via environment variable
   const isTestModeEnabled = process.env.NEXT_PUBLIC_ENABLE_TEST_MODE === 'true';
   
@@ -84,9 +93,9 @@ export default function Home() {
 
       <div className="mt-8 space-y-6">
         <p className="text-center text-muted-foreground text-xl leading-relaxed max-w-md mx-auto">
-          <strong>Katachi</strong> (形) = Shape/Form in Japanese<br/>
-          <strong>Gen</strong> (現) = To Appear/Manifest<br/>
-          Together: <strong>Shape Revealed</strong>
+          <strong className="text-white">Katachi</strong> (形) = Shape/Form in Japanese<br/>
+          <strong className="text-white">Gen</strong> (現) = To Appear/Manifest<br/>
+          Together: <strong className="text-white">Shape Revealed</strong>
         </p><br></br>
         
         <div className="flex justify-center">
@@ -187,92 +196,100 @@ export default function Home() {
 
       {/* Interactive Preview */}
       <div className="mt-12 mb-8">
-        {/* Desktop: Show both iframes side by side */}
+        {/* Desktop: Show single iframe with navigation */}
         <div className="hidden md:flex flex-col items-center">
-          <div className="flex gap-6 justify-center">
-            <div className="flex flex-col items-center">
-              <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
-                <iframe
-                  src="https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
-                  width="600"
-                  height="600"
-                  className="border-0 bg-transparent"
-                  title="Katachi Gen Interactive Demo 1"
-                  allowFullScreen
-                />
-              </div>
-              <a
-                href="https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 text-sm text-primary hover:underline font-medium"
-              >
-                View live interactive token →
-              </a>
+          <div className="w-full max-w-[700px]">
+            <div className="flex justify-between items-center mb-3">
+              {currentIframeIndex > 0 ? (
+                <button
+                  onClick={() => setCurrentIframeIndex(currentIframeIndex - 1)}
+                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Prev
+                </button>
+              ) : (
+                <div className="w-20"></div>
+              )}
+              <h3 className="text-sm font-bold uppercase tracking-wider">Katachi Gen Gallery</h3>
+              {currentIframeIndex < galleryUrls.length - 1 ? (
+                <button
+                  onClick={() => setCurrentIframeIndex(currentIframeIndex + 1)}
+                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <div className="w-20"></div>
+              )}
             </div>
-            <div className="flex flex-col items-center">
-              <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
-                <iframe
-                  src="https://storage.katachi-gen.com/katachi_1756737150668.html"
-                  width="600"
-                  height="600"
-                  className="border-0 bg-transparent"
-                  title="Katachi Gen Interactive Demo 2"
-                  allowFullScreen
-                />
+            <div className="flex justify-center">
+              <div className="flex flex-col items-center">
+                <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
+                  <iframe
+                    src={galleryUrls[currentIframeIndex]}
+                    width="600"
+                    height="600"
+                    className="border-0 bg-transparent"
+                    title={`Katachi Gen Interactive Demo ${currentIframeIndex + 1}`}
+                    allowFullScreen
+                  />
+                </div>
+                <a
+                  href={galleryUrls[currentIframeIndex]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 text-sm text-primary hover:underline font-medium"
+                >
+                  View live interactive token →
+                </a>
               </div>
-              <a
-                href="https://storage.katachi-gen.com/katachi_1756737150668.html"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-4 text-sm text-primary hover:underline font-medium"
-              >
-                View live interactive token →
-              </a>
             </div>
           </div>
         </div>
 
         {/* Mobile: Show one iframe with pagination */}
         <div className="md:hidden flex flex-col items-center">
-          <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
-            <iframe
-              src={currentIframeIndex === 0 
-                ? "https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
-                : "https://storage.katachi-gen.com/katachi_1756737150668.html"
-              }
-              width="350"
-              height="350"
-              className="border-0 bg-transparent"
-              title={`Katachi Gen Interactive Demo ${currentIframeIndex + 1}`}
-              allowFullScreen
-            />
-          </div>
-          <div className="flex items-center gap-4 mt-4">
-            {currentIframeIndex > 0 && (
-              <button
-                onClick={() => setCurrentIframeIndex(0)}
-                className="flex items-center gap-1 text-sm text-primary hover:underline font-medium"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                Previous
-              </button>
-            )}
-            {currentIframeIndex < 1 && (
-              <button
-                onClick={() => setCurrentIframeIndex(1)}
-                className="flex items-center gap-1 text-sm text-primary hover:underline font-medium"
-              >
-                Next
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            )}
+          <div className="w-full max-w-[350px]">
+            <div className="flex justify-between items-center mb-3 pr-2">
+              {currentIframeIndex > 0 ? (
+                <button
+                  onClick={() => setCurrentIframeIndex(currentIframeIndex - 1)}
+                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  Prev
+                </button>
+              ) : (
+                <div className="w-20"></div>
+              )}
+              <h3 className="text-sm font-bold uppercase tracking-wider">Katachi Gen Gallery</h3>
+              {currentIframeIndex < galleryUrls.length - 1 ? (
+                <button
+                  onClick={() => setCurrentIframeIndex(currentIframeIndex + 1)}
+                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  Next
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <div className="w-20"></div>
+              )}
+            </div>
+            <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
+              <iframe
+                src={galleryUrls[currentIframeIndex]}
+                width="350"
+                height="350"
+                className="border-0 bg-transparent"
+                title={`Katachi Gen Interactive Demo ${currentIframeIndex + 1}`}
+                allowFullScreen
+              />
+            </div>
           </div>
           <a
-            href={currentIframeIndex === 0 
-              ? "https://storage.katachi-gen.com/nfts/nft_1756716744296.html"
-              : "https://storage.katachi-gen.com/katachi_1756737150668.html"
-            }
+            href={galleryUrls[currentIframeIndex]}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 text-sm text-primary hover:underline font-medium"
