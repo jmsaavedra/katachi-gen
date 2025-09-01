@@ -41,11 +41,12 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       console.error('MCP server error:', response.status, response.statusText);
-      throw new Error(`MCP server returned ${response.status}`);
+      const errorText = await response.text();
+      console.error('MCP server error details:', errorText);
+      throw new Error(`MCP server returned ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
-    console.log('MCP server response:', data);
 
     // Handle MCP response format
     if (data.error) {
@@ -60,9 +61,15 @@ export async function POST(request: NextRequest) {
     if (data.result && data.result.content && data.result.content[0] && data.result.content[0].text) {
       try {
         result = JSON.parse(data.result.content[0].text);
+        console.log('Parsed MCP result:', JSON.stringify(result, null, 2));
       } catch (e) {
-        console.warn('Could not parse MCP response as JSON:', e);
+        console.error('Could not parse MCP response as JSON:', e);
+        console.error('Raw text was:', data.result.content[0].text);
+        throw new Error('Invalid JSON response from MCP server');
       }
+    } else {
+      console.error('Unexpected MCP response format:', JSON.stringify(data, null, 2));
+      throw new Error('Invalid MCP response format');
     }
 
     // Check if the result indicates an error
@@ -76,12 +83,26 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(result);
   } catch (error) {
     console.error('Error in interpret-sentiment API:', error);
-    return NextResponse.json(
-      { 
-        error: true, 
-        message: error instanceof Error ? error.message : 'Failed to interpret sentiment' 
-      },
-      { status: 500 }
-    );
+    console.log('Falling back to basic interpretation due to MCP server error');
+    
+    // Fallback: return a basic response when MCP server is down
+    const { address, sentiment, count } = await request.json();
+    const fallbackResponse = {
+      error: false,
+      images: [
+        { url: 'https://exonemo.com/test/katachi-gen/images/flower.webp' },
+        { url: 'https://exonemo.com/test/katachi-gen/images/karborn.webp' }
+      ],
+      walletAddress: address,
+      sentiment: sentiment,
+      seed2: Math.floor(Math.random() * 1000),
+      patternType: '',
+      totalNfts: count,
+      uniqueCollections: 2,
+      message: 'MCP server unavailable - using fallback pattern'
+    };
+    
+    console.log('Using fallback response:', fallbackResponse);
+    return NextResponse.json(fallbackResponse);
   }
 }

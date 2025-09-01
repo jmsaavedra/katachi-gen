@@ -333,6 +333,9 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           images: imageUrls,
           sentiment: dataToUse.sentiment,
           seed2: Math.random().toString(),
+          stackMedals: stackMedals?.totalMedals || 0,
+          totalNfts: nfts?.totalCount || 0,
+          uniqueCollections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
         }),
       });
 
@@ -393,6 +396,18 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       };
       
       setGeneratedPattern(patternData);
+      
+      // Log final metadata that will be used for minting
+      const finalMetadata = {
+        name: patternData.metadata.name,
+        description: patternData.metadata.description,
+        attributes: patternData.metadata.attributes,
+        image: patternData.thumbnailUrl,
+        animation_url: patternData.htmlUrl,
+        external_url: patternData.htmlUrl,
+      };
+      console.log('🎯 FINAL METADATA FOR MINTING:', JSON.stringify(finalMetadata, null, 2));
+      
       toast.success('Pattern generated successfully!');
       
     } catch (error) {
@@ -452,7 +467,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         },
         body: JSON.stringify({
           walletAddress: addressToUse,
-          seed2: `${stackMedals?.totalMedals || 0}`,
+          seed2: Math.random().toString(),
+          stackMedals: stackMedals?.totalMedals || 0,
           sentiment: sentimentData.sentiment,
           totalNfts: nfts?.totalCount || 0,
           uniqueCollections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
@@ -518,6 +534,18 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       };
       
       setGeneratedPattern(patternData);
+      
+      // Log final metadata that will be used for minting
+      const finalMetadata = {
+        name: patternData.metadata.name,
+        description: patternData.metadata.description,
+        attributes: patternData.metadata.attributes,
+        image: patternData.thumbnailUrl,
+        animation_url: patternData.htmlUrl,
+        external_url: patternData.htmlUrl,
+      };
+      console.log('🎯 FINAL METADATA FOR MINTING:', JSON.stringify(finalMetadata, null, 2));
+      
       toast.success('Pattern generated successfully!');
     } catch (err) {
       toast.error('Failed to generate pattern');
