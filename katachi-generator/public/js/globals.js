@@ -1174,40 +1174,31 @@ function initGlobals(){
         
         console.log("🎲 Initializing global random seed:", seed);
         
-        // Use numeric.js seedrandom if available
-        if (typeof numeric !== "undefined" && numeric.seedrandom && numeric.seedrandom.random) {
-            try {
-                // Create a simple seeded random generator using the seed string
-                var seedHash = 0;
-                for (var i = 0; i < seed.length; i++) {
-                    seedHash = ((seedHash << 5) - seedHash + seed.charCodeAt(i)) & 0xffffffff;
-                }
-                seedHash = Math.abs(seedHash);
-                
-                // Use seedHash to initialize a simple LCG (Linear Congruential Generator)
-                var currentSeed = seedHash % 2147483647;
-                if (currentSeed <= 0) currentSeed += 2147483646;
-                
-                _globals.randomFunction = function() {
-                    currentSeed = (currentSeed * 16807) % 2147483647;
-                    return (currentSeed - 1) / 2147483646;
-                };
-                
-                _globals.useSeededRandom = true;
-                console.log("✅ Using custom seeded random generator with hash:", seedHash);
-                
-            } catch (e) {
-                console.warn("🚨 Error creating seeded random generator:", e.message);
-                _globals.randomFunction = Math.random;
-                _globals.useSeededRandom = false;
-            }
-        } else {
-            console.warn("🚨 numeric.js not available, using Math.random");
-            _globals.randomFunction = Math.random;
-            _globals.useSeededRandom = false;
+        // Create a robust seeded random generator using the seed string
+        var seedHash = 0;
+        for (var i = 0; i < seed.length; i++) {
+            var char = seed.charCodeAt(i);
+            seedHash = ((seedHash << 5) - seedHash + char) & 0xffffffff;
         }
+        // Ensure positive value and avoid zero
+        seedHash = Math.abs(seedHash);
+        if (seedHash === 0) seedHash = 1;
         
+        // Use seedHash to initialize a Linear Congruential Generator (LCG)
+        var currentSeed = seedHash % 2147483647;
+        if (currentSeed <= 0) currentSeed += 2147483646;
+        
+        _globals.randomFunction = function() {
+            currentSeed = (currentSeed * 16807) % 2147483647;
+            return (currentSeed - 1) / 2147483646;
+        };
+        
+        _globals.useSeededRandom = true;
+        console.log("✅ Using custom seeded random generator with hash:", seedHash);
         console.log("✅ Random seed initialized. Seeded random:", _globals.useSeededRandom);
+        
+        // Immediately apply global override
+        enableGlobalRandomOverride();
     }
     _globals.initializeRandomSeed = initializeRandomSeed;
     
@@ -1224,13 +1215,10 @@ function initGlobals(){
         console.log("🔄 Changing random seed to:", seed);
         console.log("🔄 Previous seed was:", _globals.randomSeed);
         
-        // Initialize the new seed
+        // Initialize the new seed (this will also apply global override)
         initializeRandomSeed(seed);
         
-        // Update global Math.random override
-        enableGlobalRandomOverride();
-        
-        // Clear any cached random state
+        // Clear any cached random state to ensure clean slate
         _globals.faceTextureMapping = {};
         
         // Re-run texture assignment if we have textures and a model
