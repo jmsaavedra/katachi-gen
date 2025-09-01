@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Code } from 'lucide-react';
+import Image from 'next/image';
 import { useHeader } from '@/contexts/header-context';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
@@ -30,6 +31,13 @@ export default function Home() {
     setShowWalletInHeader(showGenerator);
     setIsInMintView(showGenerator);
   }, [showGenerator, setShowWalletInHeader, setIsInMintView]);
+  
+  // Auto-navigate to generator when wallet connects
+  useEffect(() => {
+    if (isConnected && connectedAddress) {
+      setShowGenerator(true);
+    }
+  }, [isConnected, connectedAddress]);
   
   const handleTestAddressSubmit = () => {
     if (!testAddress.trim()) {
@@ -80,7 +88,7 @@ export default function Home() {
               {({ openConnectModal }) => (
                 <Button 
                   size="lg"
-                  className="gap-2 px-10 py-6 text-lg"
+                  className="gap-2 px-10 py-6 text-lg animate-gradient-button"
                   onClick={openConnectModal}
                 >
                   <Sparkles className="h-5 w-5" />
@@ -152,12 +160,13 @@ export default function Home() {
             className="relative rounded-lg overflow-hidden border bg-card shadow-lg hover:shadow-xl transition-shadow cursor-pointer"
             style={{ width: '750px', height: '750px', display: 'block' }}
           >
-            <img
+            <Image
               src="/assets/r2a9VewIG36G7Z3gGMWoxNnF09WrnaoR_L8gRlSVQ0I-landing.gif"
               alt="Katachi Gen Interactive Demo"
-              width="750"
-              height="750"
+              width={750}
+              height={750}
               className="w-full h-full object-cover"
+              unoptimized
             />
           </a>
           <a
