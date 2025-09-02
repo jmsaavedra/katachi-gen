@@ -333,7 +333,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           walletAddress: addressToUse,
           images: imageUrls,
           sentiment: dataToUse.sentiment,
-          seed2: Math.random().toString(),
+          seed2: Math.floor(Math.random() * 1000000) + '_' + Date.now(),
           stackMedals: stackMedals?.totalMedals || 0,
           totalNfts: nfts?.totalCount || 0,
           uniqueCollections: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0,
@@ -471,7 +471,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         },
         body: JSON.stringify({
           walletAddress: addressToUse,
-          seed2: Math.random().toString(),
+          seed2: Math.floor(Math.random() * 1000000) + '_' + Date.now(),
           stackMedals: stackMedals?.totalMedals || 0,
           sentiment: sentimentData.sentiment,
           totalNfts: nfts?.totalCount || 0,

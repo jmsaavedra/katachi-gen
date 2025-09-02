@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
       ],
       walletAddress: address,
       sentiment: sentiment,
-      seed2: Math.floor(Math.random() * 1000),
+      seed2: Math.floor(Math.random() * 1000000) + '_' + Date.now(),
       patternType: '',
       totalNfts: count,
       uniqueCollections: 2,
