@@ -1,8 +1,9 @@
 // Thumbnail generation from actual HTML content
 const fs = require('fs');
 const path = require('path');
-// Use puppeteer-core in development, regular puppeteer in production
-const puppeteer = process.env.NODE_ENV === 'production' 
+// Use puppeteer-core in development, regular puppeteer in production/Railway
+const isProduction = process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT;
+const puppeteer = isProduction 
     ? require('puppeteer') 
     : require('puppeteer-core');
 const { templateHTML } = require('../config');
@@ -55,7 +56,7 @@ async function generateThumbnail(data, htmlFilePath = null) {
 
         // In production with regular puppeteer, don't specify executablePath (uses bundled Chrome)
         // In development with puppeteer-core, try to find Chrome executable
-        if (process.env.NODE_ENV !== 'production') {
+        if (!isProduction) {
             const chromePaths = [
                 process.env.CHROME_PATH,
                 '/usr/bin/google-chrome-stable',
@@ -82,9 +83,28 @@ async function generateThumbnail(data, htmlFilePath = null) {
             }
         } else {
             console.log('🔍 Using bundled Chromium from puppeteer');
+            console.log('🌐 Environment debug:', {
+                NODE_ENV: process.env.NODE_ENV,
+                RAILWAY_ENVIRONMENT: process.env.RAILWAY_ENVIRONMENT,
+                isProduction,
+                puppeteerType: isProduction ? 'puppeteer' : 'puppeteer-core'
+            });
         }
 
-        browser = await puppeteer.launch(launchOptions);
+        try {
+            browser = await puppeteer.launch(launchOptions);
+        } catch (puppeteerError) {
+            // If puppeteer-core fails in what we think is development, try regular puppeteer as fallback
+            if (!isProduction && puppeteerError.message.includes('executablePath')) {
+                console.log('🔄 Puppeteer-core failed, trying regular puppeteer as fallback...');
+                const fallbackPuppeteer = require('puppeteer');
+                const fallbackOptions = { ...launchOptions };
+                delete fallbackOptions.executablePath;
+                browser = await fallbackPuppeteer.launch(fallbackOptions);
+            } else {
+                throw puppeteerError;
+            }
+        }
         const page = await browser.newPage();
         
         // Enable console logging for debugging
