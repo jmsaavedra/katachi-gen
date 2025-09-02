@@ -160,7 +160,14 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                   }
                 }}
                 className={`min-h-[80px] w-full md:w-3/5 text-center ${isCurated ? 'opacity-75 cursor-not-allowed' : ''}`}
-                style={{ fontSize: '1.125rem', lineHeight: '1.75rem' }}
+                style={{ 
+                  fontSize: '1.125rem', 
+                  lineHeight: '80px',
+                  height: '80px',
+                  resize: 'none',
+                  paddingTop: '0',
+                  paddingBottom: '0'
+                }}
                 disabled={isLoading || isCurated}
               />
             </div>

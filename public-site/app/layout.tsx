@@ -39,47 +39,47 @@ export const metadata: Metadata = {
     'hackathon',
   ],
   authors: [
-    { name: 'sembo', url: 'https://x.com/1000b' },
     { name: 'quietloops', url: 'https://x.com/quietloops' },
+    { name: 'sembo', url: 'https://x.com/1000b' },
   ],
-  creator: 'sembo & quietloops',
+  creator: 'quietloops & sembo',
   publisher: 'Katachi Gen',
   formatDetection: {
     email: false,
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://katachi-gen.vercel.app'),
+  metadataBase: new URL('https://katachi-gen.com'),
   alternates: {
     canonical: '/',
   },
-  category: 'NFT Collection',
+  category: 'Generative Art',
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://katachi-gen.vercel.app',
-    title: 'Katachi Gen - Shape Revealed',
+    url: 'https://katachi-gen.com',
+    title: 'Katachi Gen 形現 - Shape Revealed',
     description:
-      'An NFT collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape.',
-    siteName: 'Katachi Gen',
+      'Collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape.',
+    siteName: 'Katachi Gen 形現',
     images: [
       {
-        url: '/lp-1.png',
+        url: '/kg-metaog.jpg',
         width: 1200,
         height: 630,
-        alt: 'Katachi Gen - Transform your Shape journey into unique origami NFTs',
-        type: 'image/png',
+        alt: 'Katachi Gen 形現 - Generative Origami representing your Shape L2 journey.',
+        type: 'image/jpeg',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Katachi Gen - Shape Revealed',
+    title: 'Katachi Gen 形現 - Shape Revealed',
     description:
-      'Transform your on-chain journey into unique origami NFTs. A Shapecraft2 Hackathon submission.',
+      'Generative Origami representing your Shape L2 journey.',
     site: '@Shape_L2',
-    creator: '@1000b',
-    images: ['/lp-1.png'],
+    creator: '@quietloops',
+    images: ['/kg-metaog.jpg'],
   },
   robots: {
     index: true,
@@ -118,8 +118,8 @@ export const metadata: Metadata = {
   other: {
     'theme-color': '#000000',
     'color-scheme': 'dark light',
-    'twitter:image': 'https://katachi-gen.vercel.app/lp-1.png',
-    'twitter:image:alt': 'Katachi Gen - Transform your Shape journey into unique origami NFTs',
+    'twitter:image': 'https://katachi-gen.com/kg-metaog.jpg',
+    'twitter:image:alt': 'Katachi Gen 形現 - Generative Origami',
     'og:image:width': '1200',
     'og:image:height': '630',
   },
@@ -133,20 +133,20 @@ export default function RootLayout({
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Katachi Gen",
+    "name": "Katachi Gen 形現",
     "alternateName": "Shape Revealed",
-    "url": "https://katachi-gen.vercel.app",
-    "description": "An NFT collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape.",
+    "url": "https://katachi-gen.com",
+    "description": "A collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape L2.",
     "creator": [
-      {
-        "@type": "Person",
-        "name": "sembo",
-        "url": "https://x.com/1000b"
-      },
       {
         "@type": "Person", 
         "name": "quietloops",
         "url": "https://x.com/quietloops"
+      },
+      {
+        "@type": "Person",
+        "name": "sembo",
+        "url": "https://x.com/1000b"
       }
     ],
     "inLanguage": "en-US",

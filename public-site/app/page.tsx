@@ -7,7 +7,7 @@ import { KatachiGenerator } from '@/components/katachi-generator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Code, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Sparkles, Code, ChevronRight, ChevronLeft, Search } from 'lucide-react';
 import { useHeader } from '@/contexts/header-context';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
@@ -21,7 +21,7 @@ export default function Home() {
   
   // Gallery URLs
   const galleryUrls = [
-    "https://storage.katachi-gen.com/nfts/nft_1756716744296.html",
+    "https://storage.katachi-gen.com/katachi_1756768199179.html",
     "https://storage.katachi-gen.com/katachi_1756739536308.html",
     "https://storage.katachi-gen.com/katachi_1756739728214.html",
     "https://storage.katachi-gen.com/katachi_1756737150668.html",
@@ -78,24 +78,37 @@ export default function Home() {
     <div className="flex min-h-[calc(100vh-200px)] flex-col items-center justify-center space-y-8 px-4">
       <div className="space-y-6 text-center max-w-3xl">
         <h1 className="text-5xl font-light tracking-tight sm:text-7xl">
-          Katachi Gen <span className="opacity-70">形現</span>
+          <span className="block sm:inline">Katachi Gen</span>
+          <span className="block sm:inline opacity-70"> 形現</span>
         </h1>
-        <p className="text-muted-foreground text-xl font-light">
+        <p className="text-primary/80 text-xl font-light italic uppercase tracking-wider">
           Shape Revealed
         </p>
         <div className="space-y-4 max-w-2xl mx-auto">
           <p className="text-muted-foreground text-xl leading-relaxed">
-            Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey on ShapeL2, creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.
+            Katachi Gen creates digital + physical artifacts representing your on-chain journey, in the form of generative 3D origami patterns. Using AI sentiment analysis and art curation, each pattern reflects your personal participation on{' '}
+            <a 
+              href="https://shape.network" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:underline font-medium"
+            >
+              ShapeL2
+            </a>
+            , creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.
           </p>
         </div>
       </div>
 
       <div className="mt-8 space-y-6">
-        <p className="text-center text-muted-foreground text-xl leading-relaxed max-w-md mx-auto">
-          <strong className="text-white">Katachi</strong> (形) = Shape/Form in Japanese<br/>
-          <strong className="text-white">Gen</strong> (現) = To Appear/Manifest<br/>
-          Together: <strong className="text-white">Shape Revealed</strong>
-        </p><br></br>
+        <div className="text-center max-w-md mx-auto">
+          <p className="text-muted-foreground text-sm italic mb-2">From Japanese</p>
+          <p className="text-muted-foreground text-xl leading-relaxed">
+            <strong className="text-white">Katachi</strong> (形) = Shape/Form<br/>
+            <strong className="text-white">Gen</strong> (現) = To Appear/Manifest<br/>
+            形現 = <strong className="text-white">Shape Revealed</strong>
+          </p>
+        </div><br></br>
         
         <div className="flex justify-center">
           {!isConnected ? (
@@ -133,7 +146,7 @@ export default function Home() {
                   Try in Explore Mode
                 </div>
                 <p className="text-xs text-muted-foreground/80">
-                  Test with any wallet address (bypasses wallet connection)
+                  Test with any address (bypass wallet connection)
                 </p>
                 <div className="space-y-2">
                   <Input
@@ -159,12 +172,12 @@ export default function Home() {
                     Test Generate
                   </Button>
                   
-                  <div className="mt-3 space-y-2">
-                    <p className="text-xs text-muted-foreground/80 text-center">
+                  <div className="mt-4 space-y-0">
+                    <p className="text-xs text-muted-foreground/80 text-center mb-2">
                       Or, explore a random top collector wallet:
                     </p>
                     <Button
-                      size="sm"
+                      size="lg"
                       onClick={() => {
                         const topWallets = [
                           '0x136bbfe37988f82f8585ed155615b75371489d45',
@@ -183,6 +196,7 @@ export default function Home() {
                       className="w-full"
                       variant="outline"
                     >
+                      <Search className="h-4 w-4" />
                       Explore
                     </Button>
                   </div>

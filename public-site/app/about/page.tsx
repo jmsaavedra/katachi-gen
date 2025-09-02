@@ -4,7 +4,17 @@ import Image from 'next/image';
 
 export const metadata: Metadata = {
   title: 'About',
-  description: 'Learn about Katachi Gen - transforming NFT collections into unique 3D origami patterns',
+  description: 'Learn about Katachi Gen - transforming NFT collections into unique 3D origami patterns through AI sentiment analysis and algorithmic curation on Shape network.',
+  openGraph: {
+    title: 'About Katachi Gen - Shape Revealed',
+    description: 'Learn about Katachi Gen - transforming NFT collections into unique 3D origami patterns through AI sentiment analysis and algorithmic curation on Shape network.',
+    images: ['/kg-metaog.jpg'],
+  },
+  twitter: {
+    title: 'About Katachi Gen - Shape Revealed',
+    description: 'Learn about Katachi Gen - transforming NFT collections into unique 3D origami patterns through AI sentiment analysis and algorithmic curation on Shape network.',
+    images: ['/kg-metaog.jpg'],
+  },
 };
 
 export default function About() {
@@ -41,7 +51,7 @@ export default function About() {
               </p>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-6 mt-12">
               <h2 className="text-2xl font-light">How It Works: Shape to Shape</h2>
               <div className="space-y-4 text-base">
                 <p>
@@ -61,7 +71,7 @@ export default function About() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 mt-12">
               <h2 className="text-2xl font-light">Etymology & Philosophy</h2>
               <div className="px-12 md:px-24 space-y-6">
                 <div className="grid md:grid-cols-2 gap-4 text-center">
@@ -102,7 +112,7 @@ export default function About() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 mt-12">
               <h2 className="text-2xl font-light">Technical Foundation</h2>
               <p className="text-base">
                 Built using cutting-edge computational origami research and tools:
@@ -174,37 +184,59 @@ export default function About() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 mt-12">
               <h2 className="text-2xl font-light">Eligibility</h2>
               <p className="text-base">
                 All wallets with a Stack NFT are able to mint Katachi Gen NFTs.
               </p>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-4 mt-12">
               <h2 className="text-2xl font-light">Team</h2>
               <div className="grid md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <p className="font-medium">Joe</p>
-                  <Link
-                    href="https://x.com/quietloops"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                  >
-                    @quietloops
-                  </Link>
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
+                    <Image
+                      src="/quietloops.jpg"
+                      alt="quietloops profile"
+                      width={48}
+                      height={48}
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium">Joe</p>
+                    <Link
+                      href="https://x.com/quietloops"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm"
+                    >
+                      @quietloops
+                    </Link>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <p className="font-medium">sembo</p>
-                  <Link
-                    href="https://x.com/1000b"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
-                  >
-                    @1000b
-                  </Link>
+                <div className="flex items-center space-x-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
+                    <Image
+                      src="/sembo.jpg"
+                      alt="sembo profile"
+                      width={48}
+                      height={48}
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="font-medium">sembo</p>
+                    <Link
+                      href="https://x.com/1000b"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-blue-600 dark:text-blue-400 hover:underline font-medium text-sm"
+                    >
+                      @1000b
+                    </Link>
+                  </div>
                 </div>
               </div>
             </div>

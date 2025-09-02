@@ -748,7 +748,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                 ) : (
                   <div className="text-xs text-green-600 text-center mt-2 flex items-center justify-center gap-1">
                     <Sparkles className="h-3 w-3" />
-                    Sentiment processed! Ready to generate.
+                    Sentiment curation complete. Generating Katachi Gen...
                   </div>
                 )}
               </div>
