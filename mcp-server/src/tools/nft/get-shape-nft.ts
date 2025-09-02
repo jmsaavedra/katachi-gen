@@ -7,6 +7,12 @@ import { config } from '../../config';
 import type { ShapeNftOutput, ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
 
+// Blocked contract addresses - NFTs from these contracts will be filtered out
+const BLOCKED_CONTRACTS = [
+  '0x274b9f633e968a31e8f9831308170720d1072135',
+  '0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b',
+].map(addr => addr.toLowerCase());
+
 // Rate limiting and retry utilities
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -92,11 +98,21 @@ export default async function getShapeNft({ address, pageKey, pageSize }: InferS
       });
     });
 
+    // Filter out blocked contracts before processing
+    const filteredNfts = nftsResponse.ownedNfts.filter(nft => {
+      const contractAddress = nft.contract.address.toLowerCase();
+      if (BLOCKED_CONTRACTS.includes(contractAddress)) {
+        console.log(`🚫 Skipped blocked contract NFT: ${nft.name || 'Unnamed'} from ${contractAddress}`);
+        return false;
+      }
+      return true;
+    });
+
     const result: ShapeNftOutput = {
       ownerAddress: address,
       timestamp: new Date().toISOString(),
-      totalNfts: nftsResponse.totalCount || nftsResponse.ownedNfts.length,
-      nfts: nftsResponse.ownedNfts.map((nft) => ({
+      totalNfts: filteredNfts.length,
+      nfts: filteredNfts.map((nft) => ({
         tokenId: nft.tokenId,
         contractAddress: nft.contract.address as Address,
         name: nft.name || null,
@@ -111,9 +127,9 @@ export default async function getShapeNft({ address, pageKey, pageSize }: InferS
       },
     };
 
-    // Add collection summary for current page
+    // Add collection summary for current page (using filtered NFTs)
     const collections = new Map<string, { count: number, name: string | null }>();
-    nftsResponse.ownedNfts.forEach(nft => {
+    filteredNfts.forEach(nft => {
       const addr = nft.contract.address;
       const existing = collections.get(addr) || { count: 0, name: nft.contract.name || null };
       collections.set(addr, { count: existing.count + 1, name: existing.name });

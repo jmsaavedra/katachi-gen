@@ -5,10 +5,7 @@ import { alchemy } from '../../clients';
 import { config } from '../../config';
 import type { ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
-import { validateImageCors } from './validate-image-cors';
 import { OwnedNft } from 'alchemy-sdk';
-import fs from 'fs';
-import path from 'path';
 
 // Define the output type for interpreted NFTs
 export interface InterpretedNFTsOutput {
@@ -22,6 +19,7 @@ export interface InterpretedNFTsOutput {
     name: string | null;
     description: string | null;
     imageUrl: string | null;
+    collectionName: string | null;
     alchemyImages: {
       cachedUrl?: string;
       thumbnailUrl?: string;
@@ -103,24 +101,11 @@ const VISUAL_CHARACTERISTICS = {
   realistic: ['photo', 'realistic', 'portrait', 'landscape', 'detailed'],
 };
 
-// Load blocked contracts from file
-function loadBlockedContracts(): string[] {
-  try {
-    const filePath = path.join(process.cwd(), 'blocked-contracts.txt');
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    
-    return fileContent
-      .split('\n')
-      .filter(line => line.trim() && !line.trim().startsWith('#')) // Remove empty lines and comments
-      .map(addr => addr.trim().toLowerCase());
-  } catch (error) {
-    console.warn('Could not load blocked-contracts.txt, using empty list:', error);
-    return [];
-  }
-}
-
 // Blocked contract addresses - NFTs from these contracts will be filtered out
-const BLOCKED_CONTRACTS = loadBlockedContracts();
+const BLOCKED_CONTRACTS = [
+  '0x274b9f633e968a31e8f9831308170720d1072135',
+  '0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b',
+].map(addr => addr.toLowerCase());
 
 // Color keywords mapping
 const COLOR_KEYWORDS = {
@@ -299,7 +284,7 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
   
   // Removed collection balance scoring as it was confusing and not relevant to sentiment matching
   
-  // Visual content analysis - prioritize Alchemy's processed images for better CORS compliance
+  // Visual content analysis - prioritize Alchemy's processed images
   const imageUrl = nft.image?.cachedUrl || nft.image?.pngUrl || nft.image?.thumbnailUrl || nft.image?.originalUrl;
   const visualAnalysis = await analyzeVisualContent(imageUrl, sentiment);
   score += visualAnalysis.score;
@@ -372,7 +357,7 @@ export default async function interpretCollectionSentiment({
       }))
     );
     
-    // Sort by score and take top N, ensuring max 2 NFTs per collection and CORS validation
+    // Sort by score and take top N, ensuring max 1 NFT per collection
     scoredNfts.sort((a, b) => b.score - a.score);
     
     const selectedNfts: typeof scoredNfts = [];
@@ -389,6 +374,7 @@ export default async function interpretCollectionSentiment({
       
       console.log(`🔍 [${index + 1}/${scoredNfts.length}] Evaluating: ${nftItem.nft.name || 'Unnamed'} (score: ${nftItem.score.toFixed(2)})`);
       console.log(`    ContentType: ${contentType || 'unknown'}`);
+      console.log(`    Contract: ${collectionAddress} (currentCount: ${currentCount})`);
       
       // Filter out blocked contracts
       if (BLOCKED_CONTRACTS.includes(collectionAddress)) {
@@ -412,6 +398,7 @@ export default async function interpretCollectionSentiment({
       } else {
         if (currentCount >= 1) {
           console.log(`❌ Skipped (collection limit): ${nftItem.nft.name || 'Unnamed'} (already have ${currentCount} from this collection)`);
+          console.log(`    Debug - Selected NFTs so far: ${selectedNfts.map(n => `${n.nft.name} (${n.nft.contract.address.toLowerCase()})`).join(', ')}`);
         } else if (selectedNfts.length >= count) {
           console.log(`❌ Skipped (count limit reached): ${nftItem.nft.name || 'Unnamed'}`);
         }
@@ -441,6 +428,7 @@ export default async function interpretCollectionSentiment({
         name: item.nft.name || `Token #${tokenId}`,
         description: item.nft.description || null,
         imageUrl: item.nft.image?.originalUrl || null,
+        collectionName: item.nft.contract.name || null,
         alchemyImages: {
           cachedUrl: item.nft.image?.cachedUrl || undefined,
           thumbnailUrl: item.nft.image?.thumbnailUrl || undefined,

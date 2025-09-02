@@ -16,16 +16,20 @@ export async function POST(request: NextRequest) {
 
     console.log('Forwarding request to katachi-generator:', {
       walletAddress: body.walletAddress,
-      imagesCount: body.images.length
+      imagesCount: body.images.length,
+      forMinting: true
     });
 
-    // Forward request to katachi-generator service
+    // Forward request to katachi-generator service with minting flag
     const response = await fetch(KATACHI_GENERATOR_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({
+        ...body,
+        forMinting: true // Force Arweave upload even in development
+      }),
     });
 
     if (!response.ok) {

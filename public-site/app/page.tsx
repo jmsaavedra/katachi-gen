@@ -18,6 +18,7 @@ export default function Home() {
   const [testAddress, setTestAddress] = useState('');
   const [testAddressError, setTestAddressError] = useState('');
   const [currentIframeIndex, setCurrentIframeIndex] = useState(0);
+  const [shouldAutoRedirect, setShouldAutoRedirect] = useState(false);
   
   // Gallery URLs
   const galleryUrls = [
@@ -41,14 +42,21 @@ export default function Home() {
     setIsInMintView(showGenerator);
   }, [showGenerator, setShowWalletInHeader, setIsInMintView]);
   
-  // Auto-navigate to generator when wallet connects
+  // Auto-redirect only when user connects wallet from this page
   useEffect(() => {
-    if (isConnected && connectedAddress) {
+    if (isConnected && connectedAddress && shouldAutoRedirect) {
       setTestAddress(''); // Clear test address when wallet connects
       setTestAddressError('');
       setShowGenerator(true);
+      setShouldAutoRedirect(false); // Reset the flag
     }
-  }, [isConnected, connectedAddress]);
+  }, [isConnected, connectedAddress, shouldAutoRedirect]);
+  
+  // Track when user initiates connection from this page
+  const handleConnectClick = (openConnectModal: () => void) => {
+    setShouldAutoRedirect(true); // Set flag to auto-redirect after connection
+    openConnectModal();
+  };
   
   const handleTestAddressSubmit = () => {
     if (!testAddress.trim()) {
@@ -151,7 +159,7 @@ export default function Home() {
                 <Button 
                   size="lg"
                   className="gap-3 px-24 py-8 text-xl animate-gradient-button w-full max-w-md"
-                  onClick={openConnectModal}
+                  onClick={() => handleConnectClick(openConnectModal)}
                 >
                   <Sparkles className="h-6 w-6" />
                   Connect Wallet
@@ -165,7 +173,7 @@ export default function Home() {
               onClick={handleMintClick}
             >
               <Sparkles className="h-6 w-6" />
-              Mint Your Katachi Gen 形現
+              Mint Now
             </Button>
           )}
         </div>

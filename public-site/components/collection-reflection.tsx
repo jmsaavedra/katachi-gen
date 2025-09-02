@@ -15,6 +15,7 @@ interface InterpretedNFT {
   name: string | null;
   description: string | null;
   imageUrl: string | null;
+  collectionName: string | null;
   reason: string;
   matchScore: number;
   matchDetails?: {
@@ -304,8 +305,12 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                           </div>
                           
                           <div className="text-xs text-muted-foreground">
-                            <p className="truncate" title={nft.contractAddress}>
-                              Collection: {nft.contractAddress.slice(0, 6)}...{nft.contractAddress.slice(-4)}
+                            <p className="truncate" title={nft.collectionName || nft.contractAddress}>
+                              {nft.collectionName ? (
+                                <>Collection: {nft.collectionName}</>
+                              ) : (
+                                <>Collection: {nft.contractAddress.slice(0, 6)}...{nft.contractAddress.slice(-4)}</>
+                              )}
                             </p>
                           </div>
                           
