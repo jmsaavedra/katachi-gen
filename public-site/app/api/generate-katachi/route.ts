@@ -91,20 +91,24 @@ export async function POST(request: NextRequest) {
     // If we couldn't create metadata, return just the basic data
     return NextResponse.json(data);
   } catch (error) {
+    // Type guards for error properties
+    const errorName = error && typeof error === 'object' && 'name' in error ? (error as Error).name : undefined;
+    const errorCode = error && typeof error === 'object' && 'code' in error ? (error as { code: string }).code : undefined;
+    
     console.error('Error in generate-katachi API:', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       url: KATACHI_GENERATOR_URL,
-      isAborted: (error as any).name === 'AbortError',
-      isNetworkError: (error as any).code === 'ENOTFOUND' || (error as any).code === 'ECONNREFUSED'
+      isAborted: errorName === 'AbortError',
+      isNetworkError: errorCode === 'ENOTFOUND' || errorCode === 'ECONNREFUSED'
     });
     
     let errorMessage = 'Failed to generate katachi pattern';
-    if ((error as any).name === 'AbortError') {
+    if (errorName === 'AbortError') {
       errorMessage = 'Request timed out after 60 seconds';
-    } else if ((error as any).code === 'ENOTFOUND') {
+    } else if (errorCode === 'ENOTFOUND') {
       errorMessage = 'Katachi generator service not found';
-    } else if ((error as any).code === 'ECONNREFUSED') {
+    } else if (errorCode === 'ECONNREFUSED') {
       errorMessage = 'Cannot connect to katachi generator service';
     } else if (error instanceof Error) {
       errorMessage = error.message;
@@ -116,8 +120,8 @@ export async function POST(request: NextRequest) {
         message: errorMessage,
         debug: {
           service_url: KATACHI_GENERATOR_URL,
-          error_type: (error as any).name,
-          error_code: (error as any).code
+          error_type: errorName,
+          error_code: errorCode
         }
       },
       { status: 500 }
