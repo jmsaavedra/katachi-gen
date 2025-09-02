@@ -13,13 +13,13 @@ export const wagmiConfig = getDefaultConfig({
   chains: [shape, shapeSepolia, mainnet],
   transports: {
     [shape.id]: http(`https://shape-mainnet.g.alchemy.com/v2/${config.alchemyKey}`, {
-      batch: true,
+      batch: false, // Disable batching to reduce request frequency
     }),
     [shapeSepolia.id]: http(`https://shape-sepolia.g.alchemy.com/v2/${config.alchemyKey}`, {
-      batch: true,
+      batch: false, // Disable batching to reduce request frequency
     }),
     [mainnet.id]: http(`https://eth-mainnet.g.alchemy.com/v2/${config.alchemyKey}`, {
-      batch: true,
+      batch: false, // Disable batching to reduce request frequency
     }),
   },
 });

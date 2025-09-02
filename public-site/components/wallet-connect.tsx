@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button';
 import { abbreviateHash } from '@/lib/utils';
 import { ExitIcon } from '@radix-ui/react-icons';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { mainnet } from 'viem/chains';
-import { useAccount, useDisconnect, useEnsName } from 'wagmi';
+import { useAccount, useDisconnect } from 'wagmi';
 import { useHeader } from '@/contexts/header-context';
 import { useRouter } from 'next/navigation';
 
 export const WalletConnect = () => {
   const { address } = useAccount();
-  const { data: ensName } = useEnsName({ address, chainId: mainnet.id });
+  // Temporarily disabled due to Alchemy rate limits
+  const ensName = null; // Temporarily disabled
   const { disconnect } = useDisconnect();
   const { isInMintView, setIsInMintView, setShowWalletInHeader } = useHeader();
   const router = useRouter();

@@ -48,9 +48,10 @@ export function useNFTsForOwner(address: Address | undefined) {
       } as OwnedNftsResponse;
     },
     enabled: !!address,
-    staleTime: 1000 * 60 * 10, // 10 minutes (longer since we're fetching more data)
-    refetchInterval: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 15, // 15 minutes (longer since we're fetching more data)
+    refetchInterval: false, // Disable automatic refetching
     refetchOnWindowFocus: false, // Disable to avoid excessive refetching
+    refetchOnReconnect: false, // Disable refetch on reconnect
   });
 }
 

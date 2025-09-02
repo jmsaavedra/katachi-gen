@@ -381,12 +381,14 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           foldLines: 0,
           colors: ['#000000', '#ffffff'],
           arweaveId: result.htmlId, // Store HTML Arweave ID for minting
-          // Store the complete metadata from the API for minting
-          attributes: result.metadata?.attributes || [
-            { trait_type: 'Sentiment Filter', value: dataToUse.sentiment },
+          // Store the complete metadata from the API for minting + add "Minted by" attribute
+          attributes: (result.metadata?.attributes || [
+            { trait_type: 'Sentiment', value: dataToUse.sentiment },
             { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
             { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
-          ]
+          ]).concat([
+            { trait_type: 'Revealed by', value: overrideAddress && !connectedAddress ? '0x0000' : connectedAddress },
+          ])
         },
         curated_nfts: dataToUse.filteredNfts.slice(0, 5).map(nft => ({
           name: nft.name || '',

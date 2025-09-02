@@ -36,11 +36,11 @@ export default function Home() {
   console.log('NEXT_PUBLIC_ENABLE_TEST_MODE:', process.env.NEXT_PUBLIC_ENABLE_TEST_MODE);
   console.log('isTestModeEnabled:', isTestModeEnabled);
 
-  // Update header state when generator visibility changes
+  // Update header state when generator visibility or wallet connection changes
   useEffect(() => {
-    setShowWalletInHeader(showGenerator);
+    setShowWalletInHeader(showGenerator || isConnected);
     setIsInMintView(showGenerator);
-  }, [showGenerator, setShowWalletInHeader, setIsInMintView]);
+  }, [showGenerator, isConnected, setShowWalletInHeader, setIsInMintView]);
   
   // Auto-redirect only when user connects wallet from this page
   useEffect(() => {
@@ -173,7 +173,7 @@ export default function Home() {
               onClick={handleMintClick}
             >
               <Sparkles className="h-6 w-6" />
-              Mint Now
+              Reveal Your Shape
             </Button>
           )}
         </div>
