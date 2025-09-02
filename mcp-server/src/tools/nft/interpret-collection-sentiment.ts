@@ -6,6 +6,8 @@ import { config } from '../../config';
 import type { ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
 import { OwnedNft } from 'alchemy-sdk';
+import fs from 'fs';
+import path from 'path';
 
 // Define the output type for interpreted NFTs
 export interface InterpretedNFTsOutput {
@@ -101,11 +103,34 @@ const VISUAL_CHARACTERISTICS = {
   realistic: ['photo', 'realistic', 'portrait', 'landscape', 'detailed'],
 };
 
+// Load blocked contracts from file with graceful fallback
+function loadBlockedContracts(): string[] {
+  // Hardcoded fallback list
+  const FALLBACK_CONTRACTS = [
+    '0x274b9f633e968a31e8f9831308170720d1072135',
+    '0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b',
+  ];
+
+  try {
+    const filePath = path.join(process.cwd(), 'blocked-contracts.txt');
+    const fileContent = fs.readFileSync(filePath, 'utf-8');
+    
+    const contractsFromFile = fileContent
+      .split('\n')
+      .filter(line => line.trim() && !line.trim().startsWith('#'))
+      .map(addr => addr.trim().toLowerCase());
+    
+    console.log(`✅ Loaded ${contractsFromFile.length} blocked contracts from file`);
+    return contractsFromFile;
+    
+  } catch (error) {
+    console.warn('⚠️ Could not load blocked-contracts.txt, using fallback list:', (error as Error).message);
+    return FALLBACK_CONTRACTS.map(addr => addr.toLowerCase());
+  }
+}
+
 // Blocked contract addresses - NFTs from these contracts will be filtered out
-const BLOCKED_CONTRACTS = [
-  '0x274b9f633e968a31e8f9831308170720d1072135',
-  '0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b',
-].map(addr => addr.toLowerCase());
+const BLOCKED_CONTRACTS = loadBlockedContracts();
 
 // Color keywords mapping
 const COLOR_KEYWORDS = {
