@@ -66,6 +66,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
     name: string | null;
     description: string | null;
     imageUrl: string | null;
+    collectionName: string | null;
     reason: string;
     matchScore: number;
     matchDetails?: {
