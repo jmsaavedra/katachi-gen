@@ -12,17 +12,21 @@ async function generateThumbnail(data) {
     try {
         console.log('🚀 Launching Chromium with Playwright');
 
-        // Launch browser with built-in Chromium
+        // Launch browser with built-in Chromium - enhanced args for WebGL rendering
         browser = await chromium.launch({
             headless: true,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
                 '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
                 '--no-first-run',
                 '--no-zygote',
-                '--disable-gpu'
+                '--enable-webgl',
+                '--use-gl=swiftshader',
+                '--enable-accelerated-2d-canvas',
+                '--num-raster-threads=1'
             ]
         });
 
@@ -99,8 +103,19 @@ async function generateThumbnail(data) {
             try {
                 console.log('📸 IMMEDIATE CAPTURE - Console message detected');
                 
-                // Brief wait to ensure rendering completion
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Longer wait to ensure WebGL/Three.js rendering completion
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+                // Debug: Check what's actually on the page before screenshot
+                const pageDebug = await page.evaluate(() => ({
+                    bodyContent: document.body?.innerHTML?.substring(0, 200) || 'NO BODY',
+                    hasCanvas: document.querySelector('canvas') !== null,
+                    canvasCount: document.querySelectorAll('canvas').length,
+                    hasThreeJs: typeof THREE !== 'undefined',
+                    nftRenderComplete: window.nftRenderComplete,
+                    timestamp: new Date().toISOString()
+                }));
+                console.log('📸 PRE-SCREENSHOT DEBUG:', JSON.stringify(pageDebug, null, 2));
                 
                 // Take screenshot
                 const screenshotBuffer = await page.screenshot({
@@ -117,6 +132,7 @@ async function generateThumbnail(data) {
                     throw new Error('Screenshot buffer is empty or invalid');
                 }
                 
+                console.log('📸 Screenshot captured successfully, size:', screenshotBuffer.length);
                 return screenshotBuffer;
             } catch (error) {
                 console.error('Error in takeScreenshotOnDetection:', error);
@@ -210,14 +226,22 @@ async function generateThumbnail(data) {
         if (!screenshotTaken) {
             console.log('📸 FALLBACK - Taking screenshot now...');
             
+            // Ensure longer wait for WebGL content to render
+            console.log('📸 FALLBACK - Waiting additional time for WebGL rendering...');
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
             // Debug: Check page state before screenshot
             const preScreenshotState = await page.evaluate(() => ({
                 canvasPresent: document.querySelector('canvas') !== null,
                 renderComplete: window.nftRenderComplete || false,
-                bodyContent: document.body?.innerHTML?.length || 0,
+                bodyContent: document.body?.innerHTML?.substring(0, 300) || 'NO BODY',
+                bodyLength: document.body?.innerHTML?.length || 0,
                 timestamp: new Date().toISOString(),
                 threejsLoaded: typeof THREE !== 'undefined',
-                globalsAvailable: typeof window.globals !== 'undefined'
+                globalsAvailable: typeof window.globals !== 'undefined',
+                loadingScreenHidden: !document.querySelector('.loading-screen') || 
+                                   document.querySelector('.loading-screen')?.style?.display === 'none',
+                canvasStyles: document.querySelector('canvas')?.style?.cssText || 'NO CANVAS'
             }));
             
             console.log('📸 SCREENSHOT TIMING - Fallback capture state:', JSON.stringify(preScreenshotState, null, 2));
@@ -239,6 +263,7 @@ async function generateThumbnail(data) {
                     throw new Error('Fallback screenshot buffer is empty or invalid');
                 }
                 
+                console.log('📸 Fallback screenshot captured successfully, size:', screenshotBuffer.length);
                 return screenshotBuffer;
             } catch (fallbackError) {
                 console.error('❌ Fallback screenshot failed:', fallbackError);

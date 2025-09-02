@@ -1,7 +1,8 @@
 'use client';
 
-import { useAccount } from 'wagmi';
+import { useAccount, useChainId, useSwitchChain } from 'wagmi';
 import { Address } from 'viem';
+import { shape, shapeSepolia } from 'viem/chains';
 import { useNFTsForOwner } from '@/hooks/web3';
 import { useMintOrigami } from '@/hooks/useMintOrigami';
 import { useStackMedals } from '@/hooks/useStackMedals';
@@ -22,8 +23,25 @@ interface KatachiGeneratorProps {
 }
 
 export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}) {
-  const { address: connectedAddress } = useAccount();
+  const { address: connectedAddress, isConnected } = useAccount();
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
   const addressToUse = overrideAddress || connectedAddress;
+
+  // Debug logging for explore mode issue
+  console.log('🐛 KatachiGenerator Debug:', {
+    overrideAddress,
+    connectedAddress,
+    isConnected,
+    addressToUse
+  });
+
+  // Get expected chain ID based on environment
+  const expectedChainId = config.mintChainId === shape.id ? shape.id : shapeSepolia.id;
+  const expectedChainName = config.mintChainId === shape.id ? 'Shape' : 'Shape Sepolia';
+  
+  // Check if user is on wrong network
+  const isWrongNetwork = isConnected && !overrideAddress && chainId !== expectedChainId;
   const { data: nfts, isLoading, error } = useNFTsForOwner(addressToUse);
   const { data: stackMedals, isLoading: isLoadingMedals, error: medalsError } = useStackMedals(addressToUse);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -147,6 +165,26 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   useEffect(() => {
     setCurrentPage(1);
   }, [nfts?.totalCount]);
+
+  // Reset entire component state when wallet connects on mint page
+  useEffect(() => {
+    if (connectedAddress && !overrideAddress) {
+      // Reset all component state to initial values
+      setIsGenerating(false);
+      setIframeLoading(false);
+      setIframeError(false);
+      setUrlResolved(false);
+      setPreviewDelay(false);
+      setPreviewCountdown(0);
+      setSentimentData(null);
+      setCuratedNfts(null);
+      setCurationInterpretation('');
+      setCurationThemes([]);
+      setGeneratedPattern(null);
+      setCurrentPage(1);
+      resetMint(); // Reset mint state as well
+    }
+  }, [connectedAddress, overrideAddress, resetMint]);
 
   const handleSentimentSubmitted = (sentiment: string, filteredNfts: Array<{
     name: string | null;
@@ -607,6 +645,45 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
         </div>
       )}
       
+      {/* Wrong Network Modal */}
+      {isWrongNetwork && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <Card className="w-full max-w-md mx-4">
+            <CardHeader className="text-center">
+              <CardTitle className="flex items-center gap-2 justify-center">
+                <span>⚠️</span>
+                Wrong Network
+              </CardTitle>
+              <CardDescription>
+                Please switch to {expectedChainName} to continue
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground text-center">
+                You&apos;re currently connected to the wrong network. Click below to switch to {expectedChainName}.
+              </p>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={async () => {
+                    try {
+                      await switchChain({ chainId: expectedChainId });
+                      toast.success(`Successfully switched to ${expectedChainName}`);
+                    } catch (error) {
+                      console.error('Network switch failed:', error);
+                      toast.error('Failed to switch network. Please switch manually in your wallet.');
+                    }
+                  }}
+                  className="flex-1"
+                  size="lg"
+                >
+                  Switch to {expectedChainName}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+      
       <div className="w-full max-w-6xl mx-auto space-y-8">
         <div className="space-y-4">
           <div className="flex gap-2 flex-wrap">
@@ -880,9 +957,20 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                       </button>
                       <button 
                         onClick={() => {
-                          const iframe = document.querySelector('iframe[title="Interactive Katachi Pattern"]') as HTMLIFrameElement;
-                          if (iframe && generatedPattern.htmlUrl) {
-                            iframe.src = generatedPattern.htmlUrl + `?refresh=${Date.now()}`;
+                          console.log('🔄 Refresh button clicked');
+                          // Find all iframes with the specific title
+                          const iframes = document.querySelectorAll('iframe[title="Interactive Katachi Pattern"]') as NodeListOf<HTMLIFrameElement>;
+                          console.log('🔍 Found iframes:', iframes.length);
+                          
+                          if (iframes.length > 0 && generatedPattern?.htmlUrl) {
+                            // Refresh all matching iframes (handles multiple viewport cases)
+                            iframes.forEach((iframe, index) => {
+                              const refreshUrl = generatedPattern.htmlUrl + `?refresh=${Date.now()}`;
+                              console.log(`🔄 Refreshing iframe ${index + 1}:`, refreshUrl);
+                              iframe.src = refreshUrl;
+                            });
+                          } else {
+                            console.error('❌ No iframe found or missing htmlUrl');
                           }
                         }}
                         className="text-xs text-muted-foreground hover:text-primary"
@@ -986,9 +1074,9 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-4">
                   <Button 
-                    className={`flex-1 gap-2 py-8 text-lg ${generatedPattern && !isMinting && mintState !== 'success' && !overrideAddress ? 'animate-gradient-button' : ''}`}
+                    className={`flex-1 gap-2 py-8 text-lg ${generatedPattern && !isMinting && mintState !== 'success' && !(overrideAddress && !connectedAddress) ? 'animate-gradient-button' : ''}`}
                     onClick={handleMintNFT}
-                    disabled={isMinting || mintState === 'success' || !!overrideAddress}
+                    disabled={isMinting || mintState === 'success' || (overrideAddress && !connectedAddress)}
                   >
                     {isMinting ? (
                       <>
@@ -1002,7 +1090,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                         <Sparkles className="h-5 w-5" />
                         Minted!
                       </>
-                    ) : overrideAddress ? (
+                    ) : overrideAddress && !connectedAddress ? (
                       <span className="flex flex-col items-center gap-1">
                         <span className="flex items-center gap-2">
                           <Eye className="h-4 w-4 md:h-5 md:w-5" />

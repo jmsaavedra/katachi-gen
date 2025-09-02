@@ -1,5 +1,108 @@
 # TODO: Project Improvements
 
+## 🚀 Vercel Monorepo Deployment Setup
+
+### Priority: High
+Configure Vercel to only redeploy specific folders when those folders are updated in the monorepo.
+
+#### Current Issue
+Vercel rebuilds the entire project on any commit, even when changes are only made to unrelated folders or files outside the `public-site/` directory.
+
+#### Implementation Steps
+
+1. **Configure Build Settings in Vercel Dashboard**
+   - Go to Vercel dashboard → Select project → **Settings** → **Git**
+   - Set **Root Directory** to `public-site/`
+   - This tells Vercel where the app to deploy is located
+
+2. **Create Build Detection Script**
+   Create `scripts/ignore-build.js` in project root:
+   ```javascript
+   #!/usr/bin/env node
+   const { execSync } = require('child_process');
+   
+   const appDir = process.env.VERCEL_PROJECT_SETTINGS_ROOT_DIRECTORY || 'public-site';
+   
+   try {
+     const changedFiles = execSync('git diff HEAD^ HEAD --name-only', { 
+       encoding: 'utf8' 
+     }).split('\n').filter(Boolean);
+   
+     const hasChangesInApp = changedFiles.some(file => 
+       file.startsWith(appDir + '/') || file === appDir
+     );
+   
+     const hasSharedChanges = changedFiles.some(file => 
+       file.startsWith('package.json') || 
+       file.startsWith('package-lock.json') ||
+       file.startsWith('shared/') ||
+       file.startsWith('libs/')
+     );
+   
+     if (hasChangesInApp || hasSharedChanges) {
+       console.log(`✅ Changes detected - proceeding with build`);
+       process.exit(1); // Build
+     } else {
+       console.log(`🛑 No relevant changes - skipping build`);
+       process.exit(0); // Skip build
+     }
+   } catch (error) {
+     console.log('⚠️ Error checking changes - proceeding with build');
+     process.exit(1); // Build on error to be safe
+   }
+   ```
+
+3. **Configure Ignored Build Step**
+   - In Vercel dashboard → **Settings** → **Git**
+   - Set **Ignored Build Step**: `node ../scripts/ignore-build.js`
+
+4. **Alternative: Simple Bash Script**
+   Create `ignore-build-step.sh` in project root:
+   ```bash
+   #!/bin/bash
+   CURRENT_APP=$(basename "$VERCEL_PROJECT_SETTINGS_ROOT_DIRECTORY")
+   
+   if git diff HEAD^ HEAD --name-only | grep -q "^$CURRENT_APP/"; then
+     echo "✅ Changes detected in $CURRENT_APP - proceeding with build"
+     exit 1
+   else
+     echo "🛑 No changes in $CURRENT_APP - skipping build"
+     exit 0
+   fi
+   ```
+
+5. **Project Structure for Monorepo**
+   ```
+   katachi-gen/
+   ├── public-site/           # Current Next.js app
+   │   ├── vercel.json       # Optional app-specific config
+   │   └── ...
+   ├── admin-dashboard/       # Future app
+   ├── shared/               # Shared components/utils
+   ├── scripts/
+   │   └── ignore-build.js   # Build detection script
+   └── ignore-build-step.sh  # Alternative bash script
+   ```
+
+6. **Testing Checklist**
+   - [ ] Deploy with changes only in `public-site/` (should build)
+   - [ ] Deploy with changes only in other folders (should skip)
+   - [ ] Deploy with package.json changes (should build)
+   - [ ] Verify build logs show correct detection messages
+
+#### Benefits
+- **Faster deployments**: Only rebuild when necessary
+- **Reduced build minutes**: Save on Vercel usage limits
+- **Better CI/CD**: Clear separation of app deployments
+- **Scalable**: Easy to add more apps to monorepo
+
+#### Alternative Approaches
+- **GitHub Actions**: Custom workflows to trigger Vercel deployments
+- **Vercel CLI**: Manual deployment control with path checking
+- **Multiple Vercel Projects**: Separate project per app folder
+
+---
+
 ## 🎨 Enhanced Visual Analysis for NFT Collection Reflection
 
 ### Current Limitation

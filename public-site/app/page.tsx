@@ -21,7 +21,7 @@ export default function Home() {
   
   // Gallery URLs
   const galleryUrls = [
-    "https://storage.katachi-gen.com/katachi_1756768199179.html",
+    "https://storage.katachi-gen.com/kg_flower-0xee49f82e58a1c2b306720d0c68047cbf70c11fb5-1756775591427.html",
     "https://storage.katachi-gen.com/katachi_1756739536308.html",
     "https://storage.katachi-gen.com/katachi_1756739728214.html",
     "https://storage.katachi-gen.com/katachi_1756737150668.html",
@@ -44,6 +44,8 @@ export default function Home() {
   // Auto-navigate to generator when wallet connects
   useEffect(() => {
     if (isConnected && connectedAddress) {
+      setTestAddress(''); // Clear test address when wallet connects
+      setTestAddressError('');
       setShowGenerator(true);
     }
   }, [isConnected, connectedAddress]);
@@ -68,20 +70,52 @@ export default function Home() {
   };
   
   // Determine which address to use for the generator
-  const addressForGenerator = showGenerator ? (testAddress || connectedAddress) : undefined;
+  // Priority: connected wallet > test address
+  const addressForGenerator = showGenerator ? (connectedAddress || testAddress) : undefined;
 
   if (showGenerator) {
     return <KatachiGenerator overrideAddress={addressForGenerator as `0x${string}` | undefined} />;
   }
 
   return (
-    <div className="flex min-h-[calc(100vh-200px)] flex-col items-center justify-center space-y-8 px-4">
+    <div>
+      {/* Video Banner - Break out of container for full width on mobile */}
+      <div className="md:hidden -mx-4 -mt-8">
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="w-full h-auto"
+        >
+          <source src="/homepage-banner-opti.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      
+      {/* Video Banner - Desktop version */}
+      <div className="hidden md:block w-full max-w-6xl mx-auto mb-6">
+        <video 
+          autoPlay 
+          loop 
+          muted 
+          playsInline
+          className="w-full h-auto rounded-lg"
+        >
+          <source src="/homepage-banner-opti.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      
+      {/* Content section */}
+      <div className="flex min-h-[calc(100vh-200px)] flex-col items-center justify-center space-y-8 px-4 pt-8 md:pt-0">
+      
       <div className="space-y-6 text-center max-w-3xl">
         <h1 className="text-5xl font-light tracking-tight sm:text-7xl">
           <span className="block sm:inline">Katachi Gen</span>
           <span className="block sm:inline opacity-70"> 形現</span>
         </h1>
-        <p className="text-primary/80 text-xl font-light italic uppercase tracking-wider">
+        <p className="text-primary/80 text-xl font-light italic uppercase tracking-wider mb-2 md:mb-8">
           Shape Revealed
         </p>
         <div className="space-y-4 max-w-2xl mx-auto">
@@ -316,6 +350,7 @@ export default function Home() {
         <p className="text-muted-foreground text-sm">
           🏆 Shapecraft2 Hackathon Submission
         </p>
+      </div>
       </div>
     </div>
   );

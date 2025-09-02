@@ -3,17 +3,24 @@
 import Link from 'next/link';
 import { WalletConnect } from '@/components/wallet-connect';
 import { useHeader } from '@/contexts/header-context';
-
 export function HeaderWrapper() {
-  const { showWalletInHeader } = useHeader();
+  const { showWalletInHeader, setIsInMintView, setShowWalletInHeader } = useHeader();
+
+  const handleLogoClick = () => {
+    // Reset mint view state and navigate to homepage
+    setIsInMintView(false);
+    setShowWalletInHeader(false);
+    // Force a page refresh to reset all state
+    window.location.href = '/';
+  };
 
   return (
     <header className="border-b">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
+        <button onClick={handleLogoClick} className="flex items-center gap-2 bg-transparent border-none cursor-pointer">
           <span className="text-xl font-light">Katachi Gen</span>
           <span className="text-xl opacity-70">形現</span>
-        </Link>
+        </button>
         <div className="flex items-center gap-4">
           <Link 
             href="/about" 

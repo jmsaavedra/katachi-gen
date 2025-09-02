@@ -159,14 +159,14 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                     handleSubmit();
                   }
                 }}
-                className={`min-h-[80px] w-full md:w-3/5 text-center ${isCurated ? 'opacity-75 cursor-not-allowed' : ''}`}
+                className={`min-h-[120px] w-full md:w-4/5 text-center ${isCurated ? 'opacity-75 cursor-not-allowed' : ''}`}
                 style={{ 
                   fontSize: '1.125rem', 
-                  lineHeight: '80px',
-                  height: '80px',
-                  resize: 'none',
-                  paddingTop: '0',
-                  paddingBottom: '0'
+                  lineHeight: '1.5',
+                  minHeight: '120px',
+                  resize: 'vertical',
+                  paddingTop: '1rem',
+                  paddingBottom: '1rem'
                 }}
                 disabled={isLoading || isCurated}
               />
