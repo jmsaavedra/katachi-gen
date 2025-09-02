@@ -419,7 +419,15 @@ export function useMintOrigami() {
       console.log('🔧 [EXECUTE_MINT] Starting deferred metadata upload after mint confirmation...');
       
       // Step 1: Upload metadata JSON to Arweave via generator
-      fetch(`${process.env.NEXT_PUBLIC_GENERATOR_URL || 'http://localhost:3001'}/upload-metadata`, {
+      const generatorUrl = process.env.NEXT_PUBLIC_GENERATOR_URL || 'http://localhost:3001';
+      const uploadUrl = `${generatorUrl}/upload-metadata`;
+      console.log('🌐 [METADATA_UPLOAD] Using URL:', {
+        NEXT_PUBLIC_GENERATOR_URL: process.env.NEXT_PUBLIC_GENERATOR_URL,
+        generatorUrl,
+        uploadUrl
+      });
+      
+      fetch(uploadUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
