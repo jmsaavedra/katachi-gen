@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useState, useEffect } from 'react';
-import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Eye } from 'lucide-react';
+import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Eye, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { CollectionReflection } from '@/components/collection-reflection';
 import { toast } from 'sonner';
@@ -870,7 +870,14 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">
+                    <div className="flex justify-between items-center mt-2">
+                      <button 
+                        onClick={() => window.open(generatedPattern.htmlUrl, '_blank')}
+                        className="text-xs text-muted-foreground underline hover:no-underline text-primary flex items-center gap-1"
+                      >
+                        Open
+                        <ExternalLink className="h-3 w-3" />
+                      </button>
                       <button 
                         onClick={() => {
                           const iframe = document.querySelector('iframe[title="Interactive Katachi Pattern"]') as HTMLIFrameElement;
@@ -878,11 +885,12 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
                             iframe.src = generatedPattern.htmlUrl + `?refresh=${Date.now()}`;
                           }
                         }}
-                        className="underline hover:no-underline text-primary"
+                        className="text-xs text-muted-foreground hover:text-primary"
+                        title="Refresh preview"
                       >
-                        Refresh
+                        <RefreshCw className="h-3 w-3" />
                       </button>
-                    </p>
+                    </div>
                   </div>
 
                   {/* Right Column - Complete Metadata */}

@@ -69,7 +69,8 @@ async function handlePatternGeneration(req, res, data) {
         );
         
         // Create temp HTML file for local preview
-        const htmlFilename = `katachi_${timestamp}.html`;
+        const walletAddress = data.walletAddress || data.stackData?.userAddress;
+        const htmlFilename = `kg_${data.patternType.toLowerCase()}-${walletAddress}-${timestamp}.html`;
         const htmlPath = path.join(__dirname, '..', 'temp', htmlFilename);
         
         // Ensure temp directory exists
