@@ -15,12 +15,16 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('Forwarding request to katachi-generator:', {
+      url: KATACHI_GENERATOR_URL,
       walletAddress: body.walletAddress,
       imagesCount: body.images.length,
       forMinting: true
     });
 
     // Forward request to katachi-generator service with minting flag
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+    
     const response = await fetch(KATACHI_GENERATOR_URL, {
       method: 'POST',
       headers: {
@@ -30,11 +34,20 @@ export async function POST(request: NextRequest) {
         ...body,
         forMinting: true // Force Arweave upload even in development
       }),
+      signal: controller.signal,
     });
+    
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
-      console.error('Katachi generator error:', response.status, response.statusText);
-      throw new Error(`Katachi generator returned ${response.status}`);
+      const errorText = await response.text().catch(() => 'Unknown error');
+      console.error('Katachi generator error:', {
+        status: response.status,
+        statusText: response.statusText,
+        url: KATACHI_GENERATOR_URL,
+        body: errorText
+      });
+      throw new Error(`Katachi generator returned ${response.status}: ${errorText}`);
     }
 
     const data = await response.json();
@@ -78,11 +91,34 @@ export async function POST(request: NextRequest) {
     // If we couldn't create metadata, return just the basic data
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error in generate-katachi API:', error);
+    console.error('Error in generate-katachi API:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      url: KATACHI_GENERATOR_URL,
+      isAborted: error.name === 'AbortError',
+      isNetworkError: error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED'
+    });
+    
+    let errorMessage = 'Failed to generate katachi pattern';
+    if (error.name === 'AbortError') {
+      errorMessage = 'Request timed out after 60 seconds';
+    } else if (error.code === 'ENOTFOUND') {
+      errorMessage = 'Katachi generator service not found';
+    } else if (error.code === 'ECONNREFUSED') {
+      errorMessage = 'Cannot connect to katachi generator service';
+    } else if (error instanceof Error) {
+      errorMessage = error.message;
+    }
+    
     return NextResponse.json(
       { 
         error: true, 
-        message: error instanceof Error ? error.message : 'Failed to generate katachi pattern' 
+        message: errorMessage,
+        debug: {
+          service_url: KATACHI_GENERATOR_URL,
+          error_type: error.name,
+          error_code: error.code
+        }
       },
       { status: 500 }
     );
