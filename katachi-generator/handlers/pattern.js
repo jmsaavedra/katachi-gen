@@ -17,7 +17,8 @@ async function handlePatternGeneration(req, res, data) {
         walletAddress: data.walletAddress,
         patternType: data.patternType,
         seed2: data.seed2,
-        imageCount: data.images ? data.images.length : 0
+        imageCount: data.images ? data.images.length : 0,
+        forMinting: data.forMinting || false
     });
 
     // Validate required fields
@@ -86,20 +87,25 @@ async function handlePatternGeneration(req, res, data) {
         
         let thumbnailTxId, htmlTxId, thumbnailUrl, htmlUrl, previewHtmlUrl;
         
-        if (TESTING_MODE) {
+        // Force Arweave upload if this is for minting, regardless of testing mode
+        const shouldUseArweave = !TESTING_MODE || data.forMinting;
+        
+        if (!shouldUseArweave) {
             // Testing mode: Try R2 first, fallback to local
             console.log('🧪 TESTING MODE: Trying R2 upload for preview...');
             
             const r2Url = await uploadToR2(htmlPath, htmlFilename);
             
-            thumbnailTxId = `thumb_${timestamp}`;
-            htmlTxId = `html_${timestamp}`;
+            // In testing mode, use local URLs for thumbnail and HTML
             thumbnailUrl = `http://localhost:${port}/thumbnails/${thumbnailFilename}`;
             
             if (r2Url) {
                 // R2 success: Use R2 for both metadata and preview, clean up temp file
                 htmlUrl = r2Url;
                 previewHtmlUrl = r2Url;
+                // Set transaction IDs to match the actual URLs for metadata consistency
+                thumbnailTxId = thumbnailUrl;
+                htmlTxId = r2Url;
                 console.log('✅ Using R2 for preview iframe:', r2Url);
                 
                 try {
@@ -112,6 +118,9 @@ async function handlePatternGeneration(req, res, data) {
                 // R2 failed: Keep local temp file for preview
                 htmlUrl = `http://localhost:${port}/temp/${htmlFilename}`;
                 previewHtmlUrl = htmlUrl;
+                // Set transaction IDs to match the actual URLs for metadata consistency
+                thumbnailTxId = thumbnailUrl;
+                htmlTxId = htmlUrl;
                 console.log('⚠️ R2 unavailable, using local temp file for preview:', htmlUrl);
                 console.log('💡 To use R2 for reliable preview hosting, configure these environment variables:');
                 console.log('   - CLOUDFLARE_R2_ENDPOINT');
@@ -120,8 +129,9 @@ async function handlePatternGeneration(req, res, data) {
             }
             
         } else {
-            // Production mode: Upload to R2 + Arweave
-            console.log('🚀 PRODUCTION MODE: Uploading to Arweave and R2');
+            // Production mode OR minting mode: Upload to R2 + Arweave
+            const modeDescription = !TESTING_MODE ? 'PRODUCTION MODE' : 'MINTING MODE (from development)';
+            console.log(`🚀 ${modeDescription}: Uploading to Arweave and R2`);
             
             // Upload to R2 first for fast gallery access
             const r2Url = await uploadToR2(htmlPath, htmlFilename);
