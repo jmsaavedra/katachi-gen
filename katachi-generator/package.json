@@ -26,6 +26,7 @@
     "inliner": "^1.13.1",
     "mime-types": "^3.0.1",
     "playwright": "^1.55.0",
+    "puppeteer": "^24.17.0",
     "puppeteer-core": "^24.17.0",
     "sharp": "^0.34.3"
   },

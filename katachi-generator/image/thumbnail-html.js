@@ -1,7 +1,10 @@
 // Thumbnail generation from actual HTML content
 const fs = require('fs');
 const path = require('path');
-const puppeteer = require('puppeteer-core');
+// Use puppeteer-core in development, regular puppeteer in production
+const puppeteer = process.env.NODE_ENV === 'production' 
+    ? require('puppeteer') 
+    : require('puppeteer-core');
 const { templateHTML } = require('../config');
 
 /**
@@ -24,30 +27,9 @@ async function generateThumbnail(data, htmlFilePath = null) {
             htmlContent = template.replace('___NFT_DATA_PLACEHOLDER___', JSON.stringify(data, null, 2));
         }
 
-        // Find Chrome executable
-        const chromePaths = [
-            process.env.CHROME_PATH,
-            '/usr/bin/google-chrome-stable',
-            '/usr/bin/google-chrome',
-            '/usr/bin/chromium-browser',
-            '/usr/bin/chromium',
-            '/opt/google/chrome/chrome',
-            '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
-        ].filter(Boolean);
-
-        let executablePath = null;
-        for (const chromePath of chromePaths) {
-            if (fs.existsSync(chromePath)) {
-                executablePath = chromePath;
-                break;
-            }
-        }
-
-        console.log(`🔍 Using Chrome executable: ${executablePath || 'bundled Chromium'}`);
-
-        browser = await puppeteer.launch({
+        // Determine Chrome executable and launch options
+        let launchOptions = {
             headless: 'new',  // Use new headless mode - critical for WebGL
-            executablePath,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
@@ -69,8 +51,40 @@ async function generateThumbnail(data, htmlFilePath = null) {
                 '--enable-webgl-developer-extensions',
                 '--force-device-scale-factor=1'
             ]
-        });
+        };
 
+        // In production with regular puppeteer, don't specify executablePath (uses bundled Chrome)
+        // In development with puppeteer-core, try to find Chrome executable
+        if (process.env.NODE_ENV !== 'production') {
+            const chromePaths = [
+                process.env.CHROME_PATH,
+                '/usr/bin/google-chrome-stable',
+                '/usr/bin/google-chrome',
+                '/usr/bin/chromium-browser',
+                '/usr/bin/chromium',
+                '/opt/google/chrome/chrome',
+                '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
+            ].filter(Boolean);
+
+            let executablePath = null;
+            for (const chromePath of chromePaths) {
+                if (fs.existsSync(chromePath)) {
+                    executablePath = chromePath;
+                    break;
+                }
+            }
+
+            if (executablePath) {
+                launchOptions.executablePath = executablePath;
+                console.log(`🔍 Using Chrome executable: ${executablePath}`);
+            } else {
+                console.log('⚠️ No Chrome executable found, using system default');
+            }
+        } else {
+            console.log('🔍 Using bundled Chromium from puppeteer');
+        }
+
+        browser = await puppeteer.launch(launchOptions);
         const page = await browser.newPage();
         
         // Enable console logging for debugging
