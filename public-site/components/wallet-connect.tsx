@@ -4,14 +4,17 @@ import { Button } from '@/components/ui/button';
 import { abbreviateHash } from '@/lib/utils';
 import { ExitIcon } from '@radix-ui/react-icons';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import { useAccount, useDisconnect } from 'wagmi';
+import { useAccount, useDisconnect, useEnsName } from 'wagmi';
 import { useHeader } from '@/contexts/header-context';
 import { useRouter } from 'next/navigation';
 
 export const WalletConnect = () => {
   const { address } = useAccount();
-  // Temporarily disabled due to Alchemy rate limits
-  const ensName = null; // Temporarily disabled
+  // ENS name resolution
+  const { data: ensName } = useEnsName({ 
+    address,
+    chainId: 1, // Mainnet for ENS resolution
+  });
   const { disconnect } = useDisconnect();
   const { isInMintView, setIsInMintView, setShowWalletInHeader } = useHeader();
   const router = useRouter();
