@@ -253,7 +253,7 @@ export function generatePlaceholderPattern(data: PatternData): GeneratedPattern 
           value: data.walletAddress.slice(0, 6) + '...' + data.walletAddress.slice(-4)
         },
         {
-          trait_type: 'Sentiment Filter',
+          trait_type: 'Sentiment',
           value: data.sentimentFilter || 'No sentiment provided'
         }
       ]

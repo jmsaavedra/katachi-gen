@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         animation_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,
         external_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,
         attributes: [
-          { trait_type: 'Sentiment Filter', value: body.sentiment || 'Applied' },
+          { trait_type: 'Sentiment', value: body.sentiment || 'Applied' },
           { trait_type: 'Stack Medals', value: body.stackMedals || 0 },
           { trait_type: 'Unique Collections', value: body.uniqueCollections || 0 },
           { trait_type: 'Pattern Type', value: data.patternType || 'Origami' },

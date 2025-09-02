@@ -523,7 +523,7 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
           arweaveId: result.htmlId, // Store HTML Arweave ID for minting
           // Store the complete metadata from the API for minting
           attributes: result.metadata?.attributes || [
-            { trait_type: 'Sentiment Filter', value: sentimentData.sentiment },
+            { trait_type: 'Sentiment', value: sentimentData.sentiment },
             { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
             { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
             { trait_type: 'Pattern Type', value: 'Origami' },

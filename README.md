@@ -102,7 +102,7 @@ katachi-gen/
 
 ## AI-Powered Collection Reflection
 
-Beyond the core origami generation, Katachi Gen features a **Sentiment Filter** system that uses AI to understand collectors' emotional connections to their NFTs. This filter curates 5 NFTs from their collection to uniquely map artwork to the faces of their origami shape. Every mint will be uniquely filtered and textured based on what the collector writes at the time of minting. 
+Beyond the core origami generation, Katachi Gen features a **Sentiment** system that uses AI to understand collectors' emotional connections to their NFTs. This filter curates 5 NFTs from their collection to uniquely map artwork to the faces of their origami shape. Every mint will be uniquely filtered and textured based on what the collector writes at the time of minting. 
 
 ### How It Works
 

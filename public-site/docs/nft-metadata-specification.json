@@ -53,7 +53,7 @@
         "value": "0x1234...5678"
       },
       {
-        "trait_type": "Sentiment Filter",
+        "trait_type": "Sentiment",
         "value": "I love collecting vibrant digital art"
       }
     ]
@@ -127,7 +127,7 @@
       "calculation": "walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4)"
     },
     "sentimentFilter": {
-      "trait_type": "Sentiment Filter",
+      "trait_type": "Sentiment",
       "description": "The sentiment or feeling the collector expressed about their collection",
       "type": "string",
       "source": "Collection Reflection component input",
@@ -200,7 +200,7 @@
   "totalTraits": 8,
   "implementedTraits": [
     "Pattern Type", "Complexity", "Fold Lines", "NFT Count", 
-    "Collection Count", "Stack Medals Count", "Wallet Seed", "Sentiment Filter"
+    "Collection Count", "Stack Medals Count", "Wallet Seed", "Sentiment"
   ],
   "notes": [
     "All traits are automatically generated based on wallet's on-chain activity",
