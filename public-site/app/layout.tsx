@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Katachi Gen 形現 - Shape Revealed',
+    default: 'Katachi Gen カタチ・ゲン',
     template: '%s | Katachi Gen',
   },
   description:
@@ -58,10 +58,10 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://katachi-gen.com',
-    title: 'Katachi Gen 形現 - Shape Revealed',
+    title: 'Katachi Gen カタチ・ゲン',
     description:
       'Collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape.',
-    siteName: 'Katachi Gen 形現',
+    siteName: 'Katachi Gen カタチ・ゲン',
     images: [
       {
         url: '/kg-metaog.jpg',
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Katachi Gen 形現 - Shape Revealed',
+    title: 'Katachi Gen カタチ・ゲン',
     description:
       'Generative Origami representing your Shape L2 journey.',
     site: '@Shape_L2',

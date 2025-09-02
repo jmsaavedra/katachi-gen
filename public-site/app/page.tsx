@@ -125,8 +125,8 @@ export default function Home() {
       
       <div className="space-y-6 text-center max-w-3xl">
         <h1 className="text-5xl font-light tracking-tight sm:text-7xl">
-          <span className="block sm:inline">Katachi Gen</span>
-          <span className="block sm:inline opacity-70"> 形現</span>
+          Katachi Gen <br />
+          <span className="opacity-70 text-3xl sm:text-5xl">カタチ・ゲン</span>
         </h1>
         <p className="text-primary/80 text-xl font-light italic uppercase tracking-wider mb-8">
           Shape Revealed
@@ -140,7 +140,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
             >
-              ShapeL2
+              Shape L2
             </a>
             , creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.
           </p>
@@ -151,8 +151,8 @@ export default function Home() {
         <div className="text-center max-w-md mx-auto">
           <p className="text-muted-foreground text-sm italic mb-2">From Japanese</p>
           <p className="text-muted-foreground text-base md:text-xl leading-relaxed">
-            <strong className="text-white">Katachi</strong> (形) = Shape/Form<br/>
-            <strong className="text-white">Gen</strong> (現) = To Appear/Manifest<br/>
+            <strong className="text-white">Katachi</strong> <span className="text-gray-500">( </span>形 <span className="text-gray-500">or</span> カタチ<span className="text-gray-500"> )</span> = Shape/Form<br/>
+            <strong className="text-white">Gen</strong> <span className="text-gray-500">( </span>現 <span className="text-gray-500">or</span> ゲン<span className="text-gray-500"> )</span> = To Appear/Manifest<br/>
             形現 = <strong className="text-white">Shape Revealed</strong>
           </p>
         </div><br></br>
@@ -163,7 +163,7 @@ export default function Home() {
               {({ openConnectModal }) => (
                 <Button 
                   size="lg"
-                  className="gap-3 px-24 py-10 animate-gradient-button w-full max-w-md flex flex-col items-center gap-0"
+                  className="gap-3 px-12 sm:px-24 py-10 animate-gradient-button w-full max-w-md flex flex-col items-center gap-0"
                   onClick={() => handleConnectClick(openConnectModal)}
                 >
                   <div className="flex items-center gap-3">
@@ -177,7 +177,7 @@ export default function Home() {
           ) : (
             <Button 
               size="lg" 
-              className="gap-3 px-24 py-8 text-xl animate-gradient-button w-full max-w-md"
+              className="gap-3 px-12 sm:px-24 py-8 text-xl animate-gradient-button w-full max-w-md"
               onClick={handleMintClick}
             >
               <Sparkles className="h-6 w-6" />
@@ -243,7 +243,7 @@ export default function Home() {
                         // Immediately navigate to the generator view
                         setShowGenerator(true);
                       }}
-                      className="w-full group border-2 border-blue-50 active:border-blue-100 hover:border-blue-100 active:scale-[1.05] hover:scale-[1.05] text-blue-50 active:text-blue-100 hover:text-blue-100 transition-all duration-300"
+                      className="w-full group border-2 border-blue-50 active:border-blue-100 hover:border-blue-100 active:scale-[1.05] hover:scale-[1.05] text-blue-200 active:text-blue-300 hover:text-blue-300 transition-all duration-300"
                       style={{
                         animation: 'glow 2.5s ease-in-out infinite',
                       }}

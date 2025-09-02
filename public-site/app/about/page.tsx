@@ -76,16 +76,16 @@ export default function About() {
               <div className="px-12 md:px-24 space-y-6">
                 <div className="grid md:grid-cols-2 gap-4 text-center">
                   <div className="space-y-2">
-                    <p className="font-medium text-lg">Katachi (形)</p>
+                    <p className="font-medium text-lg">Katachi <span className="text-gray-500">(</span> 形 <span className="text-gray-500">or</span> カタチ <span className="text-gray-500">)</span></p>
                     <p className="text-muted-foreground">Shape/Form in Japanese</p>
                   </div>
                   <div className="space-y-2">
-                    <p className="font-medium text-lg">Gen (現)</p>
+                    <p className="font-medium text-lg">Gen <span className="text-gray-500">(</span> 現 <span className="text-gray-500">or</span> ゲン <span className="text-gray-500">)</span></p>
                     <p className="text-muted-foreground">To Appear/Manifest</p>
                   </div>
                 </div>
                 <p className="italic text-base text-center">
-                  Together: &ldquo;Shape Revealed&rdquo; or &ldquo;Shape Manifest&rdquo;, evoking the transformation from flat pattern to dimensional object.
+                  カタチ・ゲン: &ldquo;Shape Revealed&rdquo; or &ldquo;Shape Manifest&rdquo;, evoking the transformation from flat pattern to dimensional object.
                 </p>
               </div>
               <p className="text-base">
