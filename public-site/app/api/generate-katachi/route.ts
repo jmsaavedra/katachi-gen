@@ -95,16 +95,16 @@ export async function POST(request: NextRequest) {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       url: KATACHI_GENERATOR_URL,
-      isAborted: error.name === 'AbortError',
-      isNetworkError: error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED'
+      isAborted: (error as any).name === 'AbortError',
+      isNetworkError: (error as any).code === 'ENOTFOUND' || (error as any).code === 'ECONNREFUSED'
     });
     
     let errorMessage = 'Failed to generate katachi pattern';
-    if (error.name === 'AbortError') {
+    if ((error as any).name === 'AbortError') {
       errorMessage = 'Request timed out after 60 seconds';
-    } else if (error.code === 'ENOTFOUND') {
+    } else if ((error as any).code === 'ENOTFOUND') {
       errorMessage = 'Katachi generator service not found';
-    } else if (error.code === 'ECONNREFUSED') {
+    } else if ((error as any).code === 'ECONNREFUSED') {
       errorMessage = 'Cannot connect to katachi generator service';
     } else if (error instanceof Error) {
       errorMessage = error.message;
@@ -116,8 +116,8 @@ export async function POST(request: NextRequest) {
         message: errorMessage,
         debug: {
           service_url: KATACHI_GENERATOR_URL,
-          error_type: error.name,
-          error_code: error.code
+          error_type: (error as any).name,
+          error_code: (error as any).code
         }
       },
       { status: 500 }
