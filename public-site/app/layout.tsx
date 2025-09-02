@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Katachi Gen - Shape Revealed',
+    default: 'Katachi Gen 形現 - Shape Revealed',
     template: '%s | Katachi Gen',
   },
   description:
@@ -125,8 +125,8 @@ export default function RootLayout({
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Katachi Gen 形現",
-    "alternateName": "Shape Revealed",
+    "name": "Katachi Gen 形現 - Shape Revealed",
+    "alternateName": "Katachi Gen 形現 - Shape Revealed",
     "url": "https://katachi-gen.com",
     "description": "A collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape L2.",
     "creator": [
