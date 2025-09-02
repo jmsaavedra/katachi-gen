@@ -2,7 +2,7 @@
 require('dotenv').config();
 const http = require('http');
 const url = require('url');
-const { port } = require('./config');
+const { port, TESTING_MODE } = require('./config');
 
 // Import handlers
 const { handleMetadataUpload } = require('./handlers/metadata');
@@ -130,6 +130,8 @@ const server = http.createServer(async (req, res) => {
 server.listen(port, () => {
     console.log(`🚀 Katachi Generator Server started on port ${port}`);
     console.log(`📡 http://localhost:${port}`);
+    console.log(`🔧 Environment: NODE_ENV=${process.env.NODE_ENV || 'undefined'}`);
+    console.log(`🧪 Testing Mode: ${TESTING_MODE ? 'ENABLED' : 'DISABLED'} ${TESTING_MODE ? '(local storage)' : '(Arweave uploads)'}`);
     
     // Run initial cleanup
     cleanupTempFiles();
