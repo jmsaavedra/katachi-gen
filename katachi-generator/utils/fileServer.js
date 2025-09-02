@@ -171,44 +171,78 @@ async function serveTempFile(req, res, requestPath) {
 function cleanupTempFiles() {
     try {
         const tempDir = path.join(__dirname, '..', 'temp');
+        const thumbnailsDir = path.join(__dirname, '..', 'thumbnails');
         
+        let totalDeleted = 0;
+        const now = Date.now();
+        const maxAge = 60 * 60 * 1000; // 60 minutes in milliseconds
+        
+        // Clean temp HTML files
         if (!fs.existsSync(tempDir)) {
             console.log('🧹 Temp directory does not exist, creating it...');
             fs.mkdirSync(tempDir, { recursive: true });
-            return;
-        }
-        
-        const files = fs.readdirSync(tempDir);
-        console.log(`🧹 Checking ${files.length} temp files for cleanup...`);
-        
-        const now = Date.now();
-        const maxAge = 60 * 60 * 1000; // 60 minutes in milliseconds
-        let deletedCount = 0;
-        
-        for (const file of files) {
-            if (!file.endsWith('.html')) continue; // Only process HTML files
+        } else {
+            const files = fs.readdirSync(tempDir);
+            let deletedCount = 0;
             
-            const filePath = path.join(tempDir, file);
-            const stats = fs.statSync(filePath);
-            const age = now - stats.mtime.getTime();
-            
-            if (age > maxAge) {
-                try {
-                    fs.unlinkSync(filePath);
-                    deletedCount++;
-                    console.log(`🗑️ Deleted old temp file: ${file} (${Math.round(age / 1000 / 60)} minutes old)`);
-                } catch (error) {
-                    console.error(`❌ Failed to delete temp file ${file}:`, error.message);
+            for (const file of files) {
+                if (!file.endsWith('.html')) continue; // Only process HTML files
+                
+                const filePath = path.join(tempDir, file);
+                const stats = fs.statSync(filePath);
+                const age = now - stats.mtime.getTime();
+                
+                if (age > maxAge) {
+                    try {
+                        fs.unlinkSync(filePath);
+                        deletedCount++;
+                        console.log(`🗑️ Deleted old temp HTML: ${file} (${Math.round(age / 1000 / 60)} minutes old)`);
+                    } catch (error) {
+                        console.error(`❌ Failed to delete temp file ${file}:`, error.message);
+                    }
                 }
             }
+            totalDeleted += deletedCount;
+            console.log(`🧹 Temp cleanup: ${deletedCount} HTML files deleted (${files.length} total checked)`);
         }
         
-        if (deletedCount > 0) {
-            console.log(`🧹 Cleanup complete: ${deletedCount} old temp files deleted`);
+        // Clean thumbnail PNG files  
+        if (!fs.existsSync(thumbnailsDir)) {
+            console.log('🧹 Thumbnails directory does not exist, creating it...');
+            fs.mkdirSync(thumbnailsDir, { recursive: true });
+        } else {
+            const files = fs.readdirSync(thumbnailsDir);
+            let deletedCount = 0;
+            
+            for (const file of files) {
+                if (!file.endsWith('.png')) continue; // Only process PNG files
+                
+                const filePath = path.join(thumbnailsDir, file);
+                const stats = fs.statSync(filePath);
+                const age = now - stats.mtime.getTime();
+                
+                if (age > maxAge) {
+                    try {
+                        fs.unlinkSync(filePath);
+                        deletedCount++;
+                        console.log(`🗑️ Deleted old thumbnail: ${file} (${Math.round(age / 1000 / 60)} minutes old)`);
+                    } catch (error) {
+                        console.error(`❌ Failed to delete thumbnail ${file}:`, error.message);
+                    }
+                }
+            }
+            totalDeleted += deletedCount;
+            console.log(`🧹 Thumbnails cleanup: ${deletedCount} PNG files deleted (${files.length} total checked)`);
+        }
+        
+        if (totalDeleted > 0) {
+            console.log(`✅ Cleanup completed: ${totalDeleted} total files deleted`);
+        } else {
+            console.log('✅ No files needed cleanup');
         }
         
     } catch (error) {
-        console.error('❌ Error during temp file cleanup:', error.message);
+        console.error('❌ Error during file cleanup:', error.message);
     }
 }
 
