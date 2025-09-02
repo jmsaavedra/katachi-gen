@@ -7,7 +7,7 @@ import { KatachiGenerator } from '@/components/katachi-generator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Code, ChevronRight, ChevronLeft, Search } from 'lucide-react';
+import { Sparkles, Code, ChevronRight, ChevronLeft, Search, ExternalLink } from 'lucide-react';
 import { useHeader } from '@/contexts/header-context';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
@@ -94,7 +94,7 @@ export default function Home() {
           loop 
           muted 
           playsInline
-          className="w-full h-auto"
+          className="w-full h-[115px] object-cover"
         >
           <source src="/homepage-banner-opti.mp4" type="video/mp4" />
           Your browser does not support the video tag.
@@ -123,17 +123,17 @@ export default function Home() {
           <span className="block sm:inline">Katachi Gen</span>
           <span className="block sm:inline opacity-70"> 形現</span>
         </h1>
-        <p className="text-primary/80 text-xl font-light italic uppercase tracking-wider mb-2 md:mb-8">
+        <p className="text-primary/80 text-xl font-light italic uppercase tracking-wider mb-8">
           Shape Revealed
         </p>
         <div className="space-y-4 max-w-2xl mx-auto">
-          <p className="text-muted-foreground text-xl leading-relaxed">
-            Katachi Gen creates digital + physical artifacts representing your on-chain journey, in the form of generative 3D origami patterns. Using AI sentiment analysis and art curation, each pattern reflects your personal participation on{' '}
+          <p className="text-white text-lg md:text-xl leading-relaxed text-left md:text-center">
+            Katachi Gen is a collection of digital + physical artifacts representing your on-chain journey, in the form of generative 3D origami patterns. Using AI sentiment analysis and art curation, each pattern reflects your personal participation on{' '}
             <a 
               href="https://shape.network" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="text-primary hover:underline font-medium"
+              className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
             >
               ShapeL2
             </a>
@@ -142,10 +142,10 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mt-8 space-y-6">
+      <div className="mt-2 space-y-7">
         <div className="text-center max-w-md mx-auto">
           <p className="text-muted-foreground text-sm italic mb-2">From Japanese</p>
-          <p className="text-muted-foreground text-xl leading-relaxed">
+          <p className="text-muted-foreground text-base md:text-xl leading-relaxed">
             <strong className="text-white">Katachi</strong> (形) = Shape/Form<br/>
             <strong className="text-white">Gen</strong> (現) = To Appear/Manifest<br/>
             形現 = <strong className="text-white">Shape Revealed</strong>
@@ -214,7 +214,7 @@ export default function Home() {
                     Test Generate
                   </Button>
                   
-                  <div className="mt-4 space-y-0">
+                  <div className="mt-6 space-y-0">
                     <p className="text-xs text-muted-foreground/80 text-center mb-2">
                       Or, explore a random top collector wallet:
                     </p>
@@ -235,10 +235,13 @@ export default function Home() {
                         // Immediately navigate to the generator view
                         setShowGenerator(true);
                       }}
-                      className="w-full"
+                      className="w-full group border-2 border-blue-400 active:border-blue-300 hover:border-blue-300 active:scale-[1.05] hover:scale-[1.05] text-blue-300 active:text-blue-200 hover:text-blue-200 transition-all duration-300"
+                      style={{
+                        animation: 'glow 2.5s ease-in-out infinite',
+                      }}
                       variant="outline"
                     >
-                      <Search className="h-4 w-4" />
+                      <Search className="h-4 w-4 transition-colors" />
                       Explore
                     </Button>
                   </div>
@@ -253,12 +256,12 @@ export default function Home() {
       <div className="mt-12 mb-8">
         {/* Desktop: Show single iframe with navigation */}
         <div className="hidden md:flex flex-col items-center">
-          <div className="w-full max-w-[700px]">
+          <div className="w-full max-w-[800px]">
             <div className="flex justify-between items-center mb-3">
               {currentIframeIndex > 0 ? (
                 <button
                   onClick={() => setCurrentIframeIndex(currentIframeIndex - 1)}
-                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-colors"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Prev
@@ -266,11 +269,11 @@ export default function Home() {
               ) : (
                 <div className="w-20"></div>
               )}
-              <h3 className="text-sm font-bold uppercase tracking-wider">Katachi Gen Gallery</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider">Interactive Gallery</h3>
               {currentIframeIndex < galleryUrls.length - 1 ? (
                 <button
                   onClick={() => setCurrentIframeIndex(currentIframeIndex + 1)}
-                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-colors"
                 >
                   Next
                   <ChevronRight className="h-4 w-4" />
@@ -284,21 +287,24 @@ export default function Home() {
                 <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
                   <iframe
                     src={galleryUrls[currentIframeIndex]}
-                    width="600"
-                    height="600"
+                    width="700"
+                    height="700"
                     className="border-0 bg-transparent"
                     title={`Katachi Gen Interactive Demo ${currentIframeIndex + 1}`}
                     allowFullScreen
                   />
                 </div>
-                <a
-                  href={galleryUrls[currentIframeIndex]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 text-sm text-primary hover:underline font-medium"
-                >
-                  View live interactive token →
-                </a>
+                <div className="w-[700px] flex justify-end mt-4">
+                  <a
+                    href={galleryUrls[currentIframeIndex]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1 text-sm text-primary hover:underline font-medium"
+                  >
+                    Open in new tab
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -306,12 +312,12 @@ export default function Home() {
 
         {/* Mobile: Show one iframe with pagination */}
         <div className="md:hidden flex flex-col items-center">
-          <div className="w-full max-w-[350px]">
-            <div className="flex justify-between items-center mb-3 pr-2">
+          <div className="w-screen max-w-none">
+            <div className="flex justify-between items-center mb-3 px-4">
               {currentIframeIndex > 0 ? (
                 <button
                   onClick={() => setCurrentIframeIndex(currentIframeIndex - 1)}
-                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-colors"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Prev
@@ -319,11 +325,11 @@ export default function Home() {
               ) : (
                 <div className="w-20"></div>
               )}
-              <h3 className="text-sm font-bold uppercase tracking-wider">Katachi Gen Gallery</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider">Interactive Gallery</h3>
               {currentIframeIndex < galleryUrls.length - 1 ? (
                 <button
                   onClick={() => setCurrentIframeIndex(currentIframeIndex + 1)}
-                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background hover:bg-accent hover:text-accent-foreground transition-colors"
+                  className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-md border border-border bg-background shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 transition-colors"
                 >
                   Next
                   <ChevronRight className="h-4 w-4" />
@@ -332,25 +338,16 @@ export default function Home() {
                 <div className="w-20"></div>
               )}
             </div>
-            <div className="relative rounded-lg overflow-hidden border bg-card shadow-lg">
+            <div className="relative w-full aspect-square overflow-hidden border-y bg-card shadow-lg">
               <iframe
                 src={galleryUrls[currentIframeIndex]}
-                width="350"
-                height="350"
-                className="border-0 bg-transparent"
+                className="w-full h-full border-0 bg-transparent"
+                style={{ width: '100%', height: '100%' }}
                 title={`Katachi Gen Interactive Demo ${currentIframeIndex + 1}`}
                 allowFullScreen
               />
             </div>
           </div>
-          <a
-            href={galleryUrls[currentIframeIndex]}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-2 text-sm text-primary hover:underline font-medium"
-          >
-            View live interactive token →
-          </a>
         </div>
       </div>
 

@@ -48,7 +48,8 @@ export const WalletConnect = () => {
             onClick={openConnectModal} 
             className="animate-gradient-button"
           >
-            Connect Wallet
+            <span className="md:hidden">Connect</span>
+            <span className="hidden md:inline">Connect Wallet</span>
           </Button>
         )
       }
