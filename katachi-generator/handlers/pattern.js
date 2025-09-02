@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { TESTING_MODE, templateHTML, origamiPatterns, port } = require('../config');
 const { processImagesAsBase64 } = require('../image/processor');
-const { generateThumbnail } = require('../image/thumbnail');
+const { generateThumbnail } = require('../image/thumbnail-html');
 const { saveThumbnail } = require('../image/processor');
 const { uploadToR2 } = require('../storage/r2');
 const { uploadFileToArweave } = require('../storage/arweave');
@@ -47,16 +47,7 @@ async function handlePatternGeneration(req, res, data) {
         const processedData = await processImagesAsBase64(data);
         console.log('🎨 Image processing completed, proceeding with generation...');
         
-        // generate thumbnail image (using processed data with base64 images)
-        console.log('Generating thumbnail...');
-        const thumbnailBuffer = await generateThumbnail(processedData);
-        console.log('Thumbnail generated, size:', thumbnailBuffer.length, 'bytes');
-        
-        // Save thumbnail (optional)
-        const timestamp = Date.now();
-        const thumbnailFilename = `thumbnail_${timestamp}.png`;
-        const thumbnailPath = await saveThumbnail(thumbnailBuffer, thumbnailFilename);
-        
+        // Create HTML content first
         // load templateHTML file from public directory
         const templatePath = path.join(__dirname, '..', 'public', templateHTML);
         const templateContent = fs.readFileSync(templatePath, 'utf8');
@@ -68,8 +59,9 @@ async function handlePatternGeneration(req, res, data) {
             JSON.stringify(processedData, null, 2)
         );
         
-        // Create temp HTML file for local preview
+        // Create temp HTML file
         const walletAddress = data.walletAddress || data.stackData?.userAddress;
+        const timestamp = Date.now();
         const htmlFilename = `kg_${data.patternType.toLowerCase()}-${walletAddress}-${timestamp}.html`;
         const htmlPath = path.join(__dirname, '..', 'temp', htmlFilename);
         
@@ -79,9 +71,18 @@ async function handlePatternGeneration(req, res, data) {
             fs.mkdirSync(tempDir, { recursive: true });
         }
         
-        // Write HTML to temp file for preview
+        // Write HTML to temp file
         fs.writeFileSync(htmlPath, htmlContent);
         console.log('🎯 HTML file created at:', htmlPath);
+
+        // generate thumbnail image from the actual HTML file
+        console.log('Generating thumbnail from HTML content...');
+        const thumbnailBuffer = await generateThumbnail(processedData, htmlPath);
+        console.log('Thumbnail generated, size:', thumbnailBuffer.length, 'bytes');
+        
+        // Save thumbnail (optional)
+        const thumbnailFilename = `thumbnail_${timestamp}.png`;
+        const thumbnailPath = await saveThumbnail(thumbnailBuffer, thumbnailFilename);
         
         let thumbnailTxId, htmlTxId, thumbnailUrl, htmlUrl, previewHtmlUrl;
         

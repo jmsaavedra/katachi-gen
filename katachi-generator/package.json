@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "NODE_ENV=development node server.js",
+    "start:prod": "NODE_ENV=production node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --mode production",
     "dev": "webpack --mode development",
@@ -20,6 +21,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.879.0",
     "arweave": "^1.15.7",
+    "canvas": "^3.2.0",
     "dotenv": "^17.2.1",
     "inliner": "^1.13.1",
     "mime-types": "^3.0.1",
