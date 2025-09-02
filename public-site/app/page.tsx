@@ -82,7 +82,12 @@ export default function Home() {
   const addressForGenerator = showGenerator ? (connectedAddress || testAddress) : undefined;
 
   if (showGenerator) {
-    return <KatachiGenerator overrideAddress={addressForGenerator as `0x${string}` | undefined} />;
+    return (
+      <KatachiGenerator 
+        overrideAddress={addressForGenerator as `0x${string}` | undefined} 
+        onGoHome={() => setShowGenerator(false)}
+      />
+    );
   }
 
   return (
@@ -158,11 +163,14 @@ export default function Home() {
               {({ openConnectModal }) => (
                 <Button 
                   size="lg"
-                  className="gap-3 px-24 py-8 text-xl animate-gradient-button w-full max-w-md"
+                  className="gap-3 px-24 py-10 animate-gradient-button w-full max-w-md flex flex-col items-center gap-0"
                   onClick={() => handleConnectClick(openConnectModal)}
                 >
-                  <Sparkles className="h-6 w-6" />
-                  Connect Wallet
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="h-12 w-12" />
+                    <span className="text-2xl">Reveal Your Shape</span>
+                  </div>
+                  <span className="text-sm opacity-75">Connect Wallet</span>
                 </Button>
               )}
             </ConnectButton.Custom>
@@ -180,10 +188,10 @@ export default function Home() {
         
         {/* Test Mode */}
         {isTestModeEnabled && (
-          <Card className="w-full max-w-md mx-auto mt-10 border-dashed border-muted-foreground/20 bg-muted/30">
+          <Card className="w-full max-w-md mx-auto mt-10 border-dashed border-white/20 bg-muted/30">
             <CardContent className="pt-0 pb-4">
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 text-sm font-medium text-white">
                   <Code className="h-4 w-4" />
                   Try in Explore Mode
                 </div>
@@ -235,7 +243,7 @@ export default function Home() {
                         // Immediately navigate to the generator view
                         setShowGenerator(true);
                       }}
-                      className="w-full group border-2 border-blue-400 active:border-blue-300 hover:border-blue-300 active:scale-[1.05] hover:scale-[1.05] text-blue-300 active:text-blue-200 hover:text-blue-200 transition-all duration-300"
+                      className="w-full group border-2 border-blue-50 active:border-blue-100 hover:border-blue-100 active:scale-[1.05] hover:scale-[1.05] text-blue-50 active:text-blue-100 hover:text-blue-100 transition-all duration-300"
                       style={{
                         animation: 'glow 2.5s ease-in-out infinite',
                       }}

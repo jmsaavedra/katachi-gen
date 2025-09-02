@@ -16,13 +16,15 @@ import { useState, useEffect } from 'react';
 import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Eye, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
 import { CollectionReflection } from '@/components/collection-reflection';
+import { EligibilityModal } from '@/components/eligibility-modal';
 import { toast } from 'sonner';
 
 interface KatachiGeneratorProps {
   overrideAddress?: Address;
+  onGoHome?: () => void;
 }
 
-export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}) {
+export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGeneratorProps = {}) {
   const { address: connectedAddress, isConnected } = useAccount();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
@@ -47,6 +49,8 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
   const [isGenerating, setIsGenerating] = useState(false);
   const [, setIframeLoading] = useState(false);
   const [iframeError, setIframeError] = useState(false);
+  const [showEligibilityModal, setShowEligibilityModal] = useState(false);
+  const [eligibilityReason, setEligibilityReason] = useState<'no-nfts' | 'no-stack' | null>(null);
   const [urlResolved, setUrlResolved] = useState(false);
   const [previewDelay, setPreviewDelay] = useState(false);
   const [previewCountdown, setPreviewCountdown] = useState(0);
@@ -186,6 +190,27 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
       resetMint(); // Reset mint state as well
     }
   }, [connectedAddress, overrideAddress, resetMint]);
+
+  // Check eligibility and show modal when data loads
+  useEffect(() => {
+    if (!addressToUse || isLoading || isLoadingMedals) {
+      return; // Still loading
+    }
+
+    // Check if user doesn't have Shape Stack NFT (medalsError indicates no Stack) - PRIORITY CHECK
+    if (medalsError) {
+      setEligibilityReason('no-stack');
+      setShowEligibilityModal(true);
+      return;
+    }
+
+    // Check if user has 0 NFTs
+    if (nfts?.totalCount === 0) {
+      setEligibilityReason('no-nfts');
+      setShowEligibilityModal(true);
+      return;
+    }
+  }, [addressToUse, isLoading, isLoadingMedals, nfts?.totalCount, medalsError]);
 
   const handleSentimentSubmitted = (sentiment: string, filteredNfts: Array<{
     name: string | null;
@@ -686,6 +711,16 @@ export function KatachiGenerator({ overrideAddress }: KatachiGeneratorProps = {}
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Eligibility Modal */}
+      {showEligibilityModal && eligibilityReason && (
+        <EligibilityModal 
+          isOpen={showEligibilityModal}
+          onClose={() => setShowEligibilityModal(false)}
+          reason={eligibilityReason}
+          onGoHome={onGoHome}
+        />
       )}
       
       <div className="w-full max-w-6xl mx-auto space-y-8">
