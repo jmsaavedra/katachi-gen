@@ -179,3 +179,7 @@ keys
 
 # xmcp build artifacts
 .xmcp/
+
+# Large video assets
+assets/**/*.mov
+assets/**/*.mp4
