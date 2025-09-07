@@ -7,6 +7,7 @@ const { generateThumbnail } = require('../image/thumbnail-html');
 const { saveThumbnail } = require('../image/processor');
 const { uploadToR2 } = require('../storage/r2');
 const { uploadFileToArweave } = require('../storage/arweave');
+const { generateNFTTemplate } = require('../utils/templateGenerator');
 
 /**
  * Handle pattern generation request
@@ -48,17 +49,14 @@ async function handlePatternGeneration(req, res, data) {
         const processedData = await processImagesAsBase64(data);
         console.log('🎨 Image processing completed, proceeding with generation...');
         
-        // Create HTML content first
-        // load templateHTML file from public directory
-        const templatePath = path.join(__dirname, '..', 'public', templateHTML);
-        const templateContent = fs.readFileSync(templatePath, 'utf8');
+        // Create HTML content using the new modular template system
+        console.log('🎨 Generating HTML using modular EJS template system...');
+        const startTime = Date.now();
         
-        // Replace the ___NFT_DATA_PLACEHOLDER___ placeholder with JSON string
-        // Use processed data with embedded base64 images
-        const htmlContent = templateContent.replace(
-            '___NFT_DATA_PLACEHOLDER___', 
-            JSON.stringify(processedData, null, 2)
-        );
+        const htmlContent = await generateNFTTemplate(processedData);
+        
+        const processingTime = Date.now() - startTime;
+        console.log(`✅ Modular template generated in ${processingTime}ms`);
         
         // Create temp HTML file
         const walletAddress = data.walletAddress || data.stackData?.userAddress;
@@ -87,10 +85,30 @@ async function handlePatternGeneration(req, res, data) {
         
         let thumbnailTxId, htmlTxId, thumbnailUrl, htmlUrl, previewHtmlUrl;
         
-        // Force Arweave upload if this is for minting, regardless of testing mode
-        const shouldUseArweave = !TESTING_MODE || data.forMinting;
+        // Check if this request is from test.html (testing interface)
+        const isTestInterface = data.testInterface === true || data.source === 'test';
         
-        if (!shouldUseArweave) {
+        // Force Arweave upload if this is for minting, regardless of testing mode
+        const shouldUseArweave = (!TESTING_MODE || data.forMinting) && !isTestInterface;
+        
+        if (isTestInterface) {
+            // Test interface: Keep files local only
+            console.log('🧪 TEST INTERFACE: Keeping files local for evaluation');
+            
+            // Use local URLs for everything
+            thumbnailUrl = `http://localhost:${port}/thumbnails/${thumbnailFilename}`;
+            htmlUrl = `http://localhost:${port}/temp/${htmlFilename}`;
+            previewHtmlUrl = htmlUrl;
+            
+            // Set transaction IDs to match the actual URLs for metadata consistency
+            thumbnailTxId = thumbnailUrl;
+            htmlTxId = htmlUrl;
+            
+            console.log('✅ HTML file saved locally at:', htmlPath);
+            console.log('🔗 Access it at:', htmlUrl);
+            console.log('📁 Physical location:', htmlPath);
+            
+        } else if (!shouldUseArweave) {
             // Testing mode: Try R2 first, fallback to local
             console.log('🧪 TESTING MODE: Trying R2 upload for preview...');
             
@@ -183,6 +201,8 @@ async function handlePatternGeneration(req, res, data) {
             previewHtmlUrl: previewHtmlUrl, // For iframe preview (always hosted)
             patternType: processedData.patternType,
             imageStats: processedData.imageStats,
+            processingTime: processingTime, // Template generation time
+            templateVersion: '2.0-modular',
             testingMode: TESTING_MODE
         }));
         

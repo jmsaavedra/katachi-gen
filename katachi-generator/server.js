@@ -7,6 +7,7 @@ const { port, TESTING_MODE } = require('./config');
 // Import handlers
 const { handleMetadataUpload } = require('./handlers/metadata');
 const { handlePatternGeneration } = require('./handlers/pattern');
+const { handleTestTemplate, handleTestAPI } = require('./handlers/testTemplate');
 
 // Import utilities
 const { loadArweaveWallet, getWalletAddress, getWalletBalance } = require('./utils/wallet');
@@ -73,8 +74,14 @@ const server = http.createServer(async (req, res) => {
     } 
     // Handle GET requests
     else if (method === 'GET') {
+        // Test routes for modular template system
+        if (urlPath === '/test-template') {
+            await handleTestTemplate(req, res);
+        } else if (urlPath === '/test-api') {
+            await handleTestAPI(req, res);
+        }
         // Check if wallet info is requested
-        if (urlPath === '/wallet-info') {
+        else if (urlPath === '/wallet-info') {
             try {
                 // Try to get wallet info if wallet is available
                 const walletKey = loadArweaveWallet();

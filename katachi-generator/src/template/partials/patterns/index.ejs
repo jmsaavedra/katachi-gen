@@ -1,0 +1,39 @@
+<script>
+// Patterns Index - Combines all origami patterns
+// Import all pattern files (these define individual pattern objects)
+</script>
+
+<%- include('./airplane.ejs') %>
+<%- include('./crane.ejs') %>
+<%- include('./hypar.ejs') %>
+<%- include('./pinwheel.ejs') %>
+<%- include('./flower.ejs') %>
+
+<script>
+
+// Combine all patterns into the origamiPatterns array (reassigning the existing variable)
+origamiPatterns = [
+    airplanePattern,
+    cranePattern,
+    hyparPattern,
+    pinwheelPattern,
+    flowerPattern
+];
+
+// Make patterns available globally
+if (typeof window !== 'undefined') {
+    window.origamiPatterns = origamiPatterns;
+}
+
+// Export for module environments
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        origamiPatterns,
+        airplanePattern,
+        cranePattern,
+        hyparPattern,
+        pinwheelPattern,
+        flowerPattern
+    };
+}
+</script>

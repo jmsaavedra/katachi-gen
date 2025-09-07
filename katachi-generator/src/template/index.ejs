@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<%- include('partials/head') %>
+<body>
+    <!-- Main HTML structure and content -->
+    <%- include('partials/body-content') %>
+    
+    <!-- WebGL Shaders for Origami Simulation -->
+    <%- include('partials/scripts/shaders') %>
+    
+    <!-- Core JavaScript Libraries -->
+    <%- include('partials/scripts/libraries') %>
+    
+    <!-- Simulation and Origami Libraries -->
+    <%- include('partials/scripts/simulation') %>
+    
+    <!-- Origami rendering logic -->
+    <%- include('partials/scripts/origami') %>
+    
+    <!-- User interaction handlers -->
+    <%- include('partials/scripts/interactions') %>
+    
+    <!-- SVG Pattern Definitions -->
+    <!-- All origami patterns are now modularized and imported through the index -->
+    <%- include('partials/patterns/index') %>
+</body>
+</html>

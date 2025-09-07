@@ -1,0 +1,308 @@
+<!-- UI Controls and Event Handlers -->
+<script>
+    // Random Seed Control Functions
+    function applyRandomSeed() {
+        // Early check for globals availability
+        if (typeof globals === 'undefined' || !globals || !globals.setRandomSeed) {
+            console.warn('🚨 Globals not yet available for random seed application');
+            return false;
+        }
+        
+        var seedInput = document.getElementById('randomSeed');
+        if (!seedInput) {
+            console.warn('🚨 Random seed input element not found');
+            return false;
+        }
+        
+        var seed = seedInput.value.trim();
+        
+        if (!seed) {
+            alert('Please enter a seed value');
+            return;
+        }
+        
+        console.log('🔄 UI: Applying new random seed:', seed);
+        console.log('🔄 UI: Current time:', new Date().toISOString());
+        
+        // Apply the seed through globals
+        if (typeof globals !== 'undefined' && globals.setRandomSeed) {
+            console.log('🔄 UI: Calling globals.setRandomSeed...');
+            
+            // Clear any existing assignments first to ensure clean slate
+            if (globals.faceTextureMapping) {
+                console.log('🔄 UI: Clearing existing face texture mapping');
+                globals.faceTextureMapping = {};
+            }
+            
+            // Apply the new seed - this will trigger reassignment
+            globals.setRandomSeed(seed);
+            
+            console.log('✅ UI: Random seed applied successfully');
+            console.log('📊 UI: Texture library size:', globals.textureLibrary ? globals.textureLibrary.length : 0);
+            console.log('📊 UI: Face mapping size:', Object.keys(globals.faceTextureMapping || {}).length);
+            
+            // Show confirmation
+            var statusElement = document.createElement('span');
+            statusElement.textContent = '✅ Seed applied: ' + seed + ' (Deterministic mode active)';
+            statusElement.style.color = '#27ae60';
+            statusElement.style.marginLeft = '10px';
+            statusElement.style.fontSize = '12px';
+            statusElement.style.fontWeight = 'bold';
+            
+            var container = seedInput.parentNode;
+            var existingStatus = container.querySelector('.seed-status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+            
+            statusElement.className = 'seed-status';
+            container.appendChild(statusElement);
+            
+            setTimeout(function() {
+                if (statusElement.parentNode) {
+                    statusElement.remove();
+                }
+            }, 5000); // Show for 5 seconds
+            
+        } else {
+            console.warn('🚨 Globals not available or setRandomSeed function not found');
+            console.log('🚨 typeof globals:', typeof globals);
+            console.log('🚨 globals object:', globals);
+            alert('Random seed system not available. Please wait for the application to fully load.');
+        }
+    }
+    
+    function resetRandomSeed() {
+        var seedInput = document.getElementById('randomSeed');
+        if (seedInput) {
+            seedInput.value = 'origami-simulator-2024';
+            applyRandomSeed();
+        }
+    }
+
+    // Initialize UI event handlers
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up enter key handler for seed input
+        var seedInput = document.getElementById('randomSeed');
+        if (seedInput) {
+            seedInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    applyRandomSeed();
+                }
+            });
+        }
+
+        // Set up download button handler for texture images
+        var dlButton = document.getElementById('dlButton');
+        if (dlButton) {
+            dlButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                console.log('Download button clicked');
+                
+                // Check if cellColorizer is available and has generateTextureMappedCellImage function
+                if (typeof globals !== 'undefined' && globals.cellColorizer && 
+                    typeof globals.cellColorizer.generateTextureMappedCellImage === 'function') {
+                    
+                    console.log('Generating and downloading texture-mapped cell image...');
+                    globals.cellColorizer.generateTextureMappedCellImage(false); // false = manual mode, will download
+                    
+                } else if (typeof globals !== 'undefined' && globals.textureLibrary && 
+                          globals.textureLibrary.length > 0) {
+                    
+                    // Fallback: download the first texture from library
+                    console.log('Downloading first texture from library...');
+                    downloadTextureFromLibrary(0);
+                    
+                } else {
+                    // No textures available
+                    console.warn('No textures available to download');
+                    alert('No texture images are currently loaded to download.');
+                }
+            });
+        }
+
+        // Set up print button handler for crease pattern SVG
+        var printButton = document.getElementById('printButton');
+        if (printButton) {
+            printButton.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                console.log('Print button clicked');
+                printCurrentView();
+            });
+        }
+
+        // Function to print current view using browser's print functionality
+        function printCurrentView() {
+            try {
+                // Hide UI elements temporarily for cleaner print
+                var elementsToHide = [
+                    document.getElementById('globalNav'),
+                    document.getElementById('controlsLeft'),
+                    document.getElementById('controlsBottom'),
+                    document.querySelector('.main-content')
+                ];
+                
+                var originalStyles = [];
+                elementsToHide.forEach(function(element, index) {
+                    if (element) {
+                        originalStyles[index] = element.style.display;
+                        element.style.display = 'none';
+                    }
+                });
+                
+                // Create print-specific styles
+                var printStyles = document.createElement('style');
+                printStyles.type = 'text/css';
+                printStyles.innerHTML = `
+                    @media print {
+                        body { margin: 0; padding: 0; }
+                        #threeView { 
+                            width: 100% !important; 
+                            height: 100% !important; 
+                            position: fixed !important;
+                            top: 0 !important;
+                            left: 0 !important;
+                        }
+                        .no-print { display: none !important; }
+                    }
+                `;
+                document.head.appendChild(printStyles);
+                
+                // Trigger print dialog
+                setTimeout(function() {
+                    window.print();
+                    
+                    // Restore original styles after print dialog
+                    setTimeout(function() {
+                        elementsToHide.forEach(function(element, index) {
+                            if (element) {
+                                element.style.display = originalStyles[index];
+                            }
+                        });
+                        document.head.removeChild(printStyles);
+                    }, 1000);
+                }, 100);
+                
+            } catch (error) {
+                console.error('Error in print functionality:', error);
+                alert('Print functionality is not available at the moment.');
+            }
+        }
+
+        // Function to download texture from library
+        function downloadTextureFromLibrary(index) {
+            if (typeof globals === 'undefined' || !globals.textureLibrary || 
+                index >= globals.textureLibrary.length) {
+                console.error('Texture index out of range or no textures available');
+                return;
+            }
+            
+            var texture = globals.textureLibrary[index];
+            if (!texture || !texture.image) {
+                console.error('Invalid texture at index', index);
+                return;
+            }
+            
+            // Create canvas to convert texture to downloadable format
+            var canvas = document.createElement('canvas');
+            canvas.width = texture.image.width;
+            canvas.height = texture.image.height;
+            var ctx = canvas.getContext('2d');
+            
+            // Draw the texture image to canvas
+            ctx.drawImage(texture.image, 0, 0);
+            
+            // Convert to blob and download
+            canvas.toBlob(function(blob) {
+                if (blob) {
+                    var url = URL.createObjectURL(blob);
+                    var downloadLink = document.createElement("a");
+                    downloadLink.href = url;
+                    
+                    var filename = texture.name || ('texture_' + index + '.png');
+                    // Ensure filename has .png extension
+                    if (!filename.toLowerCase().endsWith('.png') && 
+                        !filename.toLowerCase().endsWith('.jpg') && 
+                        !filename.toLowerCase().endsWith('.jpeg')) {
+                        filename += '.png';
+                    }
+                    
+                    downloadLink.download = filename;
+                    
+                    document.body.appendChild(downloadLink);
+                    downloadLink.click();
+                    document.body.removeChild(downloadLink);
+                    
+                    URL.revokeObjectURL(url);
+                    
+                    console.log("Texture downloaded successfully:", filename);
+                } else {
+                    console.error("Failed to create blob for texture download");
+                }
+            }, 'image/png');
+        }
+
+        // Make download function globally accessible
+        window.downloadTextureFromLibrary = downloadTextureFromLibrary;
+    });
+
+    // Make functions globally accessible
+    window.applyRandomSeed = applyRandomSeed;
+    window.resetRandomSeed = resetRandomSeed;
+</script>
+
+<!-- Loading Screen Control Script -->
+<script>
+    // Loading screen management
+    var loadingScreenHidden = false;
+    
+    function hideLoadingScreenGlobal() {
+        if (loadingScreenHidden) return;
+        loadingScreenHidden = true;
+        
+        console.log('🎬 Global loading screen hide triggered');
+        
+        try {
+            var loadingScreen = document.getElementById('loadingScreen');
+            if (loadingScreen) {
+                console.log('🎬 Hiding loading screen with fade-out animation');
+                
+                // Add fade-out class for smooth animation
+                document.body.classList.add('fade-out-loading');
+                
+                // Remove the loading screen after animation completes
+                setTimeout(function() {
+                    loadingScreen.style.display = 'none';
+                    document.body.classList.remove('fade-out-loading');
+                    document.body.classList.add('loading-hidden');
+                    console.log('✅ Loading screen hidden successfully');
+                }, 800); // Match the animation duration
+            }
+        } catch (error) {
+            console.error('❌ Error hiding loading screen:', error);
+        }
+    }
+    
+    // Make the function globally accessible
+    window.hideLoadingScreenGlobal = hideLoadingScreenGlobal;
+    
+    // Fallback: Hide loading screen after maximum wait time (10 seconds)
+    setTimeout(function() {
+        if (!loadingScreenHidden) {
+            console.log('⏰ Fallback timeout: hiding loading screen after 10 seconds');
+            hideLoadingScreenGlobal();
+        }
+    }, 10000);
+    
+    // Also hide when page fully loads as a backup
+    window.addEventListener('load', function() {
+        setTimeout(function() {
+            if (!loadingScreenHidden) {
+                console.log('📄 Page fully loaded: hiding loading screen as backup');
+                hideLoadingScreenGlobal();
+            }
+        }, 2000);
+    });
+</script>

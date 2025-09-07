@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 // Custom plugin to inline JS and CSS into HTML
 class InlineSourcePlugin {
@@ -76,17 +77,20 @@ module.exports = {
       {
         test: /\.svg$/,
         use: 'raw-loader',
-      }
+      },
     ],
   },
   plugins: [
-    new HtmlWebpackPlugin({
-      template: './public/index.html',
-      filename: 'template.html',
-      inject: 'head',
-      minify: false,
-    }),
-    new InlineSourcePlugin(),
+    // Comment out HtmlWebpackPlugin since EJS build handles template generation
+    // The build-ejs.js script already creates the complete HTML file
+    // new HtmlWebpackPlugin({
+    //   template: './public/generated-index.html',
+    //   filename: 'template.html',
+    //   inject: false,
+    //   minify: false,
+    // }),
+    // Skip InlineSourcePlugin for now as it causes issues with large files
+    // new InlineSourcePlugin(),
   ],
   optimization: {
     splitChunks: false, // すべてを1つのファイルにまとめる

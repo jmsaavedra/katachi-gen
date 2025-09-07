@@ -1,0 +1,851 @@
+<!-- Loading Screen -->
+<div id="loadingScreen">
+    <div id="loadingText">
+        Shapeの旅はすぐそこに<span class="loading-dots"></span>
+    </div>
+</div>
+
+<!-- Navigation Bar -->
+<nav id="globalNav" class="navbar navbar-inverse navbar-embossed" role="navigation">
+    <div class="navbar-header">
+        <a id="logo" class="navbar-brand" target="_blank" href="https://amandaghassaei.com/">
+            <img id="inactiveLogo" src="assets/logo.png"/>
+            <img id="activeLogo" src="assets/logo-active.png"/>
+        </a>
+    </div>
+    <div class="collapse navbar-collapse" id="navbar-collapse-01">
+        <ul class="nav navbar-nav navbar-left">
+            <li class="dropdown navDropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">File <b class="caret"></b></a>
+                <span class="dropdown-arrow"></span>
+                <ul class="dropdown-menu">
+                    <li><a class="loadFile" href="#">Import... (SVG / FOLD)</a></li>
+                    <li><a id="tips" href="#">Design Tips</a></li>
+                    <li class="divider"></li>
+                    <li><a id="createGif" href="#">Record animated GIF...</a></li>
+                    <li><a id="createVideo" href="#">Record video...</a></li>
+                    <li><a id="createPNG" href="#">Save PNG screenshot...</a></li>
+                    <li class="divider"></li>
+                    <li><a id="exportFOLD" href="#">Save Simulation as FOLD...</a></li>
+                    <li><a id="exportSTL" href="#">Save Simulation as STL...</a></li>
+                    <li><a id="exportOBJ" href="#">Save Simulation as OBJ...</a></li>
+                    <li class="divider"></li>
+                    <li><a id="saveSVG" href="#">Save Pattern as SVG...</a></li>
+                    <li><a id="generateCellMap" href="#">Generate Colored Cell Map...</a></li>
+                    <li><a id="generateTextureMappedCells" href="#">Generate Texture-Mapped Cells...</a></li>
+                </ul>
+            </li>
+            <li class="dropdown navDropdown">
+                <a href="#" id="exampleMenuButton" class="dropdown-toggle" data-toggle="dropdown">Examples <b class="caret"></b></a>
+                <span class="dropdown-arrow"></span>
+                <ul class="dropdown-menu" style="min-width: 200px;">
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Origami<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo" data-url="Origami/flappingBird.svg">Flapping Bird</a></li>
+                            <li><a href="#" class="demo author" data-author="randlett" data-url="Origami/randlettflappingbird.svg">Randlett Flapping Bird</a></li>
+                            <li><a href="#" class="demo" data-url="Origami/traditionalCrane.svg">Crane (3D)</a></li>
+                            <li><a href="#" class="demo" data-url="Origami/flat_crane.svg">Crane (flat)</a></li>
+                            <li><a href="#" class="demo author" data-author="hypar" data-url="Origami/hypar.svg">Hypar</a></li>
+                            <li><a href="#" class="demo author" data-author="hypar" data-url="Origami/6ptHypar-anti.svg">Hypar (6 point)</a></li>
+                            <li><a href="#" class="demo" data-url="Origami/singlesquaretwist.svg">Square Twist (single)</a></li>
+                            <li><a href="#" class="demo author" data-author="squareTwist" data-url="Origami/squaretwistManyAngles.svg">Square Twist (many angles)</a></li>
+                            <li><a href="#" class="demo author" data-author="moosersTrain" data-url="Origami/MoosersTrainRigid-Gardner.svg">Mooser's Rigid Train</a></li>
+                            <li><a href="#" class="demo author" data-author="pakin" data-url="Origami/airplane.svg">Paper Airplane</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#" class="demo author" data-author="langTreemaker" data-url="Origami/langCardinal.svg">Lang Cardinal</a></li>
+                            <li><a href="#" class="demo author" data-author="langTreemaker" data-url="Origami/langOrchid.svg">Lang Orchid</a></li>
+                            <li><a href="#" class="demo author" data-author="langTreemaker" data-url="Origami/langKnlDragon.svg">Lang KNL Dragon</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Tessellations<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo author" data-author="miuraOri" data-url="Tessellations/miura-ori.svg">Miura-Ori</a></li>
+                            <li><a href="#" class="demo author" data-author="miuraOri" data-url="Tessellations/miura_sharpangle.svg">Miura-Ori (sharp angle)</a></li>
+                            <li><a href="#" class="demo" data-url="Tessellations/waterbomb.svg">Waterbomb</a></li>
+                            <li><a href="#" class="demo author" data-author="whirlpool" data-url="Tessellations/whirlpool.svg">Whirlpool Spiral</a></li>
+                            <li><a href="#" class="demo author" data-author="gardner" data-url="Tessellations/FTpoly7.svg">Flower Tower (flat foldable)</a></li>
+                            <li><a href="#" class="demo author" data-author="fellerSmocked" data-url="Tessellations/HexTriFlatFoldableTess.svg">Hex/Tri Tessellation (flat foldable)</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#" class="demo author" data-author="huffmanTessellations" data-url="Tessellations/huffmanExtrudedBoxes.svg">Huffman Extruded Boxes</a></li>
+                            <li><a href="#" class="demo author" data-author="huffmanTessellations" data-url="Tessellations/huffmanWaterbomb.svg">Huffman Waterbombs</a></li>
+                            <li><a href="#" class="demo author" data-author="huffmanTessellations" data-url="Tessellations/huffmanRectangularWeave.svg">Huffman Rect Weave</a></li>
+                            <li><a href="#" class="demo author" data-author="huffmanTessellations" data-url="Tessellations/huffmanStarsTriangles.svg">Huffman Stars-Triangles</a></li>
+                            <li><a href="#" class="demo author" data-author="huffmanTessellations" data-url="Tessellations/huffmanExdentedBoxes.svg">Huffman Exdented Boxes</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#" class="demo author" data-author="langTessellations" data-url="Tessellations/langHoneycomb.svg">Lang Honeycomb Tessellation</a></li>
+                            <li><a href="#" class="demo author" data-author="langTessellations" data-url="Tessellations/langWedgeDoubleFaced.svg">Lang Wedged Double Faced Tessellation</a></li>
+                            <li><a href="#" class="demo author" data-author="langTessellations" data-url="Tessellations/langOvalTessellation.svg">Lang Oval Tessellation</a></li>
+                            <li><a href="#" class="demo author" data-author="langTessellations" data-url="Tessellations/langHyperbolicLimit.svg">Lang Hyperbolic Limit</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#" class="demo author" data-author="reschTessellations" data-url="Tessellations/reschTriTessellation.svg">Resch Triangle Tessellation</a></li>
+                            <li><a href="#" class="demo author" data-author="reschTessellations" data-url="Tessellations/reschBarbell.svg">Resch Barbell Tessellation</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Curved Creases<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo author cc" data-author="mitani" data-url="Curved/wavy_pleats.svg">Wavy Pleats</a></li>
+                            <li><a href="#" class="demo author cc" data-author="mitaniCCbook" data-url="Curved/Tri-Wing_Boomerang_Tiling.svg">Boomerang Tessellation</a></li>
+                            <li><a href="#" class="demo author cc" data-author="mitani3Dbook" data-url="Curved/Origami_Sphere_16Flaps.svg">Origami Sphere</a></li>
+                            <li><a href="#" class="demo author cc" data-author="mitani" data-url="Curved/comet.svg">Comet</a></li>
+                            <li><a href="#" class="demo author cc" data-author="mitani" data-url="Curved/scale.svg">Scale Tessellation</a></li>
+                            <li><a href="#" class="demo author cc" data-author="mitaniCCbook" data-url="Curved/Carved_Cylinder.svg">Carved Cylinder</a></li>
+                            <li><a href="#" class="demo author cc" data-author="mitaniCCbook" data-url="Curved/Rotating_Star.svg">Rotating Star</a></li>
+                            <li><a href="#" class="demo author cc" data-author="mitaniCCbook" data-url="Curved/Crossing_curves.svg">Crossing Curves</a></li>
+                            <li><a href="#" class="demo author cc" data-author="mitaniCCbook" data-url="Curved/Treble_Clef.svg">Treble Clef</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#" class="demo author cc" data-author="lukashevaCCbook" data-url="Curved/Leafy_Opus_T-69.svg">Leafy (Opus T-69)</a></li>
+                            <li><a href="#" class="demo author cc" data-author="lukasheva" data-url="Curved/Sweet_Dreams_Opus_T-41.svg">Sweet Dreams (Opus T-41)</a></li>
+                            <li><a href="#" class="demo author cc" data-author="lukasheva" data-url="Curved/Improvisation-62.svg">Improvisation 62</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#" class="demo author" data-author="huffmanCurved" data-url="Curved/huffmanTower.svg">Huffman Tower</a></li>
+                            <li><a href="#" class="demo author cc" data-author="fellerKwan" data-url="Curved/HexSpiralTess.svg">Hex Spiral Tessellation</a></li>
+                            <li><a href="#" class="demo" data-url="Curved/CircularPleat-antiFacet.svg">Circular Pleat</a></li>
+                            <li><a href="#" class="demo author" data-author="sam" data-url="Curved/shell14.svg">14 Panel Shell</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Kirigami<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo author" data-author="miyamotoHappy" data-url="Kirigami/miyamotoTower.svg">Miyamoto Tower</a></li>
+                            <li><a href="#" class="demo" data-url="Kirigami/honeycombKiri.svg">Kirigami Honeycomb</a></li>
+                            <li><a href="#" class="demo author" data-author="milliron" data-url="Kirigami/auxetic_triangle.svg">Auxetic Triangle Tessellation</a></li>
+                            <li><a href="#" class="demo author" data-author="kreuter" data-url="Kirigami/triPerfTess.svg">Perforated Triangle Tessellation</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Popups<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo author" data-author="ullagami" data-url="Popup/geometricPopup.svg">Geometric Pattern</a></li>
+                            <li><a href="#" class="demo author" data-author="popupology" data-url="Popup/castlePopup.svg">Castle</a></li>
+                            <li><a href="#" class="demo author" data-author="popupology" data-url="Popup/housePopup.svg">House</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Maze Foldings<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo author" data-author="squareMaze" data-url="Squaremaze/helloworld.svg">Square Maze "hello world"</a></li>
+                            <li><a href="#" class="demo author" data-author="squareMaze" data-url="Squaremaze/origamisimulator.svg">Square Maze "origami simulator"</a></li>
+                            <li><a href="#" class="demo author" data-author="squareMaze" data-url="Squaremaze/cross.svg">Square Maze "+"</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#" class="demo author" data-author="polygami" data-url="Polygami/polygamiCross.svg">Polygami "+"</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Pleating<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo author" data-author="konjevod" data-url="Pleating/BoxPleatPyramid.fold">Box Pleat Pyramid</a></li>
+                            <li><a href="#" class="demo author" data-author="konjevod" data-url="Pleating/BoxPleatSpiralPyramid.fold">Box Pleat Spiral Pyramid</a></li>
+                            <li><a href="#" class="demo author" data-author="konjevod" data-url="Pleating/BoxPleatInOutWave.fold">Box Pleat In Out Wave</a></li>
+                            <li><a href="#" class="demo author" data-author="konjevod" data-url="Pleating/BoxPleatSkipOneWave.fold">Box Pleat Skip One Wave</a></li>
+                            <li><a href="#" class="demo author" data-author="konjevod" data-url="Pleating/BoxPleatTessellation.fold">Box Pleat Tessellation</a></li>
+                            <li><a href="#" class="demo author" data-author="konjevod" data-url="Pleating/BoxPleatTessellationLarge.fold">Box Pleat Tessellation (large)</a></li>
+                        </ul>
+                    </li>
+                    <li class="divider"></li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Origami Bases<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo" data-url="Bases/birdBase.svg">Bird Base</a></li>
+                            <li><a href="#" class="demo author" data-author="moveSlowly" data-url="Bases/frogBase.svg">Frog Base</a></li>
+                            <li><a href="#" class="demo" data-url="Bases/boatBase.svg">Boat Base</a></li>
+                            <li><a href="#" class="demo" data-url="Bases/pinwheelBase.svg">Pinwheel Base</a></li>
+                            <li><a href="#" class="demo" data-url="Bases/openSinkBase.svg">Open Sink Base</a></li>
+                            <li><a href="#" class="demo" data-url="Bases/squareBase.svg">Square Base</a></li>
+                            <li><a href="#" class="demo" data-url="Bases/waterbombBase.svg">Waterbomb Base</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Simple Folds<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo" data-url="SimpleFolds/simpleVertex.svg">Simple Vertex</a></li>
+                            <li><a href="#" class="demo" data-url="SimpleFolds/russianTriangle.svg">Russian Triangle</a></li>
+                            <li><a href="#" class="demo" data-url="SimpleFolds/mapfold.svg">Map Fold</a></li>
+                            <li><a href="#" class="demo" data-url="SimpleFolds/brochurefold.svg">Brochure Fold</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Bistable<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo author" data-author="bistable" data-url="Bistable/curvedPleatSimple.svg">Curved Pleat</a></li>
+                        </ul>
+                    </li>
+                    <li class="divider"></li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Problematic Patterns<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" class="demo author" data-author="skinnyTriangles" data-url="Tessellations/langRattanWeave.svg">Lang Rattan Weave</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li class="dropdown navDropdown">
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown">View <b class="caret"></b></a>
+                <span class="dropdown-arrow"></span>
+                <ul class="dropdown-menu">
+                    <li><a id="changeBackground" href="#">Change Background Color...</a></li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">Rotate Model<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a id="stopRotation" href="#">Stop Rotation</a></li>
+                            <li><a id="rotateX" href="#">Rotate Around X</a></li>
+                            <li><a id="rotateY" href="#">Rotate Around Y</a></li>
+                            <li><a id="rotateZ" href="#">Rotate Around Z</a></li>
+                            <li><a id="changeRotationSpeed" href="#">Change Rotation Speed...</a></li>
+                        </ul>
+                    </li>
+                    <li class="dropdown-submenu">
+                        <a tabindex="-1">View Direction<span class="pull-right fui-arrow-right"></span></a>
+                        <ul class="dropdown-menu">
+                            <li><a href="#" id="cameraZ">View Front</a></li>
+                            <li><a href="#" id="cameraMinusZ">View Back</a></li>
+                            <li><a href="#" id="cameraX">View Right</a></li>
+                            <li><a href="#" id="cameraMinusX">View Left</a></li>
+                            <li><a href="#" id="cameraY">View Top</a></li>
+                            <li><a href="#" id="cameraMinusY">View Bottom</a></li>
+                            <li><a href="#" id="cameraIso">View Iso</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+            <li><a id="navPattern" href="#">Pattern</a></li>
+            <li><a id="navSimulation" href="#">Simulation</a></li>
+            <li><a id="about" class="menuHoverControls" target="_blank" href="#">About</a></li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right">
+            <a href="#" class="menuHoverControls" id="showAdvancedOptions">Options</a>
+        </ul>
+        <div class="sliderInput floatRight" id="creasePercentNav">
+            <span class="label-slider">Fold Percent : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+        </div>
+    </div><!-- /.navbar-collapse -->
+    <input id="fileSelector" type="file">
+</nav>
+
+<!-- Main Container for Three.js Canvas -->
+<div id="threeContainer"></div>
+
+<!-- GPU Math Canvas -->
+<canvas id="gpuMathCanvas"></canvas>
+
+<!-- Basic UI Container -->
+<div id="basicUI"></div>
+
+<!-- Controls Panel -->
+<div id="controls">
+    <a href="#" id="hideAdvancedOptions">Hide Options</a><br/><br/>
+    <div class="sliderInput floatRight" id="creasePercent">
+        <span class="label-slider">Fold Percent : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+        <input value="" placeholder="" class="float form-control" type="text">&nbsp;&nbsp;%
+    </div><br/><br/>
+    
+    <div class="inlineBlock fullWidth">
+        <a class="about" href="#" id="aboutUserInteraction"><span class="fui-question-circle"></span></a>
+        <label style="margin-right:40px" class="checkbox floatRight" for="userInteractionEnabled">
+            <input id="userInteractionEnabled" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+            Allow User Interaction
+        </label>
+    </div><br/>
+    
+    <div id="simButtons" class="alignRight">
+        <a href="#" id="start" class="paddingBottom btn btn-lg btn-success">Start Simulation</a>
+        <a href="#" id="pause" class="paddingBottom btn btn-lg btn-warning">Pause Simulation</a>
+        <a href="#" id="reset" class="paddingBottom btn btn-lg btn-default">Reset</a>
+    </div>
+    
+    <div class="fullWidth">
+        <a href="#" class="seeMore closed" data-id="simulationSettings"><span class="fui-triangle-down"></span><b>Simulation Settings:</b></a><a class="about" href="#" id="aboutStiffness"><span class="fui-question-circle"></span></a><br/>
+        <div id="simulationSettings" class="hide">
+            <div class="indent">Numerical Integration:
+                <div class="doubleIndent">
+                    <label class="radio">
+                        <input name="integrationType" value="euler" data-toggle="radio" class="custom-radio" type="radio"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                        Euler (first order)
+                    </label>
+                    <label class="radio">
+                        <input name="integrationType" value="verlet" data-toggle="radio" class="custom-radio" type="radio"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                        Verlet (second order)
+                    </label>
+                </div>
+            </div><br/>
+            
+            <div class="sliderInput paddingBottom" id="axialStiffness">
+                <span class="label-slider">Axial Stiffness : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                <input value="" placeholder="" class="float form-control" type="text">
+            </div>
+            <div class="sliderInput paddingBottom" id="faceStiffness">
+                <span class="label-slider">Face Stiffness : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                <input value="" placeholder="" class="float form-control" type="text">
+            </div>
+            <div class="sliderInput" id="creaseStiffness">
+                <span class="label-slider">Fold Stiffness : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                <input value="" placeholder="" class="float form-control" type="text">
+            </div>
+            <div class="sliderInput" id="panelStiffness">
+                <span class="label-slider">Facet Crease Stiffness : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                <input value="" placeholder="" class="float form-control" type="text">
+            </div>
+            <div class="sliderInput" id="percentDamping">
+                <span class="label-slider">Damping Ratio : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                <input value="" placeholder="" class="float form-control" type="text">
+            </div>
+        </div>
+        <br/>
+        
+        <a href="#" class="seeMore closed" data-id="solverParams"><span class="fui-triangle-down"></span><b>Solver:</b></a><br/>
+        <div id="solverParams" class="hide">
+            <div class="sliderInput" id="dtMultiplier">
+                <span class="label-slider">Time Multiplier : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                <input value="" placeholder="" class="float form-control" type="text">
+            </div>
+            <div class="sliderInput" id="numSteps">
+                <span class="label-slider">Num simulation steps per frame : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                <input value="" placeholder="" class="float form-control" type="text">
+            </div>
+        </div>
+        <br/>
+        
+        <a href="#" class="seeMore closed" data-id="patternParams"><span class="fui-triangle-down"></span><b>Pattern:</b></a><br/>
+        <div id="patternParams" class="hide">
+            <div class="indent">
+                <label class="checkbox" for="curvedCreases">
+                    <input id="curvedCreases" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Approximate Curved Creases w/ Straight Segments <a class="about" href="#" id="aboutCurvedCreases"><span class="fui-question-circle"></span></a>
+                </label>
+                <div id="curvedCreaseOptions" class="doubleIndent hide">
+                    <div class="sliderInput" id="curvedCreaesPercentLength">
+                        <span class="label-slider">% Curved Crease Length : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                        <input value="" placeholder="" class="float form-control" type="text">&nbsp;&nbsp;%
+                    </div>
+                    <div class="sliderInput" id="curvedCreaseAngleTol">
+                        <span class="label-slider">Max Ruling Angle Tolerance : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                        <input value="" placeholder="" class="float form-control" type="text">&nbsp;&nbsp;&deg;
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br/>
+        
+        <a href="#" class="seeMore closed" data-id="renderingParams"><span class="fui-triangle-down"></span><b>Rendering:</b></a><br/>
+        <div id="renderingParams" class="hide">
+            <div class="indent">
+                <label class="checkbox" for="beamVisible">
+                    <input id="beamVisible" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Beams
+                </label>
+                <label class="checkbox" for="faceVisible">
+                    <input id="faceVisible" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Faces
+                </label>
+                <label class="checkbox" for="mountainsVisible">
+                    <input id="mountainsVisible" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Mountains <span id="numMountains"></span>
+                </label>
+                <label class="checkbox" for="valleysVisible">
+                    <input id="valleysVisible" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Valleys <span id="numValleys"></span>
+                </label>
+                <label class="checkbox" for="panelsVisible">
+                    <input id="panelsVisible" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Facet Creases <span id="numFacets"></span>
+                </label>
+                <label class="checkbox" for="passiveEdgesVisible">
+                    <input id="passiveEdgesVisible" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Undriven Edges <span id="numPassive"></span>
+                </label>
+                <label class="checkbox" for="boundaryEdgesVisible">
+                    <input id="boundaryEdgesVisible" data-toggle="checkbox" class="custom-checkbox layersSelector" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Boundary Edges <span id="numBoundary"></span>
+                </label>
+            </div>
+            <br/>
+            
+            <div>
+                <a href="#" class="seeMore closed" data-id="virtualReality"><span class="fui-triangle-down"></span>Virtual Reality:</a><a class="about floatRight" href="#" id="aboutVR"><span class="fui-question-circle"></span></a>
+            </div>
+            <div id="virtualReality" class="hide indent smallTxt">
+                <b>Status:</b> &nbsp;<span id="VRstatus"></span>
+                <div id="VRoptions"><br/>
+                    <a href="#" id="enterVR" class="displayBlock btn btn-lg btn-inverse"></a>
+                </div><br/><br/>
+            </div><br/>
+            <div class="extraSpace"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Record Status -->
+<div id="recordStatus">
+    <a href="#" id="stopRecord" class="btn btn-lg btn-danger">Stop Record <span></span></a>
+</div>
+
+<!-- About Corner Link -->
+<a href="#" id="aboutCorner">?</a>
+
+<!-- Modal Dialogs -->
+<div class="modal fade" id="tipsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p><b>DESIGN TIPS</b><br/><br/>
+                    Bad design files will throw errors and create models that explode or cannot be solved, here are some tips for creating good patterns:<br/><br/>
+                    
+                    <b>SVG Import</b><br/>
+                    - Make sure your paths are merged (select all and go to Path > Union in Inkscape)<br/>
+                    - Check that there are no gaps in your design<br/>
+                    - Check that there are no extraneous points along straight segments of your design<br/>
+                    - White fills will be treated as holes in the paper<br/>
+                    - This will work best if you have black line work on white paper with minimal text/embellishments<br/><br/>
+                    
+                    <b>General</b><br/>
+                    - Avoid very small triangular faces in your design, these often become inverted and are difficult for the solver<br/>
+                    - Avoid very skinny triangles<br/>
+                    - For curved crease patterns: avoid very sharp/small radius curves, these can cause the pattern to self-intersect<br/>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aboutVRmodal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p><b>VIRTUAL REALITY</b><br/><br/>
+                    You can view this simulation in VR by clicking the "Enter VR" button.  
+                    This feature uses WebXR and may not be supported by all browsers/headsets.<br/><br/>
+                    
+                    Once you are in VR, you can grab/move the origami by pointing at it and holding down the controller trigger.  
+                    You can also change the simulation settings while in VR by pointing at the controls and pressing the trigger.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aboutAnimationModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p><b>ANIMATION</b><br/><br/>
+                    During animation/video/GIF recording, you can change the folding over time by clicking on one or more keyframes in the animation setup panel.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exportSTLModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-med">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <label class="checkbox" for="separateCreases">
+                    <input id="separateCreases" data-toggle="checkbox" class="custom-checkbox" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Save as separate objects (creases, facets, boundaries)
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button id="doSTLsave" type="button" class="actionButton btn btn-success" data-dismiss="modal">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exportOBJModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-med">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <label class="checkbox" for="separateCreasesOBJ">
+                    <input id="separateCreasesOBJ" data-toggle="checkbox" class="custom-checkbox" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Save as separate objects (creases, facets, boundaries)
+                </label>
+                <label class="checkbox" for="includeTexCoords">
+                    <input id="includeTexCoords" data-toggle="checkbox" class="custom-checkbox" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Include texture coordinates
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button id="doOBJsave" type="button" class="actionButton btn btn-success" data-dismiss="modal">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exportFOLDModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-med">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <label class="radio">
+                    <input name="foldSaveType" value="pattern" data-toggle="radio" class="custom-radio" type="radio"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Save pattern (crease pattern in flat state)
+                </label>
+                <label class="radio">
+                    <input name="foldSaveType" value="fold" data-toggle="radio" class="custom-radio" type="radio"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Save folded state (3D simulation results)
+                </label>
+                <br/>
+                <div id="foldSettings" class="hide">
+                    <label class="checkbox" for="foldAngleIsActual">
+                        <input id="foldAngleIsActual" data-toggle="checkbox" class="custom-checkbox" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                        Use actual fold angles from 3D shape (instead of target angles)
+                    </label>
+                    <br/>
+                </div>
+                <span class="smallTxt">Learn more about the FOLD format <a href="https://github.com/edemaine/fold" target="_blank">here</a>.<br/>
+                Use the <a href="https://edemaine.github.io/fold/examples/foldviewer.html" target="_blank">FOLD viewer</a> to check that your file has been exported correctly.</span>
+            </div>
+            <div class="modal-footer">
+                <button id="doFOLDsave" type="button" class="actionButton btn btn-success" data-dismiss="modal">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importFoldModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-med">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <label class="checkbox" for="foldFileIsAnimated">
+                    <input id="foldFileIsAnimated" data-toggle="checkbox" class="custom-checkbox" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    FOLD file contains animation frames
+                </label>
+            </div>
+            <div class="modal-footer">
+                <button data-dismiss="modal" type="button" class="btn btn-success">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="warningModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog sm">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p id="warningMessage"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aboutErrorModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p><b>ERROR</b><br/><br/>
+                    An error has occurred, please check the js console for more information.<br/>
+                    You can open the js console by pressing F12 (Chrome) or Cmd+Option+K (Firefox).<br/><br/>
+                    
+                    The most common causes of this error are:<br/>
+                    - Curved crease patterns that self-intersect when folded<br/>
+                    - Faces that are too small - these can become inverted during simulation<br/>
+                    - Over-constrained geometry (only relevant for rigid folding)<br/><br/>
+                    
+                    Tips to fix your pattern:<br/>
+                    - Try starting with a smaller folding percentage and increasing it slowly<br/>
+                    - Decrease the axial, face, and fold stiffness parameters (try a value of 0.7)<br/>
+                    - Try toggling between verlet and euler integration
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aboutStiffnessModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p><b>SIMULATION PARAMETERS</b><br/><br/>
+                    
+                    <b>Axial Stiffness</b> - stiffness of axial springs (along edges), this should be around 1<br/>
+                    <b>Face Stiffness</b> - bending stiffness of faces, this should be around 1<br/>
+                    <b>Fold Stiffness</b> - controls folding of crease lines, this should be around 1<br/>
+                    <b>Facet Crease Stiffness</b> - for curved crease patterns, this controls the stiffness of internal faceting, this should be around 0.7<br/>
+                    <b>Damping Ratio</b> - artificial damping to help simulation converge, this should be around 1<br/><br/>
+                    
+                    <b>Time Multiplier</b> - affects the speed of the simulation, set this higher to see faster folding<br/>
+                    <b>Num simulation steps per frame</b> - number of iterations per frame, set this higher for better simulation accuracy (but slower computation)<br/><br/>
+                    
+                    If you are experiencing problems with the simulation (model exploding, very slow convergence), 
+                    try decreasing all the stiffness values.  
+                    For a more accurate/realistic simulation, leave the stiffness values at ~1.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aboutDynamicSimModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-med">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p>The compliant simulation allows the model to bend and fold smoothly.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aboutStaticSimModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-med">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p>The static simulation solves for an equilibrium state at each time step (no dynamics).
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aboutRigidSimModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-med">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p>The rigid simulation assumes that faces do not deform.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aboutAxialStrainModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p>Color shows the axial strain in the model - blue regions are in compression, 
+                red regions are in tension.  This is computed from the difference between current 
+                and rest lengths of axial springs.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="aboutUserInteractionModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <p><b>USER INTERACTION</b><br/><br/>
+                    You can click and drag on the model to apply forces during the simulation.<br/>
+                    This is useful for troubleshooting models that are having trouble folding.
+                    </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="changeRotationSpeedModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog sm">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <label for="rotationSpeed">Rotation Speed:</label>
+                <input id="rotationSpeed" class="form-control" type="number" step="0.01" min="0">
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="changeBackgroundModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog sm">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <label for="backgroundColor">Background Color:</label>
+                <input id="backgroundColor" class="form-control" type="color">
+                <p>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="importSettingsModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog sm">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <label class="checkbox" for="dxfParseBezier">
+                    <input id="dxfParseBezier" data-toggle="checkbox" class="custom-checkbox" type="checkbox"><span class="icons"><span class="icon-unchecked"></span><span class="icon-checked"></span></span>
+                    Convert SPLINE to curve (DXF only)
+                </label>
+                <br/>
+                <div class="sliderInput" id="svgTolerance">
+                    <span class="label-slider">SVG curve->line approximation tolerance : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                    <input value="" placeholder="" class="float form-control" type="text">
+                </div>
+                <br/>
+                <div class="sliderInput" id="cleanDist">
+                    <span class="label-slider">Merge vertices within distance : </span><div class="flat-slider ui-slider ui-corner-all ui-slider-horizontal ui-widget ui-widget-content"></div>
+                    <input value="" placeholder="" class="float form-control" type="text">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <div id="tipImportSVG" class="smallTxt">Having trouble?  See these <a class="goToImportInstructions" href="#">SVG Import Tips</a>.</div>
+                <button id="doSVGImport" type="button" class="actionButton btn btn-success" data-dismiss="modal">Import SVG</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="noSupportModal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-body">
+                This app uses GPU functions that are not supported by this device/browser,
+                please try again on desktop with Chrome/Firefox.<br/>
+                <br/>
+                
+                <div class="smallTxt">
+                    <b>More information:</b><br/>
+                    
+                    This app makes extensive use of floating point textures and WebGL shaders to run the physics simulations entirely on the graphics card.
+                    Unfortunately, not all devices and browsers support these features - you're more likely to have problems on mobile devices and Safari browsers.<br/>
+                    <br/>
+
+                    The specific error encountered was:<br/>
+                    <span id="errorType"></span><br/>
+                    <br/>
+                    
+                    <b>Browser recommendations:</b><br/>
+                    <ul>
+                    <li>Chrome on desktop (best option)</li>
+                    <li>Firefox on desktop</li>
+                    <li>Chrome on mobile (may work for simple patterns)</li>
+                    <li>Firefox on mobile (may work for simple patterns)</li>
+                    <li>Safari (limited support, may work for simple patterns on some devices)</li>
+                    <li>Internet Explorer (not supported)</li>
+                    </ul>
+                    
+                    <b>Some things to try:</b><br/>
+                    <ul>
+                    <li>Make sure you have updated to the latest browser version</li>
+                    <li>Make sure your browser is hardware accelerated and using your graphics card (check browser flags)</li>
+                    <li>Try enabling WebGL flags in your browser settings</li>
+                    <li>Try a different device</li>
+                    </ul>
+                    
+                    If you continue to have problems, please send me a message on <a href="http://instagram.com/amandaghassaei" target="_blank">Instagram</a> or email aghassaei at gmail dot com.<br/>
+                    <br/>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="screenCaptureModal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+    <div class="modal-dialog modal-med">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <div class="gif">
+                    <span><b>ANIMATED GIF CAPTURE</b></span><br/><br/>
+                    <label for="gifLength">Length (sec):</label>
+                    <input id="gifLength" class="form-control" type="number" step="0.1" min="0.1" max="30">
+                </div>
+                <div class="video">
+                    <span><b>VIDEO CAPTURE</b></span><br/><br/>
+                    <label for="videoLength">Length (sec):</label>
+                    <input id="videoLength" class="form-control" type="number" step="0.1" min="0.1" max="30">
+                </div>
+                <div class="png">
+                    <span><b>PNG SCREENSHOT</b></span><br/><br/>
+                </div>
+                <span><b>Size:</b></span><br/>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="captureSize" value="1" checked>
+                        Current size (<span id="currentSizeWidth"></span> x <span id="currentSizeHeight"></span>)
+                    </label>
+                </div>
+                <div class="radio">
+                    <label>
+                        <input type="radio" name="captureSize" value="2">
+                        HD (1920 x 1080)
+                    </label>
+                </div><br/>
+                <span class="gif video"><b>Tips:</b> To reduce the amount of motion blur, you can decrease the 
+                amount of motion per frame by increasing the "Num simulation steps per frame".</span>  Check the <b>View</b> menu (above) for more rendering options.</span><br/>
+            </div>
+            <div class="modal-footer">
+                <button id="doGifRecord" type="button" class="gif actionButton btn btn-success" data-dismiss="modal">Start</button>
+                <button id="doScreenRecord" type="button" class="video actionButton btn btn-success" data-dismiss="modal">Start</button>
+                <button id="doPNGCapture" type="button" class="png actionButton btn btn-success" data-dismiss="modal">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="animationSetupModal" tabindex="-1" role="dialog" aria-labelledby="basicModal" aria-hidden="true">
+    <div class="modal-dialog modal-med">
+        <div class="modal-content">
+            <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+                </button>
+                <span><b>ANIMATION SETUP</b></span><br/><br/>
+                <p>
+                    Click on keyframes to set the folding percentage for that point in time. 
+                    The simulation will animate smoothly between keyframes during the animation.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button id="finishAnimationSetup" type="button" class="actionButton btn btn-success" data-dismiss="modal">Done</button>
+            </div>
+        </div>
+    </div>
+</div>
