@@ -11,7 +11,7 @@ const { THUMB_WIDTH, THUMB_HEIGHT } = require('../config');
  */
 async function saveThumbnail(buffer, filename) {
     try {
-        const thumbnailPath = path.join(__dirname, '..', 'thumbnails', filename);
+        const thumbnailPath = path.join(__dirname, '..', 'temp', 'thumbnails', filename);
         
         // Ensure thumbnails directory exists
         const thumbnailDir = path.dirname(thumbnailPath);

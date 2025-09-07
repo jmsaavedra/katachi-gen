@@ -61,18 +61,17 @@
 <!-- NFT Data Placeholder and Global Initialization -->
 <script>
     window.nftRenderComplete = false;
-    // const nftData = `{dataJson}`; // Airplane, Crane, Hypar, Pinwheel, Flower
-    const nftData = JSON.parse(`___NFT_DATA_PLACEHOLDER___`);
+    // NFT Data injected from EJS template
+    const nftData = <%- nftData %>;
 
     // Global render completion flag
     window.renderingComplete = false;
     
-    // Edit mode control
-    if (typeof editMode === 'undefined') {
-        var editMode = true; // Default to edit mode enabled
-    }
+    // NFT Display Mode - no editing
+    var editMode = false; // Always display mode for NFT
+    window.editMode = false;
     
     console.log('🚀 Three.js and libraries initialized');
     console.log('📊 NFT Data loaded:', nftData ? 'Available' : 'None');
-    console.log('✏️ Edit mode:', editMode);
+    console.log('🎨 NFT Display Mode Active');
 </script>

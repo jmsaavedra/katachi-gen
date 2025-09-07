@@ -1,14 +1,11 @@
 <!-- Flower Origami Pattern SVG -->
 <script>
-// Flower pattern configuration - extracted from original template
+// Flower pattern configuration - complete FTpoly7 pattern
 const flowerPattern = {
     maxFolding: 70, 
     name: "FTpoly7.svg", 
     patternType: "Flower",
-    svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1000 -1000 12000 12000"><line stroke="#000" opacity="1" x1="10000" y1="3660" x2="10000" y2="5000" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="10000" y1="5000" x2="9999" y2="6339" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="9999" y1="6339" x2="9330" y2="7500" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="9330" y1="7500" x2="8660" y2="8660" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="8660" y1="8660" x2="7499" y2="9330" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="7499" y1="9330" x2="6339" y2="10000" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="6339" y1="10000" x2="4999" y2="10000" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="4999" y1="10000" x2="3660" y2="10000" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="3660" y1="10000" x2="2500" y2="9330" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="2500" y1="9330" x2="1339" y2="8660" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="1339" y1="8660" x2="669" y2="7500" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="669" y1="7500" x2="0" y2="6339" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="0" y1="6339" x2="0" y2="5000" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="0" y1="5000" x2="0" y2="3660" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="0" y1="3660" x2="669" y2="2500" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="669" y1="2500" x2="1339" y2="1339" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="1339" y1="1339" x2="2500" y2="669" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="2500" y1="669" x2="3660" y2="0" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="3660" y1="0" x2="5000" y2="0" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="5000" y1="0" x2="6339" y2="0" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="6339" y1="0" x2="7500" y2="669" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="7500" y1="669" x2="8660" y2="1339" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="8660" y1="1339" x2="9330" y2="2500" stroke-width="33.333333333333336"/><line stroke="#000" opacity="1" x1="9330" y1="2500" x2="10000" y2="3660" stroke-width="33.333333333333336"/>
-<!-- Note: This is a truncated version of the complete Flower SVG pattern -->
-<!-- The full pattern contains several hundred additional line elements with various stroke colors -->
-<!-- including #f00, #00f, and additional geometric details for the flower petal structure --></svg>`
+    svgContent: `<%- fs.readFileSync(path.join(projectRoot, 'public/svgs/FTpoly7.svg'), 'utf8') %>`
 };
 
 // Export pattern for use in the template

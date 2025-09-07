@@ -62,12 +62,12 @@ async function handlePatternGeneration(req, res, data) {
         const walletAddress = data.walletAddress || data.stackData?.userAddress;
         const timestamp = Date.now();
         const htmlFilename = `kg_${data.patternType.toLowerCase()}-${walletAddress}-${timestamp}.html`;
-        const htmlPath = path.join(__dirname, '..', 'temp', htmlFilename);
+        const htmlPath = path.join(__dirname, '..', 'temp', 'html', htmlFilename);
         
-        // Ensure temp directory exists
-        const tempDir = path.dirname(htmlPath);
-        if (!fs.existsSync(tempDir)) {
-            fs.mkdirSync(tempDir, { recursive: true });
+        // Ensure temp/html directory exists
+        const tempHtmlDir = path.dirname(htmlPath);
+        if (!fs.existsSync(tempHtmlDir)) {
+            fs.mkdirSync(tempHtmlDir, { recursive: true });
         }
         
         // Write HTML to temp file
@@ -97,7 +97,7 @@ async function handlePatternGeneration(req, res, data) {
             
             // Use local URLs for everything
             thumbnailUrl = `http://localhost:${port}/thumbnails/${thumbnailFilename}`;
-            htmlUrl = `http://localhost:${port}/temp/${htmlFilename}`;
+            htmlUrl = `http://localhost:${port}/temp/html/${htmlFilename}`;
             previewHtmlUrl = htmlUrl;
             
             // Set transaction IDs to match the actual URLs for metadata consistency
@@ -134,7 +134,7 @@ async function handlePatternGeneration(req, res, data) {
                 }
             } else {
                 // R2 failed: Keep local temp file for preview
-                htmlUrl = `http://localhost:${port}/temp/${htmlFilename}`;
+                htmlUrl = `http://localhost:${port}/temp/html/${htmlFilename}`;
                 previewHtmlUrl = htmlUrl;
                 // Set transaction IDs to match the actual URLs for metadata consistency
                 thumbnailTxId = thumbnailUrl;
@@ -183,7 +183,7 @@ async function handlePatternGeneration(req, res, data) {
                 }
             } else {
                 // Keep temp file for preview since R2 upload failed
-                previewHtmlUrl = `http://localhost:${port}/temp/${htmlFilename}`;
+                previewHtmlUrl = `http://localhost:${port}/temp/html/${htmlFilename}`;
                 console.log('⚠️ R2 upload failed, keeping temp file for preview:', previewHtmlUrl);
             }
         }

@@ -1,112 +1,66 @@
 <!-- Origami Pattern Loading and NFT Processing -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Handle editMode functionality
-        if (typeof editMode !== 'undefined' && editMode === false) {
-            console.log('🚫 Edit mode disabled - hiding navigation and suppressing alerts');
+        // NFT Display Mode - always hide navigation and suppress alerts
+        console.log('🚫 NFT Display mode - hiding navigation and suppressing alerts');
+        
+        // Add CSS class to body for styling
+        document.body.classList.add('edit-mode-disabled');
+        
+        // Hide navigation bar
+        var navBar = document.getElementById('globalNav');
+        if (navBar) {
+            navBar.style.display = 'none';
+            console.log('✅ Navigation bar hidden');
+        }
+        
+        // Initially hide all controls
+        var controlsBottom = document.getElementById('controlsBottom');
+        if (controlsBottom) {
+            controlsBottom.style.display = 'none';
+            console.log('✅ Bottom controls initially hidden');
+        }
+        
+        // Function to show controls after rendering is complete
+        window.showControlsAfterRender = function() {
+            console.log('🎬 Starting control visibility sequence...');
+            window.nftRenderComplete = true;
+            console.log('✅ Set window.nftRenderComplete = true');
             
-            // Add CSS class to body for styling
-            document.body.classList.add('edit-mode-disabled');
-            
-            // Hide navigation bar
-            var navBar = document.getElementById('globalNav');
-            if (navBar) {
-                navBar.style.display = 'none';
-                console.log('✅ Navigation bar hidden');
-            }
-            
-            // Initially hide all controls
-            var controlsBottom = document.getElementById('controlsBottom');
-            if (controlsBottom) {
-                controlsBottom.style.display = 'none';
-                console.log('✅ Bottom controls initially hidden');
-            }
-            
-            // Function to show controls after rendering is complete
-            window.showControlsAfterRender = function() {
-                console.log('🎬 Starting control visibility sequence...');
-                window.nftRenderComplete = true;
-                console.log('✅ Set window.nftRenderComplete = true');
-                
-                setTimeout(function() {
-                    var controlsBottom = document.getElementById('controlsBottom');
-                    if (controlsBottom) {
-                        controlsBottom.style.display = 'flex';
-                        console.log('✅ Bottom controls shown after 5 second delay');
-                    }
-                }, 5000);
-            };
-            
-            // Suppress alerts by overriding alert function
-            window.alert = function(message) {
-                console.log('🔇 Alert suppressed in non-edit mode:', message);
-            };
-            
-            // Suppress other alert-related functions
-            window.confirm = function(message) {
-                console.log('🔇 Confirm dialog suppressed in non-edit mode:', message);
-                return true; // Default to true for non-disruptive behavior
-            };
-            
-            window.prompt = function(message, defaultText) {
-                console.log('🔇 Prompt dialog suppressed in non-edit mode:', message);
-                return defaultText || '';
-            };
-            
-            // Optionally suppress console errors and warnings for cleaner presentation
-            var originalConsoleError = console.error;
-            var originalConsoleWarn = console.warn;
-            
-            console.error = function() {
-                // Still log errors but mark them as suppressed
-                var args = Array.prototype.slice.call(arguments);
-                args.unshift('🔇 [SUPPRESSED ERROR]:');
-                originalConsoleError.apply(console, args);
-            };
-            
-            console.warn = function() {
-                // Still log warnings but mark them as suppressed  
-                var args = Array.prototype.slice.call(arguments);
-                args.unshift('🔇 [SUPPRESSED WARNING]:');
-                originalConsoleWarn.apply(console, args);
-            };
-            
-            console.log('✅ Edit mode restrictions applied');
-            
-            // Set globals.editMode when globals is available
+            setTimeout(function() {
+                var controlsBottom = document.getElementById('controlsBottom');
+                if (controlsBottom) {
+                    controlsBottom.style.display = 'flex';
+                    console.log('✅ Bottom controls shown after 5 second delay');
+                }
+            }, 5000);
+        };
+        
+        // Suppress alerts by overriding alert function
+        window.alert = function(message) {
+            console.log('🔇 Alert suppressed:', message);
+        };
+        
+        window.confirm = function(message) {
+            console.log('🔇 Confirm dialog suppressed:', message);
+            return true;
+        };
+        
+        window.prompt = function(message, defaultText) {
+            console.log('🔇 Prompt dialog suppressed:', message);
+            return defaultText || '';
+        };
+        
+        // Set globals.editMode to false when globals is available
+        var checkGlobals = setInterval(function() {
             if (typeof globals !== 'undefined') {
                 globals.editMode = false;
                 console.log('🔧 Set globals.editMode = false');
-            } else {
-                // Wait for globals to be available and then set editMode
-                var checkGlobals = setInterval(function() {
-                    if (typeof globals !== 'undefined') {
-                        globals.editMode = false;
-                        console.log('🔧 Set globals.editMode = false (delayed)');
-                        clearInterval(checkGlobals);
-                    }
-                }, 100);
+                clearInterval(checkGlobals);
             }
-        } else {
-            console.log('✏️  Edit mode enabled - full interface available');
-            
-            // Set globals.editMode when globals is available
-            if (typeof globals !== 'undefined') {
-                globals.editMode = true;
-                console.log('🔧 Set globals.editMode = true');
-            } else {
-                // Wait for globals to be available and then set editMode
-                var checkGlobals = setInterval(function() {
-                    if (typeof globals !== 'undefined') {
-                        globals.editMode = true;
-                        console.log('🔧 Set globals.editMode = true (delayed)');
-                        clearInterval(checkGlobals);
-                    }
-                }, 100);
-            }
-        }
+        }, 100);
         
-        console.log('🎲 Setting up random seed controls');
+        console.log('🎲 Setting up NFT data processing');
         
         // Sync window.nftData with local nftData if injected from server
         if (typeof window.nftData !== 'undefined' && window.nftData) {
@@ -277,11 +231,11 @@
                                 globals.pattern.loadSVG(svgUrl);
                                 console.log('✅ Embedded SVG pattern loading initiated successfully');
                                     
-                                // Set the maxFolding value for this pattern
-                                if (selectedPattern.maxFolding && globals.setMaxFolding) {
-                                    console.log('📏 Setting maxFolding to:', selectedPattern.maxFolding);
-                                    globals.setMaxFolding(selectedPattern.maxFolding);
-                                }
+                                    // Set the maxFolding value for this pattern
+                                    if (selectedPattern.maxFolding && globals.setMaxFolding) {
+                                        console.log('📏 Setting maxFolding to:', selectedPattern.maxFolding);
+                                        globals.setMaxFolding(selectedPattern.maxFolding);
+                                    }
                             } catch (importError) {
                                 console.error('❌ Error loading embedded SVG for pattern:', selectedPattern.name);
                                 console.error('  - Error message:', importError.message);
@@ -302,8 +256,8 @@
                         } else {
                             var reason = '';
                             if (typeof globals === 'undefined') reason = 'globals undefined';
-                            else if (!globals.importer) reason = 'importer not found';
-                            else if (typeof globals.importer.importSVG !== 'function') reason = 'importSVG not a function';
+                            else if (!globals.pattern) reason = 'pattern not found';
+                            else if (typeof globals.pattern.loadSVG !== 'function') reason = 'loadSVG not a function';
                             
                             console.warn('⚠️ Pattern loader not available (' + reason + '), proceeding with NFT processing anyway');
                             processNFTData(dataToProcess);
@@ -524,10 +478,6 @@
                 checkGlobals();
             }
         } // End processNFTData function
-
-        setTimeout(() => {
-            window.nftRenderComplete = true;
-        }, 2000);
 
     });
 </script>

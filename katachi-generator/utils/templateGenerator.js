@@ -105,51 +105,10 @@ async function generateModularTemplate(nftData) {
         
     } catch (error) {
         console.error('❌ Error generating modular template:', error);
-        
-        // Fall back to the build system approach
-        console.log('🔄 Falling back to build system...');
-        return await generateFromBuildSystem(nftData);
+        throw new Error(`EJS template generation failed: ${error.message}`);
     }
 }
 
-/**
- * Fallback method using the build system output
- * @param {Object} data - Full request data to process
- * @returns {string} - Generated HTML content
- */
-async function generateFromBuildSystem(data) {
-    try {
-        // First try the built template from dist
-        let builtTemplatePath = path.join(__dirname, '../dist/template.html');
-        
-        // If not found, try the public template
-        if (!fs.existsSync(builtTemplatePath)) {
-            builtTemplatePath = path.join(__dirname, '../public/template.html');
-        }
-        
-        if (!fs.existsSync(builtTemplatePath)) {
-            throw new Error('No template found - please run npm run build first');
-        }
-        
-        let html = fs.readFileSync(builtTemplatePath, 'utf8');
-        
-        // Prepare the data in the format expected by the template
-        const nftData = data.nftData || data;
-        const nftDataString = JSON.stringify(nftData);
-        
-        // Replace the NFT data placeholder
-        html = html.replace('___NFT_DATA_PLACEHOLDER___', nftDataString);
-        
-        console.log('✅ Template generated using build system fallback');
-        console.log(`📊 Generated HTML size: ${html.length} bytes`);
-        
-        return html;
-        
-    } catch (error) {
-        console.error('❌ Error in fallback template generation:', error);
-        throw new Error(`Template generation failed: ${error.message}`);
-    }
-}
 
 /**
  * Generate NFT template with complete data processing
@@ -222,16 +181,38 @@ async function generateNFTTemplate(data) {
  * @returns {string} - Test HTML template
  */
 async function generateTestTemplate() {
+    // Read actual test images and convert to base64
+    const testImagePaths = [
+        path.join(__dirname, '../public/textures/yatreda-1.png'),
+        path.join(__dirname, '../public/textures/thankyoux-theprocess.png'),
+        path.join(__dirname, '../public/assets/hyparStrain.png'),
+        path.join(__dirname, '../public/assets/foldedCraneSmall.png'),
+        path.join(__dirname, '../public/assets/flatcraneSmall.png')
+    ];
+    
+    const images = [];
+    for (let i = 0; i < testImagePaths.length; i++) {
+        const imagePath = testImagePaths[i];
+        if (fs.existsSync(imagePath)) {
+            const imageBuffer = fs.readFileSync(imagePath);
+            const imageExtension = path.extname(imagePath).substring(1);
+            const mimeType = imageExtension === 'png' ? 'image/png' : 'image/jpeg';
+            const base64Data = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+            
+            images.push({
+                name: path.basename(imagePath),
+                data: base64Data
+            });
+        }
+    }
+    
+    console.log(`✅ Test template: loaded ${images.length} real images for testing`);
+    
     const testData = {
         walletAddress: 'test-wallet-address',
         patternType: 'Crane',
         seed2: 'test-seed-' + Date.now(),
-        images: [
-            {
-                name: 'test-image-1.jpg',
-                data: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD...' // Sample base64
-            }
-        ]
+        images: images
     };
     
     return await generateNFTTemplate(testData);
@@ -240,6 +221,5 @@ async function generateTestTemplate() {
 module.exports = {
     generateModularTemplate,
     generateNFTTemplate,
-    generateFromBuildSystem,
     generateTestTemplate
 };

@@ -2,6 +2,8 @@
 require('dotenv').config();
 const http = require('http');
 const url = require('url');
+const path = require('path');
+const fs = require('fs');
 const { port, TESTING_MODE } = require('./config');
 
 // Import handlers
@@ -116,6 +118,22 @@ const server = http.createServer(async (req, res) => {
         // Serve NFT HTML files from temp directory for public preview
         else if (urlPath.startsWith('/temp/')) {
             await serveTempFile(req, res, urlPath);
+        }
+        // Serve thumbnail images from temp/thumbnails directory
+        else if (urlPath.startsWith('/thumbnails/')) {
+            const filename = urlPath.replace('/thumbnails/', '');
+            const thumbnailPath = path.join(__dirname, 'temp', 'thumbnails', filename);
+            
+            if (fs.existsSync(thumbnailPath)) {
+                const contentType = filename.endsWith('.png') ? 'image/png' : 'image/jpeg';
+                res.setHeader('Content-Type', contentType);
+                res.writeHead(200);
+                const stream = fs.createReadStream(thumbnailPath);
+                stream.pipe(res);
+            } else {
+                res.writeHead(404);
+                res.end('Thumbnail not found');
+            }
         }
         // Serve static files from public directory
         else {
