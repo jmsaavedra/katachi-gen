@@ -1,4 +1,10 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "xmcp build --vercel"
+  "buildCommand": "xmcp build --vercel",
+  "crons": [
+    {
+      "path": "/api/cron/keep-alive",
+      "schedule": "*/15 * * * *"
+    }
+  ]
 }
