@@ -1,7 +1,6 @@
 // Template generator using the new modular EJS system
 const fs = require('fs');
 const path = require('path');
-const ejs = require('ejs');
 
 /**
  * Generate HTML template using the modular EJS system
