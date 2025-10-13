@@ -324,17 +324,32 @@ lsof -ti:3001 | xargs kill -9
 # Or change PORT in katachi-generator/.env
 ```
 
-### Issue: "MCP Server connection failed"
+### Issue: "MCP Server connection failed" or "Error fetching nft data"
 ```bash
-# Check if production MCP server is up
-curl https://katachi-gen-mcp-server.vercel.app/health
+# The production MCP server may have rate limits or API key issues
+# Solution: Run MCP server locally
 
-# If down, you can run MCP server locally:
+# 1. Disable Redis in mcp-server/.env (comment out REDIS_URL)
+# 2. Start MCP server
 cd mcp-server
 npm install
 npm run dev
-# Then change MCP_SERVER_URL in public-site/.env.local to:
+
+# 3. Update public-site/.env.local to use local MCP:
 # MCP_SERVER_URL=http://localhost:3002/mcp
+
+# 4. Restart frontend to pick up new config
+```
+
+### Issue: Redis errors flooding MCP server logs
+```bash
+# Solution: Comment out REDIS_URL in mcp-server/.env
+# Edit mcp-server/.env and change:
+# REDIS_URL=rediss://...
+# to:
+# # REDIS_URL=rediss://...
+
+# MCP will work fine without Redis (just no caching)
 ```
 
 ### Issue: "Alchemy API rate limit exceeded"
