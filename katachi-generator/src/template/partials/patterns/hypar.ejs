@@ -1,0 +1,15 @@
+<!-- Hypar Origami Pattern SVG -->
+<script>
+// Hypar pattern configuration - complete hypar pattern
+const hyparPattern = {
+    maxFolding: 70, 
+    name: "hypar.svg", 
+    patternType: "Hypar",
+    svgContent: `<%- fs.readFileSync(path.join(projectRoot, 'public/svgs/hypar.svg'), 'utf8') %>`
+};
+
+// Export pattern for use in the template
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = hyparPattern;
+}
+</script>

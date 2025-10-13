@@ -5,9 +5,33 @@ type GetStackMedalsRequest = {
   userAddress: string;
 };
 
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS() {
+  return NextResponse.json({}, { status: 200 });
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const body: GetStackMedalsRequest = await request.json();
+    // Parse body with better error handling for empty requests
+    let body: GetStackMedalsRequest;
+    try {
+      const text = await request.text();
+      if (!text || text.trim() === '') {
+        console.warn('[get-stack-medals] Empty request body received, returning 400');
+        return NextResponse.json(
+          { error: 'Request body is required' },
+          { status: 400 }
+        );
+      }
+      body = JSON.parse(text);
+    } catch (e) {
+      console.error('[get-stack-medals] Invalid JSON in request body:', e);
+      return NextResponse.json(
+        { error: 'Invalid or empty request body' },
+        { status: 400 }
+      );
+    }
+
     const { userAddress } = body;
 
     if (!userAddress || !isAddress(userAddress)) {

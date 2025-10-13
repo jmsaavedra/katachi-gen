@@ -26,9 +26,11 @@ export function useStackMedals(userAddress: Address | undefined) {
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    if (!userAddress) {
+    // Early return if no valid address
+    if (!userAddress || userAddress.length < 42) {
       setData(null);
       setError(null);
+      setIsLoading(false);
       return;
     }
 
@@ -37,6 +39,7 @@ export function useStackMedals(userAddress: Address | undefined) {
     if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
       setData(cached.data);
       setError(null);
+      setIsLoading(false);
       return;
     }
 

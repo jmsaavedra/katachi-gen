@@ -114,18 +114,26 @@ async function serveTempFile(req, res, requestPath) {
         // Remove leading slash and extract filename from /temp/filename.html
         const cleanPath = requestPath.startsWith('/') ? requestPath.slice(1) : requestPath;
         
-        // Extract just the filename from temp/filename.html
-        const filename = cleanPath.replace('temp/', '');
+        // Extract path from temp/...
+        const tempPath = cleanPath.replace('temp/', '');
         
         // Security check: only allow .html files and no path traversal
-        if (!filename.endsWith('.html') || filename.includes('/') || filename.includes('\\') || filename.includes('..')) {
+        if (!tempPath.endsWith('.html') || tempPath.includes('..')) {
             res.writeHead(403);
             res.end('Access denied');
             return;
         }
         
-        // Construct path to temp file
-        const tempFilePath = path.join(__dirname, '..', 'temp', filename);
+        // Support both old (temp/file.html) and new (temp/html/file.html) structure
+        let tempFilePath;
+        if (tempPath.startsWith('html/')) {
+            // New structure: temp/html/filename.html
+            const filename = tempPath.replace('html/', '');
+            tempFilePath = path.join(__dirname, '..', 'temp', 'html', filename);
+        } else {
+            // Old structure: temp/filename.html (for backward compatibility)
+            tempFilePath = path.join(__dirname, '..', 'temp', tempPath);
+        }
         
         // Check if file exists
         if (!fs.existsSync(tempFilePath)) {
@@ -154,7 +162,7 @@ async function serveTempFile(req, res, requestPath) {
             }
         });
         
-        console.log('📄 Served NFT preview:', filename);
+        console.log('📄 Served NFT preview:', tempPath);
         
     } catch (error) {
         console.error('Error serving temp file:', error);
@@ -170,19 +178,46 @@ async function serveTempFile(req, res, requestPath) {
  */
 function cleanupTempFiles() {
     try {
-        const tempDir = path.join(__dirname, '..', 'temp');
-        const thumbnailsDir = path.join(__dirname, '..', 'thumbnails');
+        const tempHtmlDir = path.join(__dirname, '..', 'temp', 'html');
+        const tempDir = path.join(__dirname, '..', 'temp'); // For backward compatibility
+        const thumbnailsDir = path.join(__dirname, '..', 'temp', 'thumbnails');
         
         let totalDeleted = 0;
         const now = Date.now();
         const maxAge = 60 * 60 * 1000; // 60 minutes in milliseconds
         
-        // Clean temp HTML files
-        if (!fs.existsSync(tempDir)) {
-            console.log('🧹 Temp directory does not exist, creating it...');
-            fs.mkdirSync(tempDir, { recursive: true });
+        // Clean temp HTML files from new structure
+        if (!fs.existsSync(tempHtmlDir)) {
+            console.log('🧹 Temp HTML directory does not exist, creating it...');
+            fs.mkdirSync(tempHtmlDir, { recursive: true });
         } else {
-            const files = fs.readdirSync(tempDir);
+            const files = fs.readdirSync(tempHtmlDir);
+            let deletedCount = 0;
+            
+            for (const file of files) {
+                if (!file.endsWith('.html')) continue;
+                
+                const filePath = path.join(tempHtmlDir, file);
+                const stats = fs.statSync(filePath);
+                const age = now - stats.mtime.getTime();
+                
+                if (age > maxAge) {
+                    try {
+                        fs.unlinkSync(filePath);
+                        deletedCount++;
+                        console.log(`🗑️ Deleted old temp HTML: ${file} (${Math.round(age / 1000 / 60)} minutes old)`);
+                    } catch (error) {
+                        console.error(`❌ Failed to delete temp file ${file}:`, error.message);
+                    }
+                }
+            }
+            totalDeleted += deletedCount;
+            console.log(`🧹 Temp HTML cleanup: ${deletedCount} files deleted (${files.length} total checked)`);
+        }
+        
+        // Also clean old temp directory for backward compatibility
+        if (fs.existsSync(tempDir)) {
+            const files = fs.readdirSync(tempDir).filter(f => f.endsWith('.html'));
             let deletedCount = 0;
             
             for (const file of files) {

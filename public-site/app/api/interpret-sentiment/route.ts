@@ -1,6 +1,69 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const MCP_SERVER_URL = process.env.MCP_SERVER_URL || 'https://katachi-gen-mcp-server.vercel.app/mcp';
+const MAX_RETRIES = 2;
+const RETRY_DELAY_MS = 2000; // 2 seconds
+
+// Define the expected structure of the payload
+interface MCPPayload {
+  jsonrpc: string;
+  method: string;
+  params: {
+    name: string;
+    arguments: {
+      address: string;
+      sentiment: string;
+      count: number;
+    };
+  };
+  id: number;
+}
+
+// Helper function to make MCP request with retries for cold starts
+async function fetchMCPWithRetry(payload: MCPPayload, retries = MAX_RETRIES): Promise<Response> {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`[Attempt ${attempt}/${retries}] Calling MCP server...`);
+
+      const response = await fetch(MCP_SERVER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(30000), // 30 second timeout (Vercel Pro has longer limits)
+      });
+
+      // If successful, return immediately
+      if (response.ok) {
+        console.log(`✅ MCP server responded successfully on attempt ${attempt}`);
+        return response;
+      }
+
+      // If it's a server error and we have retries left, try again
+      if (response.status >= 500 && attempt < retries) {
+        console.warn(`⚠️ MCP server error (${response.status}), retrying in ${RETRY_DELAY_MS}ms...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+        continue;
+      }
+
+      // Otherwise return the response (will be handled by error logic)
+      return response;
+
+    } catch (error: unknown) {  // Changed from implicit 'any' to 'unknown'
+      // Handle timeout or network errors
+      if (attempt < retries) {
+        console.warn(`⚠️ Request failed: ${error instanceof Error ? error.message : 'Unknown error'}. Retrying in ${RETRY_DELAY_MS}ms...`);
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new Error('Max retries exceeded');
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,8 +76,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Make request to MCP server
-    const payload = {
+    // Make request to MCP server with retry logic
+    const payload: MCPPayload = {
       jsonrpc: '2.0',
       method: 'tools/call',
       params: {
@@ -30,14 +93,7 @@ export async function POST(request: NextRequest) {
 
     console.log('Calling MCP server with payload:', payload);
 
-    const response = await fetch(MCP_SERVER_URL, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+    const response = await fetchMCPWithRetry(payload);
 
     if (!response.ok) {
       console.error('MCP server error:', response.status, response.statusText);
@@ -67,24 +123,12 @@ export async function POST(request: NextRequest) {
         console.error('Raw text was:', data.result.content[0].text);
         throw new Error('Invalid JSON response from MCP server');
       }
-    } else {
-      console.error('Unexpected MCP response format:', JSON.stringify(data, null, 2));
-      throw new Error('Invalid MCP response format');
     }
-
-    // Check if the result indicates an error
-    if (result.error) {
-      return NextResponse.json(
-        { error: true, message: result.message },
-        { status: 500 }
-      );
-    }
-
     return NextResponse.json(result);
-  } catch (error) {
+  } catch (error: unknown) {  // Changed from implicit 'any' to 'unknown'
     console.error('Error in interpret-sentiment API:', error);
     console.log('Falling back to basic interpretation due to MCP server error');
-    
+
     // Fallback: return a basic response when MCP server is down
     const { address, sentiment, count } = await request.json();
     const fallbackResponse = {

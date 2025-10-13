@@ -77,20 +77,24 @@ module.exports = {
       {
         test: /\.svg$/,
         use: 'raw-loader',
-      },
+      }
     ],
   },
   plugins: [
-    // Comment out HtmlWebpackPlugin since EJS build handles template generation
-    // The build-ejs.js script already creates the complete HTML file
-    // new HtmlWebpackPlugin({
-    //   template: './public/generated-index.html',
-    //   filename: 'template.html',
-    //   inject: false,
-    //   minify: false,
-    // }),
-    // Skip InlineSourcePlugin for now as it causes issues with large files
-    // new InlineSourcePlugin(),
+    new HtmlWebpackPlugin({
+      template: './public/index.html',
+      filename: 'template.html',
+      inject: 'head',
+      minify: false,
+      // EJS support: To enable EJS templating, change template to .ejs file
+      // and add templateParameters for variable injection
+      templateParameters: {
+        // Template variables ready for EJS conversion
+        title: 'Katachi Gen',
+        nftDataPlaceholder: '___NFT_DATA_PLACEHOLDER___'
+      }
+    }),
+    new InlineSourcePlugin(),
   ],
   optimization: {
     splitChunks: false, // すべてを1つのファイルにまとめる

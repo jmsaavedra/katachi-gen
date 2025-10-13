@@ -407,3 +407,46 @@ katachi-generator/
 - Suggest new NFTs based on collection sentiment patterns
 - Cross-collection theme analysis
 - Marketplace integration for purchase suggestions
+
+# Katachi Gen - TODO & Development Roadmap
+
+## ✅ Completed Features
+
+### Core Generation System
+- [x] **Modular EJS Template System** (FULLY IMPLEMENTED & OPERATIONAL)
+  - Self-contained HTML generation with no external dependencies
+  - Inline template functions in `/katachi-generator/generator/generateNFT.js`
+  - Base64 image embedding for complete portability
+  - Seeded randomness for deterministic generation
+  - Texture mapping with NFT images applied to origami faces
+  - Animation controls with slider-based folding
+  - NFT display mode that hides navigation/controls for minting
+  - R2 and Arweave uploads working correctly for both HTML and thumbnails
+
+### File Cleanup
+- [x] **Old Template File Removal**
+  - Removed unused template files from `/katachi-generator/public/`:
+    - Deleted `generated-index.html` (1.8MB)
+    - Deleted `index-backup.html` (305KB)
+    - Deleted `template.html` (1.7MB - old monolithic template)
+    - Deleted `test.html` (24KB)
+  - Total cleanup: ~3.8MB of unused files removed
+
+## 🔄 In Progress
+
+### Infrastructure & Deployment
+- [ ] **File Cleanup System Enhancement**
+  - Issue: Thumbnail file (`/public/thumbnail.png`) not being cleaned up after generation
+  - Temporary HTML files in `/temp/html/` are cleaned up properly
+  - R2 and Arweave uploads working correctly
+  - Fix needed in: `/katachi-generator/routes/cleanup.js`
+
+## 📋 Backlog
+
+### Documentation
+- [ ] Add comprehensive EJS template system documentation
+  - Template structure and component responsibilities
+  - Data flow and compilation process
+  - How to add new template components
+  - Base64 embedding process
+  - Self-contained HTML architecture

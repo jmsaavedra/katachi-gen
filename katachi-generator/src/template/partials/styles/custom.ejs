@@ -1,0 +1,19 @@
+<!-- Inline main.css file content -->
+<style>
+<%= mainCSS %>
+
+/* Custom CSS Styles */
+
+/* Styles for non-edit mode */
+.edit-mode-disabled #globalNav {
+    display: none !important;
+}
+
+.edit-mode-disabled body {
+    padding-top: 0 !important; /* Remove top padding when nav is hidden */
+}
+
+.edit-mode-disabled .main-content {
+    margin-top: 0 !important; /* Adjust main content position */
+}
+</style>

@@ -1,0 +1,45 @@
+<head>
+    <!-- Basic meta tags -->
+    <meta charset="UTF-8">
+    <title>Katachi Gen</title>
+    
+    <!-- Viewport configuration for responsive design -->
+    <meta name="viewport" content="width=400">
+    
+    <!-- External library CSS includes -->
+    <style><%= jqueryUICSS %></style>
+    
+    <!-- Bootstrap CSS -->
+    <%- include('styles/bootstrap') %>
+    
+    <!-- Custom CSS styles -->
+    <%- include('styles/custom') %>
+    
+    <!-- Animation styles -->
+    <%- include('styles/animations') %>
+    
+    <!-- 
+    TODO: During content migration, extract:
+    - Meta tags from original template
+    - Link tags for external stylesheets
+    - Any additional head elements
+    -->
+    
+    <!-- NFT Data and Configuration Script -->
+    <!-- This will contain the main data object and initialization -->
+    <script>
+        // Global variables for NFT rendering
+        window.nftRenderComplete = false;
+        
+        // NFT data will be injected here during generation
+        const nftData = <%- nftData %>;
+        
+        // Edit mode configuration
+        const editMode = false;
+        window.editMode = editMode;
+        
+        // Origami patterns will be loaded from the patterns directory
+        // Declared as let to allow reassignment later
+        let origamiPatterns = [];
+    </script>
+</head>
