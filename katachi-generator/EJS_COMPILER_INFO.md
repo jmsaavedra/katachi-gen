@@ -1,304 +1,142 @@
-# EJS Compiler System Documentation
+# EJS Template System Documentation
 
 ## Overview
 
-The EJS (Embedded JavaScript) compiler system generates self-contained HTML files for NFT origami artwork. It takes user-uploaded images and selected origami patterns, then compiles them into complete, portable HTML files with embedded 3D rendering capabilities.
+The EJS template system generates self-contained HTML files for NFT origami artwork. **Unlike traditional EJS systems with separate `.ejs` template files, this system uses inline JavaScript template literal functions** defined directly in `generateNFT.js`. The system takes user-uploaded images and selected origami patterns, then compiles them into complete, portable HTML files with embedded 3D rendering capabilities.
 
 ## Core Architecture
 
-### **Template Structure**
+### **Actual Implementation**
+The template system uses **inline JavaScript functions** that return template strings, NOT separate EJS files:
+
+```javascript
+// All templates are JavaScript functions in generateNFT.js
+function generateNFTStyles() { return `<style>...</style>`; }
+function generateNFTLibraries() { return `<script>...</script>`; }
+function generateNFTScripts() { return `<script>...</script>`; }
+function generateNFTData(nftData) { return `<script>const nftData = ${JSON.stringify(nftData)};</script>`; }
 ```
-src/template/
-├── index.ejs                    # Main template entry point
-└── partials/
-    ├── head.ejs                 # HTML head section
-    ├── body-content.ejs         # Main body structure
-    ├── patterns/
-    │   ├── index.ejs            # Pattern aggregator
-    │   ├── airplane.ejs         # Airplane pattern definition
-    │   ├── crane.ejs            # Crane pattern definition
-    │   ├── hypar.ejs            # Hypar pattern definition
-    │   ├── pinwheel.ejs         # Pinwheel pattern definition
-    │   └── flower.ejs           # Flower pattern definition
-    ├── scripts/
-    │   ├── libraries.ejs        # All JavaScript libraries
-    │   ├── simulation.ejs       # Origami simulation logic
-    │   ├── origami.ejs          # Core origami rendering
-    │   ├── interactions.ejs     # User interaction handlers
-    │   ├── three-setup.ejs      # Three.js initialization
-    │   └── shaders.ejs          # WebGL shaders
-    └── styles/
-        ├── bootstrap.ejs        # Bootstrap CSS framework
-        ├── custom.ejs           # Custom styling
-        └── animations.ejs       # Animation CSS
-```
+
+**There is NO separate template directory structure.** All template generation happens within `/katachi-generator/generator/generateNFT.js` using template literal functions.
 
 ## Template Generation Process
 
 ### **1. Input Processing**
-The `generateNFTTemplate()` function accepts:
+The `generateHTML()` function accepts:
 ```javascript
 {
     walletAddress: "0x...",           // User's wallet address
     patternType: "flower",            // Selected origami pattern
     seed2: "random-seed",             // Randomization seed
-    images: [                         // Array of 5 base64-encoded images
-        {
-            name: "image1.jpg",
-            data: "data:image/jpeg;base64,..."
-        }
-        // ... 4 more images
+    images: [                         // Array of base64-encoded images
+        "data:image/jpeg;base64,..."
     ],
-    forMinting: false,                // Production vs test mode
-    testInterface: true               // Called from test.html
+    forMinting: false                 // Production vs test mode
 }
 ```
 
-### **2. Data Structure Creation**
-Transforms input into standardized NFT data structure:
-```javascript
-const nftData = {
-    walletAddress: "0x...",
-    patternType: "flower",
-    seed2: "random-seed",
-    images: [...],                    // Base64 image data
-    generatedAt: "2025-01-07T...",    // ISO timestamp
-    templateVersion: "2.0-modular",   // EJS system version
-    metadata: {
-        imageCount: 5,
-        forMinting: false,
-        testMode: true
-    }
-};
-```
+### **2. Template Assembly**
+The HTML is assembled by calling inline functions and concatenating strings:
 
-### **3. EJS Compilation**
-Uses `ejs.renderFile()` with template data:
 ```javascript
-const templateData = {
-    nftData: JSON.stringify(nftData), // Embedded as JSON string
-    jqueryUICSS: "...",               // Inline CSS content
-    mainCSS: "...",                   // Custom CSS content
-    title: "Katachi Gen",
-    testMode: boolean,
-    fs: fs,                           // File system access
-    path: path,                       # Path utilities
-    projectRoot: "/path/to/project",  // Root directory
-    readFile: (filePath) => {...},   // File reading utility
-    inlineAsset: (assetPath) => {...} // Asset inlining utility
-};
+const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    ${generateNFTStyles()}
+</head>
+<body>
+    ${generateNFTData(nftData)}
+    ${generateNFTLibraries()}
+    ${generateNFTScripts()}
+</body>
+</html>
+`;
 ```
 
 ## JavaScript Library Embedding
 
 ### **Complete Library Stack**
-The EJS system embeds these libraries using `fs.readFileSync()`:
+The inline functions embed these libraries using `fs.readFileSync()`:
 
 **Core Libraries:**
-- **jQuery 3.2.1** (`jquery-3.2.1.min.js`) - DOM manipulation
-- **jQuery UI** (`jquery-ui.min.js`) - UI components
-- **Bootstrap/Flat-UI** (`flat-ui.min.js`) - UI framework
+- **jQuery 3.2.1** - DOM manipulation
+- **jQuery UI** - UI components  
+- **Bootstrap/Flat-UI** - UI framework
 
 **3D Graphics Stack:**
-- **Three.js** (`three.min.js`) - Complete 3D rendering engine
-- **TrackballControls** (`TrackballControls.js`) - Camera controls
-- **SVGLoader** (`SVGLoader.js`) - SVG pattern loading
-- **WebVR** (`WebVR.js`) - VR support
+- **Three.js** - Complete 3D rendering engine
+- **TrackballControls** - Camera controls
+- **SVGLoader** - SVG pattern loading
+- **WebVR** - VR support
 
 **Origami-Specific:**
-- **Underscore.js** (`underscore-min.js`) - Utility functions
-- **Earcut** (`earcut.js`) - Polygon triangulation
-- **Fold.js** (`fold.js`) - Origami fold processing
+- **Underscore.js** - Utility functions
+- **Earcut** - Polygon triangulation
+- **Fold.js** - Origami fold processing
 
 ### **Embedding Process**
 ```javascript
-// Example from libraries.ejs
-<script type="text/javascript">
-<%- fs.readFileSync(path.join(projectRoot, 'public/js/three.min.js'), 'utf8') %>
-</script>
+// Example from generateNFTLibraries() function
+function generateNFTLibraries() {
+    const jqueryPath = path.join(__dirname, '../public/js/jquery-3.2.1.min.js');
+    const jqueryContent = fs.readFileSync(jqueryPath, 'utf8');
+    
+    return `<script>${jqueryContent}</script>`;
+}
 ```
 
 ## Origami Pattern System
 
 ### **Pattern Definition Structure**
-Each pattern file (e.g., `flower.ejs`) defines:
-```javascript
-const flowerPattern = {
-    maxFolding: 70,                   // Maximum fold percentage
-    name: "FTpoly7.svg",              // Pattern file name
-    patternType: "Flower",            // Pattern type identifier
-    svgContent: `<svg xmlns="...">    // Complete SVG geometry
-        <line stroke="#000" opacity="1" x1="10000" y1="3660" 
-              x2="10000" y2="5000" stroke-width="33.33"/>
-        <!-- Hundreds more line elements -->
-    </svg>`
-};
-```
+Patterns are defined as JavaScript objects within the `generateNFTScripts()` function:
 
-### **Pattern Aggregation**
-The `patterns/index.ejs` combines all patterns:
 ```javascript
-// Import all pattern definitions
-<%- include('./airplane.ejs') %>
-<%- include('./crane.ejs') %>
-<%- include('./hypar.ejs') %>
-<%- include('./pinwheel.ejs') %>
-<%- include('./flower.ejs') %>
-
-// Create global patterns array
-origamiPatterns = [
-    airplanePattern,
-    cranePattern,
-    hyparPattern,
-    pinwheelPattern,
-    flowerPattern
+const origamiPatterns = [
+    {
+        maxFolding: 70,
+        name: "FTpoly7.svg",
+        patternType: "Flower",
+        svgContent: `<svg xmlns="...">
+            <line stroke="#000" opacity="1" x1="10000" y1="3660" x2="10000" y2="5000"/>
+            <!-- More line elements -->
+        </svg>`
+    },
+    // ... more patterns
 ];
 ```
 
 ### **Available Patterns**
+All patterns are embedded inline in the generated HTML:
 1. **Airplane**: Classic paper airplane with clean fold lines
 2. **Crane**: Traditional Japanese crane with intricate folding
 3. **Hypar**: Hyperbolic paraboloid mathematical form
 4. **Pinwheel**: Radial pattern with spinning motion effect
 5. **Flower**: Petal-like formations with complex geometry
 
-## Pattern Definition System
-
-### **Individual Pattern Files**
-Each origami pattern is defined in its own EJS file with complete SVG geometry:
-
-**File Structure**:
-```
-src/template/partials/patterns/
-├── airplane.ejs    - airplanePattern object
-├── crane.ejs       - cranePattern object  
-├── hypar.ejs       - hyparPattern object
-├── pinwheel.ejs    - pinwheelPattern object
-├── flower.ejs      - flowerPattern object
-└── index.ejs       - Aggregates all patterns
-```
-
-### **Pattern Object Structure**
-Each pattern file defines a JavaScript object with this structure:
-```javascript
-const flowerPattern = {
-    maxFolding: 70,                    // Maximum fold percentage for animation
-    name: "FTpoly7.svg",               // Original pattern filename reference
-    patternType: "Flower",             // Type identifier (matches user selection)
-    svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1000 -1000 12000 12000">
-        <line stroke="#000" opacity="1" x1="10000" y1="3660" x2="10000" y2="5000" stroke-width="33.33"/>
-        <line stroke="#000" opacity="1" x1="10000" y1="5000" x2="9999" y2="6339" stroke-width="33.33"/>
-        <line stroke="#f00" opacity="1" x1="666" y1="486" x2="486" y2="486" stroke-width="2.88"/>
-        <!-- Hundreds more <line> elements defining fold geometry -->
-    </svg>`
-};
-```
-
-### **SVG Geometry Format**
-The `svgContent` contains the origami crease pattern as SVG `<line>` elements:
-
-**Stroke Colors Indicate Fold Types**:
-- **`stroke="#000"`** (Black): Mountain folds or cut lines
-- **`stroke="#f00"`** (Red): Valley folds or fold guidelines
-- **`stroke="#00f"`** (Blue): Alternative fold indicators (pattern-specific)
-
-**Coordinate System**:
-- Uses SVG coordinate space (typically -1000 to 12000 range)
-- Each line defined by start point `(x1,y1)` and end point `(x2,y2)`
-- `stroke-width` determines line thickness for rendering
-
-**Example Line Elements**:
-```svg
-<line stroke="#000" opacity="1" x1="10000" y1="3660" x2="10000" y2="5000" stroke-width="33.33"/>
-<!-- Mountain fold: vertical line from (10000,3660) to (10000,5000) -->
-
-<line stroke="#f00" opacity="1" x1="666" y1="486" x2="486" y2="486" stroke-width="2.88"/>
-<!-- Valley fold: horizontal line from (666,486) to (486,486) -->
-```
-
-### **Adding New Patterns**
-
-**1. Create Pattern File**:
-Create `src/template/partials/patterns/newpattern.ejs`:
-```javascript
-const newpatternPattern = {
-    maxFolding: 100,
-    name: "newpattern.svg",
-    patternType: "NewPattern",
-    svgContent: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000">
-        <!-- Define your fold lines here -->
-        <line stroke="#000" x1="0" y1="500" x2="1000" y2="500" stroke-width="2"/>
-        <line stroke="#f00" x1="500" y1="0" x2="500" y2="1000" stroke-width="2"/>
-    </svg>`
-};
-```
-
-**2. Register in Index**:
-Add to `src/template/partials/patterns/index.ejs`:
-```javascript
-<%- include('./newpattern.ejs') %>
-
-origamiPatterns = [
-    airplanePattern,
-    cranePattern,
-    hyparPattern,
-    pinwheelPattern,
-    flowerPattern,
-    newpatternPattern  // Add your new pattern
-];
-```
-
-**3. Update Test Interface**:
-Add pattern option to `public/index.html` origamiPatterns array:
-```javascript
-{ 
-    type: 'newpattern', 
-    name: 'New Pattern', 
-    description: 'Description of your pattern',
-    icon: '📐'
-}
-```
-
-### **Pattern Source Origins**
-The SVG geometry in these files represents:
-- **Fold lines**: Mountain and valley creases that define the origami structure
-- **Cut lines**: Boundaries or edges of the paper
-- **Guidelines**: Helper lines for complex folding sequences
-
-These coordinates are typically derived from:
-- Origami crease pattern diagrams
-- Mathematical fold simulations
-- Hand-drawn patterns converted to SVG format
-- Computational origami design software output
-
-### **Modifying Existing Patterns**
-To modify a pattern's geometry:
-1. Edit the `svgContent` string in the appropriate `.ejs` file
-2. Adjust `<line>` coordinates to change fold positions
-3. Modify `stroke` colors to change fold types (mountain/valley)
-4. Update `maxFolding` value to change animation range
-5. Test in development by selecting the pattern in the interface
-
-**Important**: Pattern modifications require understanding of origami mathematics and SVG coordinate systems. Invalid geometry may result in non-foldable or visually incorrect 3D models.
+### **Pattern Selection**
+Pattern is selected based on `patternType` parameter and embedded in the output HTML.
 
 ## CSS and Styling System
 
 ### **Inline CSS Embedding**
-The template system reads and embeds CSS files:
-```javascript
-// From templateGenerator.js
-const jqueryUICSS = fs.readFileSync(jqueryUICSSPath, 'utf8');
-const mainCSS = fs.readFileSync(mainCSSPath, 'utf8');
+CSS is embedded via the `generateNFTStyles()` function:
 
-// Made available to templates
-templateData.jqueryUICSS = jqueryUICSS;
-templateData.mainCSS = mainCSS;
+```javascript
+function generateNFTStyles() {
+    const jqueryUICSS = fs.readFileSync('./public/css/jquery-ui.min.css', 'utf8');
+    const mainCSS = fs.readFileSync('./public/css/main.css', 'utf8');
+    
+    return `
+        <style>${jqueryUICSS}</style>
+        <style>${mainCSS}</style>
+    `;
+}
 ```
 
 ### **CSS Files Included**
 - **jquery-ui.min.css**: jQuery UI component styling
 - **main.css**: Custom origami application styles
-- Additional CSS partials from `styles/` directory
 
 ## Output Generation
 
