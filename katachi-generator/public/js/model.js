@@ -544,10 +544,10 @@ function initModel(globals){
         if (!fold || !fold.vertices_coords) {
             console.warn("❌ No fold data available for consistent UV mapping");
             // console.log("🔍 Available globals:", {
-                cellColorizerFoldData: !!globals.cellColorizerFoldData,
-                globalsFold: !!globals.fold,
-                cellColorizerTransformParams: !!globals.cellColorizerTransformParams
-            });
+            //     cellColorizerFoldData: !!globals.cellColorizerFoldData,
+            //     globalsFold: !!globals.fold,
+            //     cellColorizerTransformParams: !!globals.cellColorizerTransformParams
+            // });
             return;
         }
         
@@ -698,9 +698,9 @@ function initModel(globals){
             if (!fold || !fold.vertices_coords) {
                 console.warn("❌ No fold data available for updateFaceBasedUVs");
                 // console.log("🔍 Available globals for updateFaceBasedUVs:", {
-                    cellColorizerFoldData: !!globals.cellColorizerFoldData,
-                    globalsFold: !!globals.fold
-                });
+                //     cellColorizerFoldData: !!globals.cellColorizerFoldData,
+                //     globalsFold: !!globals.fold
+                // });
                 return;
             }
             

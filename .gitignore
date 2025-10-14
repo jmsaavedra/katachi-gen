@@ -187,3 +187,4 @@ assets/**/*.mp4
 # katachi-generator generated files
 katachi-generator/temp/
 katachi-generator/public/generated-index.html
+katachi-generator/logs-debug/
