@@ -5,6 +5,7 @@ const sharp = require('sharp');
 const https = require('https');
 const http = require('http');
 const { THUMB_WIDTH, THUMB_HEIGHT } = require('../config');
+const { getNFTWithRaribleImages, getBestImageUrl } = require('../utils/raribleClient');
 
 /**
  * Save thumbnail to file
@@ -155,6 +156,50 @@ function downloadWithStrategy(imageUrl, options) {
 }
 
 /**
+ * Extract contract address and token ID from NFT image URL
+ * Supports IPFS and HTTP URLs with various formats
+ */
+function parseNFTInfoFromUrl(imageUrl, metadata = {}) {
+    // Try to extract from metadata if available
+    if (metadata.contractAddress && metadata.tokenId) {
+        return {
+            contractAddress: metadata.contractAddress,
+            tokenId: metadata.tokenId
+        };
+    }
+
+    // Common NFT URL patterns:
+    // ipfs://bafybei.../123.gif -> token ID might be in filename
+    // https://nft.storage/.../metadata.json
+    // For now, return null - caller must provide contract/tokenId explicitly
+    return null;
+}
+
+/**
+ * Try to fetch optimized image from Rarible API
+ * @param {string} contractAddress - NFT contract address
+ * @param {string} tokenId - NFT token ID
+ * @returns {Promise<string|null>} Optimized image URL or null if not available
+ */
+async function getOptimizedImageFromRarible(contractAddress, tokenId) {
+    try {
+        const nftData = await getNFTWithRaribleImages(contractAddress, tokenId);
+        const optimizedUrl = getBestImageUrl(nftData.images);
+
+        if (optimizedUrl) {
+            console.log(`✅ Using Rarible optimized image: ${optimizedUrl.slice(0, 80)}...`);
+            return optimizedUrl;
+        }
+
+        console.log(`⚠️ No optimized images found in Rarible, falling back to direct download`);
+        return null;
+    } catch (error) {
+        console.warn(`⚠️ Rarible API failed: ${error.message}, falling back to direct download`);
+        return null;
+    }
+}
+
+/**
  * Download image as base64 with retry logic
  */
 async function downloadImageAsBase64(imageUrl, maxRetries = 3) {
@@ -202,29 +247,46 @@ async function downloadImageAsBase64(imageUrl, maxRetries = 3) {
 
 /**
  * Process images as base64 for embedding
+ * Tries to use Rarible optimized thumbnails first, falls back to direct download
  */
 async function processImagesAsBase64(data) {
     console.log('🎨 Processing images for base64 embedding...');
-    
+
     // Create a deep copy to avoid modifying original data
     const processedData = JSON.parse(JSON.stringify(data));
-    
+
     // Process main images array
     if (processedData.images && Array.isArray(processedData.images)) {
         console.log(`📋 Processing ${processedData.images.length} images`);
-        
+
         for (let i = 0; i < processedData.images.length; i++) {
             const image = processedData.images[i];
             if (image.url) {
                 try {
                     console.log(`🔄 Processing image ${i + 1}/${processedData.images.length}: ${image.url.slice(0, 50)}...`);
-                    
-                    const downloadResult = await downloadImageAsBase64(image.url);
+
+                    let imageUrlToDownload = image.url;
+                    let usedRarible = false;
+
+                    // Try Rarible first if we have contract and token info
+                    if (image.contractAddress && image.tokenId) {
+                        console.log(`🔍 Attempting to fetch optimized image from Rarible for ${image.contractAddress}:${image.tokenId}`);
+                        const raribleUrl = await getOptimizedImageFromRarible(image.contractAddress, image.tokenId);
+                        if (raribleUrl) {
+                            imageUrlToDownload = raribleUrl;
+                            usedRarible = true;
+                            image.source = 'rarible';
+                        }
+                    } else {
+                        console.log(`⚠️ No contract/token info for image ${i + 1}, using direct download`);
+                    }
+
+                    const downloadResult = await downloadImageAsBase64(imageUrlToDownload);
                     const base64String = downloadResult.buffer.toString('base64');
-                    
+
                     // Determine MIME type from URL or default to PNG
                     let mimeType = 'image/png';
-                    const urlLower = image.url.toLowerCase();
+                    const urlLower = imageUrlToDownload.toLowerCase();
                     if (urlLower.includes('.jpg') || urlLower.includes('.jpeg')) {
                         mimeType = 'image/jpeg';
                     } else if (urlLower.includes('.gif')) {
@@ -232,15 +294,16 @@ async function processImagesAsBase64(data) {
                     } else if (urlLower.includes('.webp')) {
                         mimeType = 'image/webp';
                     }
-                    
+
                     // Store both original URL and base64
                     image.originalUrl = image.url;
                     image.url = `data:${mimeType};base64,${base64String}`;
                     image.size = downloadResult.size;
                     image.compressedSize = downloadResult.compressedSize;
-                    
-                    console.log(`✅ Image ${i + 1} processed: ${downloadResult.size} → ${downloadResult.compressedSize} bytes`);
-                    
+                    image.usedRarible = usedRarible;
+
+                    console.log(`✅ Image ${i + 1} processed${usedRarible ? ' (via Rarible)' : ''}: ${downloadResult.size} → ${downloadResult.compressedSize} bytes`);
+
                 } catch (error) {
                     console.error(`❌ Failed to process image ${i + 1}: ${error.message}`);
                     // Keep original URL as fallback
@@ -249,15 +312,16 @@ async function processImagesAsBase64(data) {
             }
         }
     }
-    
+
     // Add processing metadata
     processedData.imageStats = {
         totalImages: processedData.images?.length || 0,
         processedImages: processedData.images?.filter(img => img.url && img.url.startsWith('data:')).length || 0,
         failedImages: processedData.images?.filter(img => img.error).length || 0,
+        raribleOptimized: processedData.images?.filter(img => img.usedRarible).length || 0,
         timestamp: new Date().toISOString()
     };
-    
+
     console.log('🎨 Image processing completed:', processedData.imageStats);
     return processedData;
 }
@@ -267,5 +331,6 @@ module.exports = {
     compressImage,
     downloadWithStrategy,
     downloadImageAsBase64,
-    processImagesAsBase64
+    processImagesAsBase64,
+    getOptimizedImageFromRarible
 };
