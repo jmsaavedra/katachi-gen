@@ -52,13 +52,13 @@ function initThreeView(globals) {
         
         // Optimized lighting for clear texture visibility without white blown-out highlights
         // Using global lighting settings for adjustable parameters
-        
+
         // Debug: Log current lighting settings
-        console.log("🔧 ThreeView: Initializing lighting with globals settings:");
-        console.log("- frontMain intensity:", globals.lighting.frontMain.intensity);
-        console.log("- frontDetail1 intensity:", globals.lighting.frontDetail1.intensity);
-        console.log("- frontDetail2 intensity:", globals.lighting.frontDetail2.intensity);
-        console.log("- ambient intensity:", globals.lighting.ambient.intensity);
+        // console.log("🔧 ThreeView: Initializing lighting with globals settings:");
+        // console.log("- frontMain intensity:", globals.lighting.frontMain.intensity);
+        // console.log("- frontDetail1 intensity:", globals.lighting.frontDetail1.intensity);
+        // console.log("- frontDetail2 intensity:", globals.lighting.frontDetail2.intensity);
+        // console.log("- ambient intensity:", globals.lighting.ambient.intensity);
         
         // Main front light for texture clarity - globals.jsから値を読み取り
         lights.frontMain = new THREE.DirectionalLight(0xffffff, globals.lighting.frontMain.intensity);
@@ -115,8 +115,8 @@ function initThreeView(globals) {
         // Enhanced ambient light for better overall visibility
         lights.ambient = new THREE.AmbientLight(0xffffff, globals.lighting.ambient.intensity);
         scene.add(lights.ambient);
-        
-        console.log("✅ ThreeView: Lighting initialization completed");
+
+        // console.log("✅ ThreeView: Lighting initialization completed");
         //scene.fog = new THREE.FogExp2(0xf4f4f4, 1.7);
         //renderer.setClearColor(scene.fog.color);
 
