@@ -125,8 +125,72 @@ Current configuration: These won't trigger builds. If you need them to, modify t
 git diff HEAD^ HEAD --quiet -- public-site/ .gitignore README.md
 ```
 
+## Related Projects Configuration
+
+Since `public-site` makes HTTP calls to `mcp-server`, we've configured them as Related Projects in Vercel. This provides automatic environment variable sharing for preview and production deployments.
+
+### Configuration Files
+
+**public-site/vercel.json:**
+```json
+{
+  "relatedProjects": ["prj_EYMS10jLH1DLF0nMJcawNa743OfF"]
+}
+```
+
+**mcp-server/vercel.json:**
+```json
+{
+  "relatedProjects": ["prj_h38FV306nWJUA6A66REbtT5iUmOc"]
+}
+```
+
+### How to Use Related Projects URLs
+
+After deploying with this configuration, Vercel automatically exposes related project URLs via environment variables.
+
+**Option 1: Using @vercel/related-projects package (Recommended)**
+
+Install in public-site:
+```bash
+npm install @vercel/related-projects
+```
+
+Then in your API routes:
+```typescript
+import { withRelatedProject } from '@vercel/related-projects';
+
+const mcpServerUrl = withRelatedProject({
+  projectName: 'katachi-gen-mcp-server',
+  defaultHost: 'http://localhost:3002/mcp'
+});
+```
+
+**Option 2: Using VERCEL_URL directly (Simpler)**
+
+Access via environment variable:
+```typescript
+const mcpServerUrl = process.env.VERCEL_URL_katachi_gen_mcp_server
+  || process.env.MCP_SERVER_URL
+  || 'http://localhost:3002/mcp';
+```
+
+**Option 3: Manual configuration (Current approach)**
+
+Keep using `MCP_SERVER_URL` environment variable, but update it in Vercel dashboard for each environment:
+- **Production**: `https://katachi-gen-mcp-server.vercel.app/mcp`
+- **Preview**: Set per branch if needed
+- **Development**: `http://localhost:3002/mcp` (in `.env.local`)
+
+### Benefits
+
+✅ **Automatic preview coordination** - Preview branches automatically connect to the right services
+✅ **Simplified configuration** - Less manual environment variable management
+✅ **Safer testing** - Preview deployments don't accidentally hit production APIs
+
 ## Resources
 
 - [Vercel Monorepos Documentation](https://vercel.com/docs/monorepos)
+- [Vercel Related Projects](https://vercel.com/docs/monorepos#define-related-projects)
 - [Ignored Build Step Guide](https://vercel.com/guides/how-do-i-use-the-ignored-build-step-field-on-vercel)
 - [Git Settings Configuration](https://vercel.com/docs/project-configuration/git-settings#ignored-build-step)

@@ -1,6 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "xmcp build --vercel",
+  "relatedProjects": ["prj_h38FV306nWJUA6A66REbtT5iUmOc"],
   "crons": [
     {
       "path": "/api/cron/keep-alive",
