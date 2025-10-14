@@ -300,32 +300,32 @@ function initCellColorizer(globals) {
             
             // Calculate how many cells per texture
             const cellsPerTexture = Math.ceil(faces.length / numTextures);
-            console.log("Cells per texture:", cellsPerTexture);
-            
+            // console.log("Cells per texture:", cellsPerTexture);
+
             // Get bounding box
             const bbox = getBoundingBox(vertices);
-            console.log("📊 CellColorizer texture mapping bounding box:", bbox);
-            
+            // console.log("📊 CellColorizer texture mapping bounding box:", bbox);
+
             const width = bbox.maxX - bbox.minX;
             const height = bbox.maxZ - bbox.minZ;
-            
-            console.log("📊 CellColorizer texture mapping pattern dimensions:", width.toFixed(3), "x", height.toFixed(3));
-            console.log("📊 CellColorizer vertices count:", vertices.length);
-            
+
+            // console.log("📊 CellColorizer texture mapping pattern dimensions:", width.toFixed(3), "x", height.toFixed(3));
+            // console.log("📊 CellColorizer vertices count:", vertices.length);
+
             if (width === 0 || height === 0) {
                 globals.warn("Pattern has no dimensions.");
                 return;
             }
-            
+
             // Calculate appropriate canvas size based on pattern aspect ratio
             const aspectRatio = width / height;
-            console.log("Pattern aspect ratio:", aspectRatio.toFixed(3), "(width/height =", width.toFixed(3), "/", height.toFixed(3), ")");
-            
+            // console.log("Pattern aspect ratio:", aspectRatio.toFixed(3), "(width/height =", width.toFixed(3), "/", height.toFixed(3), ")");
+
             // Determine canvas dimensions based on aspect ratio
             // Use a maximum dimension of 2048 for performance, but maintain aspect ratio
             const maxDimension = 2048;
             let canvasWidth, canvasHeight;
-            
+
             if (aspectRatio >= 1) {
                 // Width is larger or equal to height
                 canvasWidth = maxDimension;
@@ -335,60 +335,60 @@ function initCellColorizer(globals) {
                 canvasHeight = maxDimension;
                 canvasWidth = Math.round(maxDimension * aspectRatio);
             }
-            
+
             // Ensure minimum size for small patterns
             canvasWidth = Math.max(canvasWidth, 512);
             canvasHeight = Math.max(canvasHeight, 512);
-            
-            console.log("Canvas dimensions:", canvasWidth + "x" + canvasHeight, "based on pattern aspect ratio");
-            
+
+            // console.log("Canvas dimensions:", canvasWidth + "x" + canvasHeight, "based on pattern aspect ratio");
+
             // Store canvas dimensions globally for consistent UV mapping
             globals.cellColorizerCanvasWidth = canvasWidth;
             globals.cellColorizerCanvasHeight = canvasHeight;
             globals.cellColorizerScale = null; // Will be calculated later
             globals.cellColorizerOffsetX = null;
             globals.cellColorizerOffsetY = null;
-            
+
             // Create main canvas for the final result - aspect ratio matched
             const finalCanvas = document.createElement('canvas');
             finalCanvas.width = canvasWidth;
             finalCanvas.height = canvasHeight;
             const finalCtx = finalCanvas.getContext('2d');
-            
+
             // Clear with transparent background
             finalCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-            
+
             // Apply 180 degree rotation to fix upside-down texture
             finalCtx.save();
             finalCtx.translate(canvasWidth / 2, canvasHeight / 2);
             finalCtx.rotate(Math.PI); // 180 degree rotation
             finalCtx.translate(-canvasWidth / 2, -canvasHeight / 2);
-            
-            console.log("Canvas created, starting aspect-ratio-matched texture mapping...");
-            
+
+            // console.log("Canvas created, starting aspect-ratio-matched texture mapping...");
+
             // Calculate scale to fit the pattern exactly in the canvas
             const scaleX = canvasWidth / width;
             const scaleY = canvasHeight / height;
-            
+
             // Use the smaller scale to ensure the entire pattern fits
             const scale = Math.min(scaleX, scaleY);
-            
+
             // Center the pattern in the canvas
             const scaledWidth = width * scale;
             const scaledHeight = height * scale;
             const offsetX = (canvasWidth - scaledWidth) / 2;
             const offsetY = (canvasHeight - scaledHeight) / 2;
-            
+
             // Store transformation parameters globally for consistent UV mapping
             globals.cellColorizerScale = scale;
             globals.cellColorizerOffsetX = offsetX;
             globals.cellColorizerOffsetY = offsetY;
-            
-            console.log("Texture map scale calculations:");
-            console.log("  - scaleX:", scaleX.toFixed(3), "scaleY:", scaleY.toFixed(3));
-            console.log("  - final scale:", scale.toFixed(3));
-            console.log("  - scaled dimensions:", scaledWidth.toFixed(1) + "x" + scaledHeight.toFixed(1));
-            console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
+
+            // console.log("Texture map scale calculations:");
+            // console.log("  - scaleX:", scaleX.toFixed(3), "scaleY:", scaleY.toFixed(3));
+            // console.log("  - final scale:", scale.toFixed(3));
+            // console.log("  - scaled dimensions:", scaledWidth.toFixed(1) + "x" + scaledHeight.toFixed(1));
+            // console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
             
             // Function to transform coordinates to canvas space with full coverage
             function transformPoint(vertex) {
@@ -405,45 +405,45 @@ function initCellColorizer(globals) {
                     continue;
                 }
                 
-                console.log("Processing texture", textureIndex, ":", texture.name);
-                
+                // console.log("Processing texture", textureIndex, ":", texture.name);
+
                 // Create a temporary canvas with FIXED pattern dimensions
                 const tempCanvas = document.createElement('canvas');
                 tempCanvas.width = canvasWidth;
                 tempCanvas.height = canvasHeight;
                 const tempCtx = tempCanvas.getContext('2d');
-                
+
                 // Clear with transparent background
                 tempCtx.clearRect(0, 0, canvasWidth, canvasHeight);
-                
+
                 // Apply 180 degree rotation for consistency
                 tempCtx.save();
                 tempCtx.translate(canvasWidth / 2, canvasHeight / 2);
                 tempCtx.rotate(Math.PI); // 180 degree rotation
                 tempCtx.translate(-canvasWidth / 2, -canvasHeight / 2);
-                
+
                 // Calculate aspect ratios to fit within PATTERN bounds (not canvas bounds)
-                console.log("🔍 Fitting texture to pattern dimensions:");
-                console.log("  - Pattern dimensions:", scaledWidth.toFixed(1) + "x" + scaledHeight.toFixed(1));
-                console.log("  - Pattern position:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
-                console.log("  - Canvas dimensions:", canvasWidth + "x" + canvasHeight);
-                
+                // console.log("🔍 Fitting texture to pattern dimensions:");
+                // console.log("  - Pattern dimensions:", scaledWidth.toFixed(1) + "x" + scaledHeight.toFixed(1));
+                // console.log("  - Pattern position:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
+                // console.log("  - Canvas dimensions:", canvasWidth + "x" + canvasHeight);
+
                 const imageAspect = texture.image.width / texture.image.height;
                 const patternAspect = scaledWidth / scaledHeight;
-                
+
                 // FORCE texture to EXACT pattern size (no aspect ratio fitting)
                 // This ensures texture size matches fold lines exactly
                 const drawWidth = scaledWidth;
                 const drawHeight = scaledHeight;
                 const drawX = offsetX;
                 const drawY = offsetY;
-                
-                console.log("Texture", textureIndex, "STRETCHED to EXACT pattern size:");
-                console.log("  - Image size:", texture.image.width + "x" + texture.image.height, "aspect:", imageAspect.toFixed(3));
-                console.log("  - Pattern size:", scaledWidth.toFixed(1) + "x" + scaledHeight.toFixed(1), "aspect:", patternAspect.toFixed(3));
-                console.log("  - Draw size:", drawWidth.toFixed(1) + "x" + drawHeight.toFixed(1), "(FORCED to pattern size)");
-                console.log("  - Draw position:", drawX.toFixed(1) + "," + drawY.toFixed(1));
-                console.log("  - 🎯 EXACT match with fold lines: " + scale.toFixed(3));
+
+                // console.log("Texture", textureIndex, "STRETCHED to EXACT pattern size:");
+                // console.log("  - Image size:", texture.image.width + "x" + texture.image.height, "aspect:", imageAspect.toFixed(3));
+                // console.log("  - Pattern size:", scaledWidth.toFixed(1) + "x" + scaledHeight.toFixed(1), "aspect:", patternAspect.toFixed(3));
+                // console.log("  - Draw size:", drawWidth.toFixed(1) + "x" + drawHeight.toFixed(1), "(FORCED to pattern size)");
+                // console.log("  - Draw position:", drawX.toFixed(1) + "," + drawY.toFixed(1));
+                // console.log("  - 🎯 EXACT match with fold lines: " + scale.toFixed(3));
                 
                 // Draw the texture fitted to PATTERN dimensions (same scale as fold lines)
                 tempCtx.drawImage(texture.image, drawX, drawY, drawWidth, drawHeight);
@@ -472,25 +472,25 @@ function initCellColorizer(globals) {
                 const startFace = textureIndex * cellsPerTexture;
                 const endFace = Math.min((textureIndex + 1) * cellsPerTexture, faces.length);
                 
-                console.log("Texture", textureIndex, "assigned to faces", startFace, "to", endFace - 1);
-                console.log("🔍 Mask generation: using SAME coordinates as texture");
-                
+                // console.log("Texture", textureIndex, "assigned to faces", startFace, "to", endFace - 1);
+                // console.log("🔍 Mask generation: using SAME coordinates as texture");
+
                 // Draw the assigned faces on the mask using THE SAME transformPoint function
                 for (let faceIndex = startFace; faceIndex < endFace; faceIndex++) {
                     const face = faces[faceIndex];
-                    
+
                     if (face.length < 3) continue; // Skip invalid faces
-                    
+
                     // Use THE SAME coordinate transformation as the rest of the system
                     const canvasPoints = face.map(vertexIndex => {
                         const vertex = vertices[vertexIndex];
                         return transformPoint(vertex); // SAME function as everywhere else
                     });
-                    
+
                     // Debug first face coordinates
-                    if (faceIndex === startFace) {
-                        console.log("🔍 First face canvas coordinates:", canvasPoints.slice(0, 3));
-                    }
+                    // if (faceIndex === startFace) {
+                    //     console.log("🔍 First face canvas coordinates:", canvasPoints.slice(0, 3));
+                    // }
                     
                     // Draw filled polygon on mask
                     maskCtx.beginPath();
@@ -514,11 +514,11 @@ function initCellColorizer(globals) {
                 // Composite this texture layer onto the final canvas
                 finalCtx.globalCompositeOperation = 'source-over';
                 finalCtx.drawImage(tempCanvas, 0, 0);
-                
-                console.log("Applied texture", textureIndex, "to", endFace - startFace, "faces");
+
+                // console.log("Applied texture", textureIndex, "to", endFace - startFace, "faces");
             }
-            
-            console.log("Finished processing", numTextures, "textures");
+
+            // console.log("Finished processing", numTextures, "textures");
             
             // Restore canvas state after rotation
             finalCtx.restore();

@@ -832,51 +832,51 @@ function initGlobals(){
         // Shuffle the assignments for randomness
         console.log("🎲 Using seeded random values for texture assignment:");
         console.log("🔑 Current seed:", _globals.randomSeed);
-        console.log("� Seeded random function available:", !!_globals.randomFunction);
-        console.log("�📊 faceAssignments array length:", faceAssignments.length);
-        console.log("📊 faceAssignments before shuffle:", JSON.stringify(faceAssignments));
-        
+        // console.log("� Seeded random function available:", !!_globals.randomFunction);
+        // console.log("�📊 faceAssignments array length:", faceAssignments.length);
+        // console.log("📊 faceAssignments before shuffle:", JSON.stringify(faceAssignments));
+
         // Generate deterministic random values using seeded random
         var randomValues = [];
         for (var i = faceAssignments.length - 1; i > 0; i--) {
             var randomValue = _globals.getSeededRandom();
             randomValues.push(randomValue);
         }
-        
-        console.log("📋 Generated seeded random values: [" + randomValues.slice(0, 10).map(function(v) { return v.toFixed(6); }).join(", ") + (randomValues.length > 10 ? "..." : "") + "]");
-        
+
+        // console.log("📋 Generated seeded random values: [" + randomValues.slice(0, 10).map(function(v) { return v.toFixed(6); }).join(", ") + (randomValues.length > 10 ? "..." : "") + "]");
+
         // Perform Fisher-Yates shuffle using the seeded random values
         var shuffleIndex = 0;
         for (var i = faceAssignments.length - 1; i > 0; i--) {
             var randomValue = randomValues[shuffleIndex];
             var j = Math.floor(randomValue * (i + 1));
             shuffleIndex++;
-            
-            if (shuffleIndex <= 10) { // Log first few steps for debugging
-                console.log("Step " + (faceAssignments.length - 1 - i) + ": seeded random=" + randomValue.toFixed(6) + ", j=" + j + ", swapping indices " + i + " ↔ " + j);
-            }
-            
+
+            // if (shuffleIndex <= 10) { // Log first few steps for debugging
+            //     console.log("Step " + (faceAssignments.length - 1 - i) + ": seeded random=" + randomValue.toFixed(6) + ", j=" + j + ", swapping indices " + i + " ↔ " + j);
+            // }
+
             // Perform swap
             var temp = faceAssignments[i];
             faceAssignments[i] = faceAssignments[j];
             faceAssignments[j] = temp;
         }
-        
-        console.log("📋 All seeded random values: [" + randomValues.map(function(v) { return v.toFixed(6); }).join(", ") + "]");
-        console.log("📊 faceAssignments after shuffle:", JSON.stringify(faceAssignments));
-        
+
+        // console.log("📋 All seeded random values: [" + randomValues.map(function(v) { return v.toFixed(6); }).join(", ") + "]");
+        // console.log("📊 faceAssignments after shuffle:", JSON.stringify(faceAssignments));
+
         // Apply assignments to faces
         for (var f = 0; f < faces.length; f++) {
             if (faceAssignments[f] !== undefined) {
                 _globals.faceTextureMapping[f] = faceAssignments[f];
             }
         }
-        
+
         // Debug: Show final face-to-texture mapping (first 20 faces)
-        console.log("🗺️ Final face mapping (first 20 faces):");
-        for (var f = 0; f < Math.min(20, faces.length); f++) {
-            console.log("Face " + f + " → Texture " + _globals.faceTextureMapping[f]);
-        }
+        // console.log("🗺️ Final face mapping (first 20 faces):");
+        // for (var f = 0; f < Math.min(20, faces.length); f++) {
+        //     console.log("Face " + f + " → Texture " + _globals.faceTextureMapping[f]);
+        // }
         
         // Statistics for logging
         var textureUsage = {};

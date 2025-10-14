@@ -95,12 +95,7 @@ async function generateModularTemplate(nftData) {
         
         console.log('✅ Modular template generated successfully');
         console.log(`📊 Generated HTML size: ${html.length} bytes`);
-        
-        // Debug: Show first 1000 chars of generated HTML
-        console.log('📝 Generated HTML preview:');
-        console.log(html.substring(0, 1000));
-        console.log('...');
-        
+
         return html;
         
     } catch (error) {
