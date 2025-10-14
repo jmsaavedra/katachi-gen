@@ -74,7 +74,16 @@ async function compressImage(buffer, options = {}) {
         };
         
     } catch (error) {
-        console.warn(`⚠️ Image compression failed: ${error.message}, using original`);
+        console.warn(`⚠️ Image compression failed: ${error.message}`);
+
+        // If the original image is very large (>10MB), reject it rather than embedding it raw
+        const MAX_UNCOMPRESSED_SIZE = 10 * 1024 * 1024; // 10MB
+        if (buffer.length > MAX_UNCOMPRESSED_SIZE) {
+            console.error(`❌ Image too large to embed uncompressed: ${Math.round(buffer.length / 1024 / 1024)}MB`);
+            throw new Error(`Image format not supported and file too large (${Math.round(buffer.length / 1024 / 1024)}MB). Please use PNG, JPEG, or WebP format.`);
+        }
+
+        console.warn(`⚠️ Using original uncompressed image (${Math.round(buffer.length / 1024)}KB)`);
         return {
             buffer,
             originalSize: buffer.length,
@@ -184,9 +193,31 @@ function parseNFTInfoFromUrl(imageUrl, metadata = {}) {
 async function getOptimizedImageFromRarible(contractAddress, tokenId) {
     try {
         const nftData = await getNFTWithRaribleImages(contractAddress, tokenId);
+
+        // Log which image sizes are available for this NFT
+        console.log(`📸 Rarible image availability for ${contractAddress}:${tokenId}:`);
+        console.log(`   - preview: ${nftData.images.preview ? '✅ available' : '❌ not available'}`);
+        console.log(`   - big: ${nftData.images.big ? '✅ available' : '❌ not available'}`);
+        console.log(`   - initial: ${nftData.images.initial ? '✅ available' : '❌ not available'}`);
+        console.log(`   - original: ${nftData.images.original ? '✅ available' : '❌ not available'}`);
+        console.log(`   - portrait: ${nftData.images.portrait ? '✅ available' : '❌ not available'}`);
+
         const optimizedUrl = getBestImageUrl(nftData.images);
 
         if (optimizedUrl) {
+            // Check if this is a thumbnail URL (better than full original)
+            if (optimizedUrl.includes('/thumbnail')) {
+                console.log(`✅ Using Rarible thumbnail image: ${optimizedUrl.slice(0, 80)}...`);
+                return optimizedUrl;
+            }
+
+            // If Rarible only has 'original' with no optimized sizes, check if it's worth using
+            const hasOptimizedSizes = nftData.images.preview || nftData.images.big || nftData.images.initial;
+            if (!hasOptimizedSizes && nftData.images.original) {
+                console.log(`⚠️ Rarible only has 'original' size (no thumbnails), skipping Rarible optimization`);
+                return null; // Fall back to direct download (might be same or smaller)
+            }
+
             console.log(`✅ Using Rarible optimized image: ${optimizedUrl.slice(0, 80)}...`);
             return optimizedUrl;
         }
@@ -289,6 +320,13 @@ async function processImagesAsBase64(data) {
                         console.log(`🔍 Attempting to fetch optimized image from Rarible for ${image.contractAddress}:${image.tokenId}`);
                         const raribleUrl = await getOptimizedImageFromRarible(image.contractAddress, image.tokenId);
                         if (raribleUrl) {
+                            // Check if URL suggests it might be a video or problematic format
+                            const urlLower = raribleUrl.toLowerCase();
+                            if (urlLower.includes('/media') || urlLower.includes('.mp4') || urlLower.includes('.webm') || urlLower.includes('.mov')) {
+                                console.warn(`⚠️ Rarible URL appears to be video/media format, might be large: ${raribleUrl.slice(0, 80)}...`);
+                                // Still try it, but the compression limit will catch it if too large
+                            }
+
                             imageUrlToDownload = raribleUrl;
                             usedRarible = true;
                             image.source = 'rarible';
@@ -297,6 +335,7 @@ async function processImagesAsBase64(data) {
                         console.log(`⚠️ No contract/token info for image ${i + 1}, using direct download`);
                     }
 
+                    console.log(`📥 Downloading and encoding image ${i + 1} from URL: ${imageUrlToDownload}`);
                     const downloadResult = await downloadImageAsBase64(imageUrlToDownload);
                     const base64String = downloadResult.buffer.toString('base64');
 
@@ -329,11 +368,32 @@ async function processImagesAsBase64(data) {
         }
     }
 
+    // Filter out images that failed to process and are too large
+    if (processedData.images) {
+        const originalCount = processedData.images.length;
+        processedData.images = processedData.images.filter(img => {
+            // Keep images that successfully converted to base64
+            if (img.url && img.url.startsWith('data:')) return true;
+
+            // Remove images with errors (couldn't be processed)
+            if (img.error) {
+                console.warn(`🗑️ Removing failed image from generation: ${img.error}`);
+                return false;
+            }
+
+            return true;
+        });
+
+        if (processedData.images.length < originalCount) {
+            console.log(`📉 Reduced image count from ${originalCount} to ${processedData.images.length} (removed ${originalCount - processedData.images.length} failed images)`);
+        }
+    }
+
     // Add processing metadata
     processedData.imageStats = {
         totalImages: processedData.images?.length || 0,
         processedImages: processedData.images?.filter(img => img.url && img.url.startsWith('data:')).length || 0,
-        failedImages: processedData.images?.filter(img => img.error).length || 0,
+        failedImages: 0, // Already filtered out
         raribleOptimized: processedData.images?.filter(img => img.usedRarible).length || 0,
         timestamp: new Date().toISOString()
     };

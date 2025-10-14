@@ -107,8 +107,18 @@ async function generateThumbnail(data, htmlFilePath = null) {
         }
         const page = await browser.newPage();
         
-        // Enable console logging for debugging
-        page.on('console', msg => console.log('🖥️ HTML LOG:', msg.text()));
+        // Enable selective console logging (only important messages)
+        page.on('console', msg => {
+            const text = msg.text();
+            // Only log critical messages: errors, NFT processing milestones, and completion
+            if (text.includes('ERROR') ||
+                text.includes('Failed to load') ||
+                text.includes('NFT rendering completed') ||
+                text.includes('All NFT textures loaded') ||
+                text.includes('Render timeout')) {
+                console.log('🖥️ HTML:', text);
+            }
+        });
         page.on('pageerror', error => console.log('🚨 HTML ERROR:', error.message));
         
         // Set viewport

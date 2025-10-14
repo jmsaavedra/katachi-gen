@@ -46,7 +46,10 @@ async function getNFTWithRaribleImages(contractAddress, tokenId, blockchain = 'S
                 try {
                     const result = JSON.parse(data);
                     const processedData = extractImageUrls(result);
-                    console.log(`✅ Found ${Object.keys(processedData.images).length} optimized image URLs from Rarible`);
+                    const availableSizes = Object.entries(processedData.images)
+                        .filter(([_, url]) => url)
+                        .map(([size, _]) => size);
+                    console.log(`✅ Found ${availableSizes.length} optimized image URLs from Rarible: ${availableSizes.join(', ')}`);
                     resolve(processedData);
                 } catch (error) {
                     reject(new Error(`Failed to parse Rarible response: ${error.message}`));
@@ -72,14 +75,42 @@ function extractImageUrls(item) {
         portrait: null      // Portrait orientation
     };
 
-    // Extract images from content array
+    // Extract images from content array (skip videos)
     const content = item.meta?.content || [];
 
+    // First pass: collect all IMAGE items with their metadata
+    const imageItems = [];
     for (const contentItem of content) {
+        // Only process IMAGE types, skip VIDEO, AUDIO, etc.
+        if (contentItem['@type'] !== 'IMAGE') {
+            continue;
+        }
+
         if (contentItem.url && contentItem.representation) {
-            const rep = contentItem.representation.toLowerCase();
-            if (rep in images) {
-                images[rep] = contentItem.url;
+            imageItems.push({
+                url: contentItem.url,
+                representation: contentItem.representation.toLowerCase(),
+                size: contentItem.size || 0,
+                isThumbnail: contentItem.url.includes('/thumbnail')
+            });
+        }
+    }
+
+    // Second pass: assign to appropriate slots, preferring thumbnails and smaller files
+    for (const item of imageItems) {
+        const rep = item.representation;
+        if (rep in images) {
+            // If slot is empty, use this image
+            if (!images[rep]) {
+                images[rep] = item.url;
+            } else {
+                // Slot already has an image - prefer thumbnails or smaller files
+                const currentIsThumbnail = images[rep].includes('/thumbnail');
+                if (item.isThumbnail && !currentIsThumbnail) {
+                    // Prefer thumbnails over non-thumbnails
+                    images[rep] = item.url;
+                    console.log(`   📎 Preferring thumbnail URL for ${rep}`);
+                }
             }
         }
     }
@@ -101,12 +132,26 @@ function extractImageUrls(item) {
 /**
  * Get best available image URL (prioritizing smaller, optimized versions)
  * @param {Object} images - Images object from extractImageUrls
- * @returns {string|null} Best available image URL
+ * @returns {Object|null} Object with url and size type, or null if none available
  */
 function getBestImageUrl(images) {
     // Priority: preview > big > initial > original
     // Use preview for HTML compilation to avoid large file sizes
-    return images.preview || images.big || images.initial || images.original || null;
+    const priorities = [
+        { type: 'preview', url: images.preview },
+        { type: 'big', url: images.big },
+        { type: 'initial', url: images.initial },
+        { type: 'original', url: images.original }
+    ];
+
+    for (const option of priorities) {
+        if (option.url) {
+            console.log(`📏 Selected Rarible image size: ${option.type}`);
+            return option.url;
+        }
+    }
+
+    return null;
 }
 
 module.exports = {

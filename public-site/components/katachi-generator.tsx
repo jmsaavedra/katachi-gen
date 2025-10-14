@@ -30,14 +30,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
   const { switchChain } = useSwitchChain();
   const addressToUse = overrideAddress || connectedAddress;
 
-  // Debug logging for explore mode issue
-  console.log('🐛 KatachiGenerator Debug:', {
-    overrideAddress,
-    connectedAddress,
-    isConnected,
-    addressToUse
-  });
-
   // Get expected chain ID based on environment
   const expectedChainId = config.mintChainId === shape.id ? shape.id : shapeSepolia.id;
   const expectedChainName = config.mintChainId === shape.id ? 'Shape' : 'Shape Sepolia';
@@ -219,12 +211,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     contractAddress: string;
     tokenId: string;
   }>) => {
-    console.log('🎯 [DEBUG] handleSentimentSubmitted called with:', {
-      sentiment: sentiment,
-      sentimentLength: sentiment?.length,
-      filteredNftsCount: filteredNfts?.length,
-      firstNft: filteredNfts?.[0]
-    });
     
     setSentimentData({
       sentiment,
@@ -259,13 +245,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     }>,
     sentiment?: string
   ) => {
-    console.log('🎯 [DEBUG] handleCurationCompleted called with:', {
-      interpretation: interpretation?.slice(0, 50) + '...',
-      themesCount: themes?.length || 0,
-      nftsCount: nfts?.length || 0,
-      sentiment,
-      currentSentimentData: sentimentData
-    });
     
     setCuratedNfts(nfts?.map(nft => ({
       ...nft,
@@ -276,10 +255,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     
     // If sentiment is provided, update sentiment data with the curated NFTs
     if (sentiment) {
-      console.log('🎯 [DEBUG] Updating sentiment data with:', {
-        sentiment,
-        curatedNftsCount: nfts.length
-      });
       const newSentimentData = {
         ...sentimentData, // Preserve existing sentiment data
         sentiment,
@@ -312,11 +287,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       tokenId: string;
     }>;
   }) => {
-    console.log('🎯 [DEBUG] handleGenerateKatachiWithData called with:', {
-      hasSentimentData: !!dataToUse,
-      sentiment: dataToUse?.sentiment,
-      filteredNftsCount: dataToUse?.filteredNfts?.length || 0
-    });
     
     if (!addressToUse) {
       toast.error('Please connect your wallet first');
@@ -337,19 +307,20 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     
     try {
       // Use the passed data instead of state
+      // IMPORTANT: Include contractAddress and tokenId so katachi-generator can use Rarible API for optimized thumbnails
       const imageUrls = dataToUse.filteredNfts
         .slice(0, 5)
-        .map(nft => ({ url: nft.imageUrl || '' }))
+        .map(nft => ({
+          url: nft.imageUrl || '',
+          contractAddress: nft.contractAddress,
+          tokenId: nft.tokenId
+        }))
         .filter(img => img.url);
 
       if (imageUrls.length === 0) {
         throw new Error('No valid NFT images found for pattern generation');
       }
 
-      console.log('Calling katachi-generator with:', {
-        walletAddress: addressToUse,
-        imageCount: imageUrls.length
-      });
 
       const response = await fetch('/api/generate-katachi', {
         method: 'POST',
@@ -374,21 +345,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       if (result.error || !result.success) {
         throw new Error(result.message || 'Pattern generation failed');
       }
-
-      console.log('Katachi generation result:', {
-        success: result.success,
-        thumbnailId: result.thumbnailId,
-        htmlId: result.htmlId,
-        hasThumbnail: !!result.thumbnailId
-      });
-
-      console.log('🔍 [DEBUG] Raw generate-katachi API result:', {
-        hasMetadata: !!result.metadata,
-        metadataKeys: result.metadata ? Object.keys(result.metadata) : [],
-        attributesCount: result.metadata?.attributes?.length || 0,
-        name: result.metadata?.name,
-        description: result.metadata?.description?.slice(0, 100) + '...'
-      });
 
       // Create pattern data structure using response from generate-katachi API
       const patternData = {
@@ -435,7 +391,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         animation_url: patternData.metadataHtmlUrl, // Use Arweave URL for metadata
         external_url: patternData.metadataHtmlUrl, // Use Arweave URL for metadata
       };
-      console.log('🎯 FINAL METADATA FOR MINTING:', JSON.stringify(finalMetadata, null, 2));
       
       toast.success('Pattern generated successfully!');
       
@@ -448,11 +403,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
   };
 
   const handleGenerateKatachi = async () => {
-    console.log('🎯 [DEBUG] handleGenerateKatachi called with sentimentData:', {
-      hasSentimentData: !!sentimentData,
-      sentiment: sentimentData?.sentiment,
-      filteredNftsCount: sentimentData?.filteredNfts?.length || 0
-    });
     
     if (!addressToUse) {
       toast.error('Please connect your wallet first');
@@ -474,19 +424,20 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     
     try {
       // Get first 5 filtered NFT images for pattern generation
+      // IMPORTANT: Include contractAddress and tokenId so katachi-generator can use Rarible API for optimized thumbnails
       const imageUrls = sentimentData.filteredNfts
         .slice(0, 5)
-        .map(nft => ({ url: nft.imageUrl || '' }))
+        .map(nft => ({
+          url: nft.imageUrl || '',
+          contractAddress: nft.contractAddress,
+          tokenId: nft.tokenId
+        }))
         .filter(img => img.url); // Remove empty URLs
 
       if (imageUrls.length === 0) {
         throw new Error('No valid NFT images found for pattern generation');
       }
 
-      console.log('Calling katachi-generator with:', {
-        walletAddress: addressToUse,
-        imageCount: imageUrls.length
-      });
 
       // Call katachi-generator API
       const response = await fetch('/api/generate-katachi', {
@@ -514,21 +465,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       if (result.error || !result.success) {
         throw new Error(result.message || 'Pattern generation failed');
       }
-
-      console.log('Katachi generation result:', {
-        success: result.success,
-        thumbnailId: result.thumbnailId,
-        htmlId: result.htmlId,
-        hasThumbnail: !!result.thumbnailId
-      });
-
-      console.log('🔍 [DEBUG] Raw generate-katachi API result:', {
-        hasMetadata: !!result.metadata,
-        metadataKeys: result.metadata ? Object.keys(result.metadata) : [],
-        attributesCount: result.metadata?.attributes?.length || 0,
-        name: result.metadata?.name,
-        description: result.metadata?.description?.slice(0, 100) + '...'
-      });
 
       // Create pattern data structure using response from generate-katachi API
       const patternData = {
@@ -574,7 +510,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         animation_url: patternData.metadataHtmlUrl, // Use Arweave URL for metadata
         external_url: patternData.metadataHtmlUrl, // Use Arweave URL for metadata
       };
-      console.log('🎯 FINAL METADATA FOR MINTING:', JSON.stringify(finalMetadata, null, 2));
       
       toast.success('Pattern generated successfully!');
     } catch (err) {

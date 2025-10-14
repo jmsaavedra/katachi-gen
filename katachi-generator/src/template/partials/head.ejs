@@ -18,26 +18,51 @@
     <!-- Animation styles -->
     <%- include('styles/animations') %>
     
-    <!-- 
+    <!--
     TODO: During content migration, extract:
     - Meta tags from original template
     - Link tags for external stylesheets
     - Any additional head elements
     -->
-    
+
+    <!-- Console Log Filter -->
+    <!-- Suppress verbose debug logs in production (browser console only) -->
+    <script>
+        (function() {
+            const originalLog = console.log;
+
+            // Emoji patterns that indicate verbose debug logs (suppress these)
+            const verbosePatterns = [
+                '🔍', '📋', '🔄', '📥', '🔧', '📊', '🔗', '📞', '🎯', '🔑',
+                '📐', '🔀', '📏', '📈', '📝', '🗂️', '🖼️', '🎲', '🎨', '🔔',
+                '📁', '🙈', '🤖', '✏️', '🎮', '📄', '🎬', '🗺️', '🔲', '🕐',
+                '✅', '🔨', '👁️', '🏁', '🚫', '🔒', '📦', '🎉', '🛑', '⚙️'
+            ];
+
+            console.log = function(...args) {
+                const msg = args.join(' ');
+                // Suppress logs starting with verbose emoji patterns
+                if (verbosePatterns.some(p => msg.startsWith(p))) {
+                    return;
+                }
+                originalLog.apply(console, args);
+            };
+        })();
+    </script>
+
     <!-- NFT Data and Configuration Script -->
     <!-- This will contain the main data object and initialization -->
     <script>
         // Global variables for NFT rendering
         window.nftRenderComplete = false;
-        
+
         // NFT data will be injected here during generation
         const nftData = <%- nftData %>;
-        
+
         // Edit mode configuration
         const editMode = false;
         window.editMode = editMode;
-        
+
         // Origami patterns will be loaded from the patterns directory
         // Declared as let to allow reassignment later
         let origamiPatterns = [];
