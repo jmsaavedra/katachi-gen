@@ -1,7 +1,7 @@
 // Pattern generation handler
 const fs = require('fs');
 const path = require('path');
-const { TESTING_MODE, templateHTML, origamiPatterns, port } = require('../config');
+const { TESTING_MODE, ENABLE_MINTING, templateHTML, origamiPatterns, port } = require('../config');
 const { processImagesAsBase64 } = require('../image/processor');
 const { generateThumbnail } = require('../image/thumbnail-html');
 const { saveThumbnail } = require('../image/processor');
@@ -87,9 +87,10 @@ async function handlePatternGeneration(req, res, data) {
         
         // Check if this request is from test.html (testing interface)
         const isTestInterface = data.testInterface === true || data.source === 'test';
-        
-        // Force Arweave upload if this is for minting, regardless of testing mode
-        const shouldUseArweave = (!TESTING_MODE || data.forMinting) && !isTestInterface;
+
+        // Use ENABLE_MINTING flag to control Arweave uploads
+        // Can be overridden by forMinting flag from frontend for backwards compatibility
+        const shouldUseArweave = (ENABLE_MINTING || data.forMinting) && !isTestInterface;
         
         if (isTestInterface) {
             // Test interface: Keep files local only
@@ -127,8 +128,8 @@ async function handlePatternGeneration(req, res, data) {
             console.log('🔗 Access it at:', htmlUrl);
 
         } else {
-            // Production mode OR minting mode: Upload to R2 + Arweave
-            const modeDescription = !TESTING_MODE ? 'PRODUCTION MODE' : 'MINTING MODE (from development)';
+            // Production mode OR minting enabled: Upload to R2 + Arweave
+            const modeDescription = ENABLE_MINTING ? 'MINTING MODE (ENABLE_MINTING=true)' : 'PRODUCTION MODE';
             console.log(`🚀 ${modeDescription}: Uploading to Arweave and R2`);
             
             // Upload to R2 first for fast gallery access
