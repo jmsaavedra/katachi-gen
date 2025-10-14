@@ -183,4 +183,7 @@ keys
 # Large video assets
 assets/**/*.mov
 assets/**/*.mp4
+
+# katachi-generator generated files
 katachi-generator/temp/
+katachi-generator/public/generated-index.html
