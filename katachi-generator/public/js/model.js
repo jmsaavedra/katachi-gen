@@ -126,32 +126,32 @@ function initModel(globals){
                 setGeoUpdates();
             }
         } else if (globals.colorMode == "texture" && (globals.faceTexture || globals.textureLibrary.length > 0)) {
-            console.log("🎨 Setting mesh material to simple texture mode");
-            console.log("📋 Simple texture context:");
-            console.log("  - faceTexture exists:", !!globals.faceTexture);
-            console.log("  - useSimpleTextureMode:", !!globals.useSimpleTextureMode);
-            console.log("  - isCellGeneratedTexture:", !!globals.isCellGeneratedTexture);
+            // console.log("🎨 Setting mesh material to simple texture mode");
+            // console.log("📋 Simple texture context:");
+//             console.log("  - faceTexture exists:", !!globals.faceTexture);
+//             console.log("  - useSimpleTextureMode:", !!globals.useSimpleTextureMode);
+//             console.log("  - isCellGeneratedTexture:", !!globals.isCellGeneratedTexture);
             
             var textureToUse = globals.faceTexture;
             
             // Only use texture if it's cell-generated or explicitly set
             if (!textureToUse && globals.textureLibrary.length > 0 && globals.isCellGeneratedTexture) {
-                console.log("📝 Using first texture from library for cell-generated texture");
+                // console.log("📝 Using first texture from library for cell-generated texture");
                 textureToUse = globals.textureLibrary[0];
                 globals.faceTexture = textureToUse;
             } else if (!textureToUse && globals.textureLibrary.length > 0 && !globals.isCellGeneratedTexture) {
-                console.log("⏳ Waiting for cell-generated texture, skipping temporary texture application");
+                //                 console.log("⏳ Waiting for cell-generated texture, skipping temporary texture application");
                 // Don't apply temporary texture - wait for cellColorizer
                 return;
             }
             
             if (textureToUse) {
-                console.log("🔨 Creating texture material");
-                console.log("📝 Texture details:");
-                console.log("  - Name:", textureToUse.name || "atlas");
-                console.log("  - Image dimensions:", textureToUse.image ? textureToUse.image.width + "x" + textureToUse.image.height : "N/A");
-                console.log("  - Format:", textureToUse.format);
-                console.log("  - Type:", textureToUse.type);
+                // console.log("🔨 Creating texture material");
+                // console.log("📝 Texture details:");
+//                 console.log("  - Name:", textureToUse.name || "atlas");
+//                 console.log("  - Image dimensions:", textureToUse.image ? textureToUse.image.width + "x" + textureToUse.image.height : "N/A");
+//                 console.log("  - Format:", textureToUse.format);
+//                 console.log("  - Type:", textureToUse.type);
                 
                 // Enhanced texture material with subtle reflective properties
                 material = new THREE.MeshPhongMaterial({
@@ -170,7 +170,7 @@ function initModel(globals){
                 });
                 
                 // 裏面用にテクスチャをクローンして反転させる
-                console.log("🔄 Creating flipped texture for backside");
+                // console.log("🔄 Creating flipped texture for backside");
                 var flippedTexture = textureToUse.clone();
                 flippedTexture.needsUpdate = true;
                 
@@ -209,25 +209,25 @@ function initModel(globals){
                     opacity: 1.0
                 });
                 
-                console.log("✅ Texture material created successfully");
-                console.log("🔄 裏面マテリアルに反転テクスチャを設定（折り紙の裏面効果）");
+                // console.log("✅ Texture material created successfully");
+                // console.log("🔄 裏面マテリアルに反転テクスチャを設定（折り紙の裏面効果）");
                 backside.visible = true;  // 裏面を表示
                 
                 // Check if this is a cell-generated texture that needs simple UV mapping
-                console.log("🔍 Checking UV mapping condition:");
+                // console.log("🔍 Checking UV mapping condition:");
                 console.log("  - globals.isCellGeneratedTexture:", !!globals.isCellGeneratedTexture);
                 console.log("  - globals.useSimpleTextureMode:", !!globals.useSimpleTextureMode);
                 console.log("  - Combined condition:", !!(globals.isCellGeneratedTexture && globals.useSimpleTextureMode));
                 
                 if (globals.isCellGeneratedTexture && globals.useSimpleTextureMode) {
-                    console.log("🎯 Using simple UV mapping for cell-generated texture");
+                    // console.log("🎯 Using simple UV mapping for cell-generated texture");
                     setSimpleUVMapping();
                 } else {
                     // Update UV coordinates for face-based texture mapping
-                    console.log("🔄 Updating UV coordinates for texture mapping (fallback)");
+                    // console.log("🔄 Updating UV coordinates for texture mapping (fallback)");
                     updateFaceBasedUVs();
                 }
-                console.log("✅ Texture material applied successfully");
+                // console.log("✅ Texture material applied successfully");
             } else {
                 console.warn("⚠️ Texture mode selected but no texture available, falling back to color mode");
                 globals.colorMode = "color";
@@ -265,7 +265,7 @@ function initModel(globals){
                     material.color.setStyle( "#" + globals.color1);
                     material2.color.setStyle( "#" + globals.color2);
                 } else {
-                    console.log("🔍 Fallback surfaces set to transparent - color not applied");
+                    // console.log("🔍 Fallback surfaces set to transparent - color not applied");
                 }
                 backside.visible = true;
             }
@@ -304,19 +304,19 @@ function initModel(globals){
                 material.color.setStyle( "#" + globals.color1);
                 material2.color.setStyle( "#" + globals.color2);
             } else {
-                console.log("🔍 Surfaces set to transparent - color not applied");
+                // console.log("🔍 Surfaces set to transparent - color not applied");
             }
             backside.visible = true;
         }
         
-        console.log("🔗 Applying materials to mesh objects");
-        console.log("📋 Material assignment:");
-        console.log("  - frontside material type:", material.type);
-        console.log("  - frontside has texture map:", !!material.map);
+//         console.log("🔗 Applying materials to mesh objects");
+        // console.log("📋 Material assignment:");
+//         console.log("  - frontside material type:", material.type);
+//         console.log("  - frontside has texture map:", !!material.map);
         if (material.map) {
-            console.log("  - texture dimensions:", material.map.image ? material.map.image.width + "x" + material.map.image.height : "N/A");
+//             console.log("  - texture dimensions:", material.map.image ? material.map.image.width + "x" + material.map.image.height : "N/A");
         }
-        console.log("  - backside material type:", material2.type);
+//         console.log("  - backside material type:", material2.type);
         
         frontside.material = material;
         backside.material = material2;
@@ -343,14 +343,14 @@ function initModel(globals){
             }
         }
         
-        console.log("✅ Materials successfully applied to mesh");
-        console.log("🎨 Material configuration:");
-        console.log("  - Frontside color:", material.color ? "#" + material.color.getHexString() : "N/A");
-        console.log("  - Backside color:", material2.color ? "#" + material2.color.getHexString() : "N/A");
-        console.log("  - Frontside visible:", frontside.visible);
-        console.log("  - Backside visible:", backside.visible);
-        console.log("  - Frontside opacity:", material.opacity);
-        console.log("  - Backside opacity:", material2.opacity);
+        // console.log("✅ Materials successfully applied to mesh");
+        // console.log("🎨 Material configuration:");
+//         console.log("  - Frontside color:", material.color ? "#" + material.color.getHexString() : "N/A");
+//         console.log("  - Backside color:", material2.color ? "#" + material2.color.getHexString() : "N/A");
+//         console.log("  - Frontside visible:", frontside.visible);
+//         console.log("  - Backside visible:", backside.visible);
+//         console.log("  - Frontside opacity:", material.opacity);
+//         console.log("  - Backside opacity:", material2.opacity);
     }
 
     function updateEdgeVisibility(){
@@ -524,7 +524,7 @@ function initModel(globals){
     }
 
     function setSimpleUVMapping() {
-        console.log("🎯 Setting simple UV mapping for cell-generated texture");
+        // console.log("🎯 Setting simple UV mapping for cell-generated texture");
         
         if (!geometry || !geometry.attributes || !geometry.attributes.position) {
             console.warn("❌ Cannot set simple UV mapping: geometry not available");
@@ -534,7 +534,7 @@ function initModel(globals){
         var positions = geometry.attributes.position.array;
         var vertexCount = positions.length / 3;
         
-        console.log("📐 Creating simple UV mapping for", vertexCount, "vertices");
+        // console.log("📐 Creating simple UV mapping for", vertexCount, "vertices");
         
         // Create simple UV coordinates (0,0) to (1,1) mapping
         var uvs = new Float32Array(vertexCount * 2);
@@ -543,7 +543,7 @@ function initModel(globals){
         var fold = globals.cellColorizerFoldData || globals.fold;
         if (!fold || !fold.vertices_coords) {
             console.warn("❌ No fold data available for consistent UV mapping");
-            console.log("🔍 Available globals:", {
+            // console.log("🔍 Available globals:", {
                 cellColorizerFoldData: !!globals.cellColorizerFoldData,
                 globalsFold: !!globals.fold,
                 cellColorizerTransformParams: !!globals.cellColorizerTransformParams
@@ -551,7 +551,7 @@ function initModel(globals){
             return;
         }
         
-        console.log("✅ Using fold data with", fold.vertices_coords.length, "vertices");
+        // console.log("✅ Using fold data with", fold.vertices_coords.length, "vertices");
         
         // Get original 2D pattern bounds using the EXACT same method as cellColorizer
         var minX = Infinity, minZ = Infinity;
@@ -572,8 +572,8 @@ function initModel(globals){
         var patternWidth = maxX - minX;
         var patternHeight = maxZ - minZ;
         
-        console.log("📊 Pattern bounds from fold data (same as cellColorizer):", {minX, maxX, minZ, maxZ});
-        console.log("📊 Pattern dimensions from fold data:", patternWidth.toFixed(3), "x", patternHeight.toFixed(3));
+        // console.log("📊 Pattern bounds from fold data (same as cellColorizer):", {minX, maxX, minZ, maxZ});
+        // console.log("📊 Pattern dimensions from fold data:", patternWidth.toFixed(3), "x", patternHeight.toFixed(3));
         
         // Use the EXACT same canvas dimensions and transformation parameters from cellColorizer
         var canvasWidth, canvasHeight;
@@ -588,10 +588,10 @@ function initModel(globals){
             offsetX = globals.cellColorizerOffsetX;
             offsetY = globals.cellColorizerOffsetY;
             
-            console.log("📋 Using cellColorizer parameters:");
-            console.log("  - canvas size:", canvasWidth + "x" + canvasHeight);
-            console.log("  - scale:", scale.toFixed(3));
-            console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
+            // console.log("📋 Using cellColorizer parameters:");
+//             console.log("  - canvas size:", canvasWidth + "x" + canvasHeight);
+//             console.log("  - scale:", scale.toFixed(3));
+//             console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
         } else {
             // Fallback: calculate parameters (same logic as cellColorizer)
             console.log("⚠️ cellColorizer parameters not available, calculating fallback...");
@@ -619,9 +619,9 @@ function initModel(globals){
             offsetY = (canvasHeight - scaledHeight) / 2;
             
             console.log("� Fallback parameters:");
-            console.log("  - canvas size:", canvasWidth + "x" + canvasHeight);
-            console.log("  - scale:", scale.toFixed(3));
-            console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
+//             console.log("  - canvas size:", canvasWidth + "x" + canvasHeight);
+//             console.log("  - scale:", scale.toFixed(3));
+//             console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
         }
         
         // Create UV mapping using EXACT same transformation as cellColorizer
@@ -656,11 +656,11 @@ function initModel(globals){
             
             // Debug first few vertices
             if (i < 5) {
-                console.log("Vertex", i, "3D[" + x.toFixed(3) + ", " + z.toFixed(3) + "] → Canvas[" + canvasX.toFixed(1) + ", " + canvasY.toFixed(1) + "] → UV[" + u.toFixed(3) + ", " + v.toFixed(3) + "]");
+                //                 console.log("Vertex", i, "3D[" + x.toFixed(3) + ", " + z.toFixed(3) + "] → Canvas[" + canvasX.toFixed(1) + ", " + canvasY.toFixed(1) + "] → UV[" + u.toFixed(3) + ", " + v.toFixed(3) + "]");
             }
         }
         
-        console.log("📊 Generated", uvs.length / 2, "simple UV coordinates");
+        // console.log("📊 Generated", uvs.length / 2, "simple UV coordinates");
         
         // Apply UV coordinates to geometry
         if (geometry.attributes.uv) {
@@ -670,11 +670,11 @@ function initModel(globals){
             geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
         }
         
-        console.log("✅ Simple UV mapping applied successfully");
+        // console.log("✅ Simple UV mapping applied successfully");
     }
 
     function updateFaceBasedUVs(){
-        console.log("🎯 updateFaceBasedUVs: Using cellColorizer-compatible UV mapping");
+        // console.log("🎯 updateFaceBasedUVs: Using cellColorizer-compatible UV mapping");
         
         if (!geometry) {
             console.warn("❌ Cannot update UVs: geometry not available");
@@ -685,7 +685,7 @@ function initModel(globals){
         if (globals.cellColorizerCanvasWidth && globals.cellColorizerCanvasHeight && 
             globals.cellColorizerScale !== null && globals.cellColorizerOffsetX !== null && globals.cellColorizerOffsetY !== null) {
             
-            console.log("🎯 Using stored cellColorizer parameters for updateFaceBasedUVs");
+            // console.log("🎯 Using stored cellColorizer parameters for updateFaceBasedUVs");
             
             var canvasWidth = globals.cellColorizerCanvasWidth;
             var canvasHeight = globals.cellColorizerCanvasHeight;
@@ -697,14 +697,14 @@ function initModel(globals){
             var fold = globals.cellColorizerFoldData || globals.fold;
             if (!fold || !fold.vertices_coords) {
                 console.warn("❌ No fold data available for updateFaceBasedUVs");
-                console.log("🔍 Available globals for updateFaceBasedUVs:", {
+                // console.log("🔍 Available globals for updateFaceBasedUVs:", {
                     cellColorizerFoldData: !!globals.cellColorizerFoldData,
                     globalsFold: !!globals.fold
                 });
                 return;
             }
             
-            console.log("✅ updateFaceBasedUVs using fold data with", fold.vertices_coords.length, "vertices");
+            // console.log("✅ updateFaceBasedUVs using fold data with", fold.vertices_coords.length, "vertices");
             
             // Get same bounding box as cellColorizer
             var minX = Infinity, minZ = Infinity;
@@ -721,11 +721,11 @@ function initModel(globals){
                 maxZ = Math.max(maxZ, z);
             }
             
-            console.log("📊 updateFaceBasedUVs parameters:");
-            console.log("  - canvas size:", canvasWidth + "x" + canvasHeight);
-            console.log("  - scale:", scale.toFixed(3));
-            console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
-            console.log("  - bounding box:", {minX, maxX, minZ, maxZ});
+            // console.log("📊 updateFaceBasedUVs parameters:");
+//             console.log("  - canvas size:", canvasWidth + "x" + canvasHeight);
+//             console.log("  - scale:", scale.toFixed(3));
+//             console.log("  - offset:", offsetX.toFixed(1) + "," + offsetY.toFixed(1));
+//             console.log("  - bounding box:", {minX, maxX, minZ, maxZ});
             
             // Apply UV mapping to geometry vertices
             var positions = geometry.attributes.position.array;
@@ -768,7 +768,7 @@ function initModel(globals){
                 geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
             }
             
-            console.log("✅ updateFaceBasedUVs: Applied cellColorizer-compatible UV mapping");
+            // console.log("✅ updateFaceBasedUVs: Applied cellColorizer-compatible UV mapping");
             
         } else {
             console.log("⚠️ updateFaceBasedUVs: cellColorizer parameters not available, using fallback");
@@ -809,7 +809,7 @@ function initModel(globals){
             geometry.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
         }
         
-        console.log("✅ Basic UV mapping created for", vertexCount, "vertices");
+        // console.log("✅ Basic UV mapping created for", vertexCount, "vertices");
     }
 
     function getGeometry(){
@@ -1093,11 +1093,11 @@ function initModel(globals){
     }
     
     function updateUVMapping() {
-        console.log("🔄 updateUVMapping called - determining which mapping method to use");
+        // console.log("🔄 updateUVMapping called - determining which mapping method to use");
         
         // Check if we have fold data for face-based mapping
         if (globals.fold && globals.fold.faces_vertices && globals.fold.vertices_coords) {
-            console.log("📐 Using face-based UV mapping");
+            // console.log("📐 Using face-based UV mapping");
             updateFaceBasedUVs();
         } else if (geometry && geometry.attributes && geometry.attributes.position) {
             console.log("📦 Using basic geometry UV mapping");
