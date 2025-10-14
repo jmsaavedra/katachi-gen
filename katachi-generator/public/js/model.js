@@ -215,9 +215,9 @@ function initModel(globals){
                 
                 // Check if this is a cell-generated texture that needs simple UV mapping
                 // console.log("🔍 Checking UV mapping condition:");
-                console.log("  - globals.isCellGeneratedTexture:", !!globals.isCellGeneratedTexture);
-                console.log("  - globals.useSimpleTextureMode:", !!globals.useSimpleTextureMode);
-                console.log("  - Combined condition:", !!(globals.isCellGeneratedTexture && globals.useSimpleTextureMode));
+                // console.log("  - globals.isCellGeneratedTexture:", !!globals.isCellGeneratedTexture);
+                // console.log("  - globals.useSimpleTextureMode:", !!globals.useSimpleTextureMode);
+                // console.log("  - Combined condition:", !!(globals.isCellGeneratedTexture && globals.useSimpleTextureMode));
                 
                 if (globals.isCellGeneratedTexture && globals.useSimpleTextureMode) {
                     // console.log("🎯 Using simple UV mapping for cell-generated texture");
