@@ -4,6 +4,8 @@ The Next.js web application for Katachi Gen, an NFT collection of algorithmicall
 
 🏆 **Shapecraft2 Hackathon Submission**
 
+Deployed on Vercel with monorepo optimization and automatic URL resolution via Related Projects.
+
 ## Features
 
 - **Wallet Connection**: Multi-wallet support via RainbowKit
