@@ -265,6 +265,22 @@ async function processImagesAsBase64(data) {
                 try {
                     console.log(`🔄 Processing image ${i + 1}/${processedData.images.length}: ${image.url.slice(0, 50)}...`);
 
+                    // Check if already a data URI (base64 encoded)
+                    if (image.url.startsWith('data:')) {
+                        console.log(`✅ Image ${i + 1} already base64 data URI, using as-is`);
+                        image.originalUrl = image.url;
+                        image.alreadyEncoded = true;
+
+                        // Extract size from base64 string for stats
+                        const base64Match = image.url.match(/base64,(.+)$/);
+                        if (base64Match) {
+                            image.size = base64Match[1].length;
+                            image.compressedSize = base64Match[1].length;
+                        }
+
+                        continue; // Skip download/processing
+                    }
+
                     let imageUrlToDownload = image.url;
                     let usedRarible = false;
 
