@@ -441,7 +441,18 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       
     } catch (error) {
       console.error('❌ Generation failed:', error);
-      toast.error('Failed to generate katachi');
+
+      // Extract error message from the error object
+      let errorMessage = 'Failed to generate katachi';
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      // Show detailed error to user
+      toast.error(errorMessage, {
+        description: 'Please try again or contact support if the issue persists.',
+        duration: 6000,
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -578,8 +589,19 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       
       toast.success('Pattern generated successfully!');
     } catch (err) {
-      toast.error('Failed to generate pattern');
       console.error('Pattern generation error:', err);
+
+      // Extract error message from the error object
+      let errorMessage = 'Failed to generate pattern';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      // Show detailed error to user
+      toast.error(errorMessage, {
+        description: 'Please try again or contact support if the issue persists.',
+        duration: 6000,
+      });
     } finally {
       setIsGenerating(false);
     }

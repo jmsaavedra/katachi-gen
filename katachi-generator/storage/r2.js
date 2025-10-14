@@ -1,6 +1,6 @@
 // Cloudflare R2 storage utilities
 const fs = require('fs');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, ListObjectsV2Command, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 // Validate R2 credentials
 function validateR2Credentials() {

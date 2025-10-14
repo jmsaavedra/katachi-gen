@@ -95,17 +95,15 @@ async function uploadFileToArweave(filePath, walletPath = null) {
             throw new Error(`File not found: ${filePath}`);
         }
 
-        console.log(`Uploading file: ${filePath}`);
+        console.log(`Local file: ${filePath}`);
 
         // Load wallet key using the new function
         const walletKey = loadArweaveWallet();
-        
+
         // Get wallet address and balance
         const walletAddress = await getWalletAddress(walletKey);
-        console.log(`Wallet address: ${walletAddress}`);
-        
+
         const balance = await getWalletBalance(walletAddress);
-        console.log(`Wallet balance: ${balance.ar} AR (${balance.winston} winston)`);
 
         // Check if wallet has sufficient balance (rough estimation)
         if (parseFloat(balance.ar) < 0.001) {
@@ -114,14 +112,11 @@ async function uploadFileToArweave(filePath, walletPath = null) {
 
         // Read file content
         const fileContent = fs.readFileSync(filePath);
-        console.log(`File size: ${fileContent.length} bytes`);
 
         // Get content type
         const contentType = getContentType(filePath);
-        console.log(`Content type: ${contentType}`);
 
         // Create transaction
-        console.log('Creating transaction...');
         const transaction = await arweave.createTransaction({
             data: fileContent
         }, walletKey);
@@ -136,42 +131,21 @@ async function uploadFileToArweave(filePath, walletPath = null) {
         // Calculate cost
         const cost = await arweave.transactions.getPrice(fileContent.length);
         const costAR = arweave.ar.winstonToAr(cost);
-        console.log(`Upload cost: ${costAR} AR (${cost} winston)`);
 
         // Check if wallet has sufficient balance for the upload
         if (parseInt(balance.winston) < parseInt(cost)) {
             throw new Error(`Insufficient balance. Required: ${costAR} AR, Available: ${balance.ar} AR`);
         }
 
-        // Sign the transaction
-        console.log('Signing transaction...');
+        // Sign and post the transaction
+        console.log('Signing and posting transaction...');
         await arweave.transactions.sign(transaction, walletKey);
-
-        // Post the transaction
-        console.log('Posting transaction to Arweave...');
         const response = await arweave.transactions.post(transaction);
 
         if (response.status === 200) {
             console.log('✅ Successfully uploaded to Arweave!');
-            console.log(`Transaction ID: ${transaction.id}`);
             console.log(`Arweave URL: https://arweave.net/${transaction.id}`);
-            console.log(`Gateway URL: https://arweave.net/${transaction.id}`);
-            
-            // Wait a moment and check transaction status
-            console.log('\nChecking transaction status...');
-            setTimeout(async () => {
-                try {
-                    const status = await arweave.transactions.getStatus(transaction.id);
-                    console.log(`Transaction status: ${status.status}`);
-                    if (status.confirmed) {
-                        console.log(`Block height: ${status.confirmed.block_height}`);
-                        console.log(`Block hash: ${status.confirmed.block_indep_hash}`);
-                    }
-                } catch (statusError) {
-                    console.log('Could not check status immediately (this is normal for new transactions)');
-                }
-            }, 5000);
-            
+
             return transaction.id;
         } else {
             throw new Error(`Upload failed with status: ${response.status} - ${response.statusText}`);

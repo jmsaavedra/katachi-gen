@@ -5,6 +5,7 @@ const Arweave = require('arweave');
 const port = process.env.PORT || 3001;
 const templateHTML = 'template.html';
 const TESTING_MODE = process.env.NODE_ENV === 'development';
+const ENABLE_MINTING = process.env.ENABLE_MINTING === 'true';
 
 // Thumbnail configuration
 const THUMB_WIDTH = 1024;
@@ -63,6 +64,7 @@ module.exports = {
     port,
     templateHTML,
     TESTING_MODE,
+    ENABLE_MINTING,
     THUMB_WIDTH,
     THUMB_HEIGHT,
     arweaveWalletPath,

@@ -996,6 +996,14 @@ function initControls(globals){
     }
 
     function setSlider(id, val, min, max, incr, callback, callbackOnStop){
+        // Check if jQuery UI is available
+        if (!$.fn.slider) {
+            // Return mock jQuery object with slider methods that do nothing
+            return $({}).extend({
+                slider: function() { return this; }
+            });
+        }
+
         var slider = $(id).slider({
             orientation: 'horizontal',
             range: false,
@@ -1016,6 +1024,10 @@ function initControls(globals){
     }
 
     function setLogSliderInput(id, val, min, max, incr, callback){
+        // Check if jQuery UI is available
+        if (!$.fn.slider) {
+            return; // Exit early if jQuery UI not available
+        }
 
         var scale = (Math.log(max)-Math.log(min)) / (max-min);
 
@@ -1056,12 +1068,24 @@ function initControls(globals){
     }
 
     function setSliderInputVal(id, val){
+        // Check if jQuery UI is available
+        if (!$.fn.slider) {
+            return; // Exit early if jQuery UI not available
+        }
+
         $(id+">div").slider({value:val});
         var $input = $(id+">input");
         $input.val(val);
     }
 
     function setSliderInput(id, val, min, max, incr, callback){
+        // Check if jQuery UI is available
+        if (!$.fn.slider) {
+            // Return mock jQuery object with slider methods that do nothing
+            return $({}).extend({
+                slider: function() { return this; }
+            });
+        }
 
         var slider = $(id+">div").slider({
             orientation: 'horizontal',

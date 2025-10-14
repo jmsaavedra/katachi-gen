@@ -2,10 +2,10 @@
  * Created by ghassaei on 10/7/16.
  */
 
-console.log("Loading globals.js...");
+// console.log("Loading globals.js...");
 
 function initGlobals(){
-    console.log("initGlobals function called");
+    // console.log("initGlobals function called");
 
     var _globals = {
 
@@ -743,45 +743,62 @@ function initGlobals(){
     _globals.removeTexture = removeTexture;
 
     function assignRandomTextures() {
-        console.log("🕐 assignRandomTextures called at:", new Date().toISOString());
-        console.log("🔑 Using seed:", _globals.randomSeed, "| Seeded random enabled:", _globals.useSeededRandom);
-        
+        // console.log("🕐 assignRandomTextures called at:", new Date().toISOString());
+        // console.log("🔑 Using seed:", _globals.randomSeed, "| Seeded random enabled:", _globals.useSeededRandom);
+
         // Ensure the random seed is properly initialized before assignment
         if (!_globals.randomFunction || !_globals.useSeededRandom) {
-            console.log("🔄 Re-initializing random seed before texture assignment");
+            // console.log("🔄 Re-initializing random seed before texture assignment");
             _globals.initializeRandomSeed(_globals.randomSeed);
         }
-        
+
         if (!_globals.model || _globals.textureLibrary.length === 0) {
             console.warn("Cannot assign random textures: missing model or textures");
             return;
         }
-        
+
         // Debug: Verify texture library state
-        console.log("🔍 Pre-assignment texture library verification:");
-        console.log("- Library length:", _globals.textureLibrary.length);
-        for (var t = 0; t < _globals.textureLibrary.length; t++) {
-            var tex = _globals.textureLibrary[t];
-            console.log("  [" + t + "]", tex ? tex.name : "NULL", 
-                       tex && tex.image ? "✓" : "✗");
-        }
-        
+        // console.log("🔍 Pre-assignment texture library verification:");
+        // console.log("- Library length:", _globals.textureLibrary.length);
+        // for (var t = 0; t < _globals.textureLibrary.length; t++) {
+        //     var tex = _globals.textureLibrary[t];
+        //     console.log("  [" + t + "]", tex ? tex.name : "NULL",
+        //                tex && tex.image ? "✓" : "✗");
+        // }
+
         // Get faces from the fold data if available, otherwise use model faces
         var faces;
         if (_globals.fold && _globals.fold.faces_vertices) {
             faces = _globals.fold.faces_vertices;
-            console.log("Using fold data for faces:", faces.length, "faces");
+            // console.log("Using fold data for faces:", faces.length, "faces");
         } else {
             faces = _globals.model.getFaces();
-            console.log("Using model data for faces:", faces ? faces.length : 0, "faces");
+            // console.log("Using model data for faces:", faces ? faces.length : 0, "faces");
         }
-        
+
         if (!faces || faces.length === 0) {
-            console.warn("No faces found in model");
+            // Model not ready yet - defer texture assignment
+            if (!_globals.textureAssignmentRetryCount) {
+                _globals.textureAssignmentRetryCount = 0;
+            }
+
+            if (_globals.textureAssignmentRetryCount < 10) {
+                _globals.textureAssignmentRetryCount++;
+                // console.log("⏳ Model faces not ready, retrying in 200ms (attempt", _globals.textureAssignmentRetryCount, "/10)");
+                setTimeout(function() {
+                    assignRandomTextures();
+                }, 200);
+            } else {
+                console.warn("❌ No faces found in model after 10 retries");
+                _globals.textureAssignmentRetryCount = 0;
+            }
             return;
         }
-        
-        console.log("🎲 Assigning", _globals.textureLibrary.length, "textures randomly to", faces.length, "faces");
+
+        // Reset retry count on success
+        _globals.textureAssignmentRetryCount = 0;
+
+        // console.log("🎲 Assigning", _globals.textureLibrary.length, "textures randomly to", faces.length, "faces");
         
         // Clear existing mapping COMPLETELY to ensure fresh start
         _globals.faceTextureMapping = {};
@@ -832,51 +849,51 @@ function initGlobals(){
         // Shuffle the assignments for randomness
         console.log("🎲 Using seeded random values for texture assignment:");
         console.log("🔑 Current seed:", _globals.randomSeed);
-        console.log("� Seeded random function available:", !!_globals.randomFunction);
-        console.log("�📊 faceAssignments array length:", faceAssignments.length);
-        console.log("📊 faceAssignments before shuffle:", JSON.stringify(faceAssignments));
-        
+        // console.log("� Seeded random function available:", !!_globals.randomFunction);
+        // console.log("�📊 faceAssignments array length:", faceAssignments.length);
+        // console.log("📊 faceAssignments before shuffle:", JSON.stringify(faceAssignments));
+
         // Generate deterministic random values using seeded random
         var randomValues = [];
         for (var i = faceAssignments.length - 1; i > 0; i--) {
             var randomValue = _globals.getSeededRandom();
             randomValues.push(randomValue);
         }
-        
-        console.log("📋 Generated seeded random values: [" + randomValues.slice(0, 10).map(function(v) { return v.toFixed(6); }).join(", ") + (randomValues.length > 10 ? "..." : "") + "]");
-        
+
+        // console.log("📋 Generated seeded random values: [" + randomValues.slice(0, 10).map(function(v) { return v.toFixed(6); }).join(", ") + (randomValues.length > 10 ? "..." : "") + "]");
+
         // Perform Fisher-Yates shuffle using the seeded random values
         var shuffleIndex = 0;
         for (var i = faceAssignments.length - 1; i > 0; i--) {
             var randomValue = randomValues[shuffleIndex];
             var j = Math.floor(randomValue * (i + 1));
             shuffleIndex++;
-            
-            if (shuffleIndex <= 10) { // Log first few steps for debugging
-                console.log("Step " + (faceAssignments.length - 1 - i) + ": seeded random=" + randomValue.toFixed(6) + ", j=" + j + ", swapping indices " + i + " ↔ " + j);
-            }
-            
+
+            // if (shuffleIndex <= 10) { // Log first few steps for debugging
+            //     console.log("Step " + (faceAssignments.length - 1 - i) + ": seeded random=" + randomValue.toFixed(6) + ", j=" + j + ", swapping indices " + i + " ↔ " + j);
+            // }
+
             // Perform swap
             var temp = faceAssignments[i];
             faceAssignments[i] = faceAssignments[j];
             faceAssignments[j] = temp;
         }
-        
-        console.log("📋 All seeded random values: [" + randomValues.map(function(v) { return v.toFixed(6); }).join(", ") + "]");
-        console.log("📊 faceAssignments after shuffle:", JSON.stringify(faceAssignments));
-        
+
+        // console.log("📋 All seeded random values: [" + randomValues.map(function(v) { return v.toFixed(6); }).join(", ") + "]");
+        // console.log("📊 faceAssignments after shuffle:", JSON.stringify(faceAssignments));
+
         // Apply assignments to faces
         for (var f = 0; f < faces.length; f++) {
             if (faceAssignments[f] !== undefined) {
                 _globals.faceTextureMapping[f] = faceAssignments[f];
             }
         }
-        
+
         // Debug: Show final face-to-texture mapping (first 20 faces)
-        console.log("🗺️ Final face mapping (first 20 faces):");
-        for (var f = 0; f < Math.min(20, faces.length); f++) {
-            console.log("Face " + f + " → Texture " + _globals.faceTextureMapping[f]);
-        }
+        // console.log("🗺️ Final face mapping (first 20 faces):");
+        // for (var f = 0; f < Math.min(20, faces.length); f++) {
+        //     console.log("Face " + f + " → Texture " + _globals.faceTextureMapping[f]);
+        // }
         
         // Statistics for logging
         var textureUsage = {};
@@ -1171,9 +1188,9 @@ function initGlobals(){
         } else {
             _globals.randomSeed = seed;
         }
-        
-        console.log("🎲 Initializing global random seed:", seed);
-        
+
+        // console.log("🎲 Initializing global random seed:", seed);
+
         // Create a robust seeded random generator using the seed string
         var seedHash = 0;
         for (var i = 0; i < seed.length; i++) {
@@ -1194,8 +1211,8 @@ function initGlobals(){
         };
         
         _globals.useSeededRandom = true;
-        console.log("✅ Using custom seeded random generator with hash:", seedHash);
-        console.log("✅ Random seed initialized. Seeded random:", _globals.useSeededRandom);
+        // console.log("✅ Using custom seeded random generator with hash:", seedHash);
+        // console.log("✅ Random seed initialized. Seeded random:", _globals.useSeededRandom);
         
         // Immediately apply global override
         enableGlobalRandomOverride();
@@ -1252,16 +1269,16 @@ function initGlobals(){
     
     function enableGlobalRandomOverride() {
         if (_globals.useSeededRandom && _globals.randomFunction) {
-            console.log("🔒 Overriding Math.random with seeded function");
+            // console.log("🔒 Overriding Math.random with seeded function");
             Math.random = _globals.getSeededRandom;
         } else {
-            console.log("🔓 Using original Math.random");
+            // console.log("🔓 Using original Math.random");
             Math.random = originalMathRandom;
         }
     }
-    
+
     function disableGlobalRandomOverride() {
-        console.log("🔄 Restoring original Math.random");
+        // console.log("🔄 Restoring original Math.random");
         Math.random = originalMathRandom;
     }
     
@@ -1349,19 +1366,19 @@ function initGlobals(){
     function onPatternLoaded(callback) {
         if (typeof callback === 'function') {
             _globals.patternLoadingCallbacks.push(callback);
-            console.log('📋 Pattern loading callback registered, total callbacks:', _globals.patternLoadingCallbacks.length);
+            // console.log('📋 Pattern loading callback registered, total callbacks:', _globals.patternLoadingCallbacks.length);
         }
     }
     _globals.onPatternLoaded = onPatternLoaded;
-    
+
     function notifyPatternLoaded(patternInfo) {
-        console.log('🔔 Notifying pattern loaded:', patternInfo);
+        // console.log('🔔 Notifying pattern loaded:', patternInfo);
         var callbacks = _globals.patternLoadingCallbacks.slice(); // Copy array
         _globals.patternLoadingCallbacks = []; // Clear callbacks
-        
+
         callbacks.forEach(function(callback, index) {
             try {
-                console.log('📞 Calling pattern loading callback', index);
+                // console.log('📞 Calling pattern loading callback', index);
                 callback(patternInfo);
             } catch (error) {
                 console.error('❌ Error in pattern loading callback', index, ':', error);
@@ -1373,8 +1390,8 @@ function initGlobals(){
     // Enable global override by default
     enableGlobalRandomOverride();
 
-    console.log("initGlobals function completed successfully");
+    // console.log("initGlobals function completed successfully");
     return _globals;
 }
 
-console.log("globals.js loaded successfully, initGlobals function defined");
+// console.log("globals.js loaded successfully, initGlobals function defined");
