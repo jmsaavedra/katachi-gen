@@ -18,6 +18,9 @@
  *   R2_BUCKET_NAME (optional, defaults to 'katachi-gen')
  */
 
+// Load environment variables from .env file
+require('dotenv').config();
+
 const { S3Client, ListObjectsV2Command, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 
 // Parse command line arguments
