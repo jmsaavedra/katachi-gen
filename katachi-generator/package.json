@@ -7,7 +7,8 @@
     "start:prod": "NODE_ENV=production node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node build-ejs.js",
-    "dev": "NODE_ENV=development node server.js"
+    "dev": "NODE_ENV=development node server.js",
+    "minify": "node scripts/minify-partials.js"
   },
   "keywords": [],
   "author": "",
