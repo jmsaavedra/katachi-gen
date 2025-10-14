@@ -4,7 +4,7 @@ const path = require('path');
 
 // Read the main CSS files that need to be inlined
 const jqueryUICSS = fs.readFileSync(path.join(__dirname, 'public/css/jquery-ui.min.css'), 'utf8');
-const mainCSS = fs.readFileSync(path.join(__dirname, 'public/css/main.css'), 'utf8');
+const mainCSS = fs.readFileSync(path.join(__dirname, 'public/css/main.min.css'), 'utf8');
 
 // Template data
 const templateData = {

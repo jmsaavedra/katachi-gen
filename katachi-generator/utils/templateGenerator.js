@@ -21,7 +21,7 @@ async function generateModularTemplate(nftData) {
         // Read the required CSS files
         const projectRoot = path.join(__dirname, '..');
         const jqueryUICSSPath = path.join(projectRoot, 'public/css/jquery-ui.min.css');
-        const mainCSSPath = path.join(projectRoot, 'public/css/main.css');
+        const mainCSSPath = path.join(projectRoot, 'public/css/main.min.css');
         
         let jqueryUICSS = '';
         let mainCSS = '';
@@ -36,7 +36,7 @@ async function generateModularTemplate(nftData) {
         if (fs.existsSync(mainCSSPath)) {
             mainCSS = fs.readFileSync(mainCSSPath, 'utf8');
         } else {
-            console.warn(`⚠️ main.css not found at ${mainCSSPath}`);
+            console.warn(`⚠️ main.min.css not found at ${mainCSSPath}`);
         }
         
         // Prepare template data
