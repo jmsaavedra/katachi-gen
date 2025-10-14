@@ -109,43 +109,23 @@ async function handlePatternGeneration(req, res, data) {
             console.log('📁 Physical location:', htmlPath);
             
         } else if (!shouldUseArweave) {
-            // Testing mode: Try R2 first, fallback to local
-            console.log('🧪 TESTING MODE: Trying R2 upload for preview...');
-            
-            const r2Url = await uploadToR2(htmlPath, htmlFilename);
-            
-            // In testing mode, use local URLs for thumbnail and HTML
+            // Local development mode: Keep everything local, no uploads
+            console.log('🔧 LOCAL DEVELOPMENT MODE: Keeping files local, skipping uploads');
+
+            // Use local URLs for everything
             thumbnailUrl = `http://localhost:${port}/thumbnails/${thumbnailFilename}`;
-            
-            if (r2Url) {
-                // R2 success: Use R2 for both metadata and preview, clean up temp file
-                htmlUrl = r2Url;
-                previewHtmlUrl = r2Url;
-                // Set transaction IDs to match the actual URLs for metadata consistency
-                thumbnailTxId = thumbnailUrl;
-                htmlTxId = r2Url;
-                console.log('✅ Using R2 for preview iframe:', r2Url);
-                
-                try {
-                    fs.unlinkSync(htmlPath);
-                    console.log('🧹 Cleaned up temp file (using R2)');
-                } catch (cleanupError) {
-                    console.warn('Could not clean up temporary HTML file:', cleanupError.message);
-                }
-            } else {
-                // R2 failed: Keep local temp file for preview
-                htmlUrl = `http://localhost:${port}/temp/html/${htmlFilename}`;
-                previewHtmlUrl = htmlUrl;
-                // Set transaction IDs to match the actual URLs for metadata consistency
-                thumbnailTxId = thumbnailUrl;
-                htmlTxId = htmlUrl;
-                console.log('⚠️ R2 unavailable, using local temp file for preview:', htmlUrl);
-                console.log('💡 To use R2 for reliable preview hosting, configure these environment variables:');
-                console.log('   - CLOUDFLARE_R2_ENDPOINT');
-                console.log('   - CLOUDFLARE_R2_ACCESS_KEY_ID');
-                console.log('   - CLOUDFLARE_R2_SECRET_ACCESS_KEY');
-            }
-            
+            htmlUrl = `http://localhost:${port}/temp/html/${htmlFilename}`;
+            previewHtmlUrl = htmlUrl;
+
+            // Set transaction IDs to match the actual URLs for metadata consistency
+            thumbnailTxId = thumbnailUrl;
+            htmlTxId = htmlUrl;
+
+            console.log('⏭️  Skipping Arweave upload due to local development mode');
+            console.log('⏭️  Skipping temp file cleanup due to local development mode');
+            console.log('✅ HTML file kept at:', htmlPath);
+            console.log('🔗 Access it at:', htmlUrl);
+
         } else {
             // Production mode OR minting mode: Upload to R2 + Arweave
             const modeDescription = !TESTING_MODE ? 'PRODUCTION MODE' : 'MINTING MODE (from development)';
@@ -173,13 +153,18 @@ async function handlePatternGeneration(req, res, data) {
             if (r2Url) {
                 previewHtmlUrl = r2Url;
                 console.log('🎨 Gallery URL:', r2Url);
-                
-                // Clean up temp file since we have R2 URL
-                try {
-                    fs.unlinkSync(htmlPath);
-                    console.log('🧹 Cleaned up temp file (using R2 URL)');
-                } catch (cleanupError) {
-                    console.warn('Could not clean up temporary HTML file:', cleanupError.message);
+
+                // Clean up temp file since we have R2 URL (only in production)
+                if (!TESTING_MODE) {
+                    try {
+                        fs.unlinkSync(htmlPath);
+                        console.log('🧹 Cleaned up temp file (using R2 URL)');
+                    } catch (cleanupError) {
+                        console.warn('Could not clean up temporary HTML file:', cleanupError.message);
+                    }
+                } else {
+                    console.log('⏭️  Skipping temp file cleanup due to local development mode (minting)');
+                    console.log('📁 Temp file kept at:', htmlPath);
                 }
             } else {
                 // Keep temp file for preview since R2 upload failed
