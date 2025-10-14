@@ -89,8 +89,9 @@ async function handlePatternGeneration(req, res, data) {
         const isTestInterface = data.testInterface === true || data.source === 'test';
 
         // Use ENABLE_MINTING flag to control Arweave uploads
-        // Can be overridden by forMinting flag from frontend for backwards compatibility
-        const shouldUseArweave = (ENABLE_MINTING || data.forMinting) && !isTestInterface;
+        // ENABLE_MINTING from .env takes precedence over frontend forMinting flag
+        // This gives developers full control via local environment
+        const shouldUseArweave = ENABLE_MINTING && !isTestInterface;
         
         if (isTestInterface) {
             // Test interface: Keep files local only
