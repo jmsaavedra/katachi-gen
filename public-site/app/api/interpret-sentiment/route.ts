@@ -7,7 +7,7 @@ import { withRelatedProject } from '@vercel/related-projects';
 // - Development: http://localhost:3002/mcp (from env var)
 const MCP_SERVER_URL = withRelatedProject({
   projectName: 'katachi-gen-mcp-server',
-  fallbackUrl: process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp',
+  defaultHost: process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp',
 }) + '/mcp';
 
 const MAX_RETRIES = 2;

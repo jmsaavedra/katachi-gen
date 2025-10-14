@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     // Automatically resolves to the correct MCP server URL based on environment
     const mcpServerUrl = withRelatedProject({
       projectName: 'katachi-gen-mcp-server',
-      fallbackUrl: process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp',
+      defaultHost: process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp',
     }) + '/mcp';
 
     const mcpRequest = {
