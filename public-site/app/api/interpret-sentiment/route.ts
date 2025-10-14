@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withRelatedProject } from '@vercel/related-projects';
 
-const MCP_SERVER_URL = process.env.MCP_SERVER_URL || 'https://katachi-gen-mcp-server.vercel.app/mcp';
+// Automatically resolves to the correct MCP server URL based on environment
+// - Production: https://katachi-gen-mcp-server.vercel.app/mcp
+// - Preview: Automatically matches preview branch URL
+// - Development: http://localhost:3002/mcp (from env var)
+const MCP_SERVER_URL = withRelatedProject({
+  projectName: 'katachi-gen-mcp-server',
+  fallbackUrl: process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp',
+}) + '/mcp';
+
 const MAX_RETRIES = 2;
 const RETRY_DELAY_MS = 2000; // 2 seconds
 

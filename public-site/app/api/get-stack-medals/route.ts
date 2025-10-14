@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isAddress } from 'viem';
+import { withRelatedProject } from '@vercel/related-projects';
 
 type GetStackMedalsRequest = {
   userAddress: string;
@@ -41,13 +42,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const mcpServerUrl = process.env.MCP_SERVER_URL;
-    if (!mcpServerUrl) {
-      return NextResponse.json(
-        { error: 'MCP server not configured' },
-        { status: 500 }
-      );
-    }
+    // Automatically resolves to the correct MCP server URL based on environment
+    const mcpServerUrl = withRelatedProject({
+      projectName: 'katachi-gen-mcp-server',
+      fallbackUrl: process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp',
+    }) + '/mcp';
 
     const mcpRequest = {
       jsonrpc: '2.0',
