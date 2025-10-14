@@ -169,26 +169,26 @@ function initThreeView(globals) {
         globals.multiAxisRotation.x = (Math.random() - 0.5) * 2 * (baseSpeed + Math.random() * speedVariation);
         globals.multiAxisRotation.y = (Math.random() - 0.5) * 2 * (baseSpeed + Math.random() * speedVariation);
         globals.multiAxisRotation.z = (Math.random() - 0.5) * 2 * (baseSpeed + Math.random() * speedVariation);
-        
-        console.log('🎲 New random rotation speeds:', {
-            x: globals.multiAxisRotation.x.toFixed(4),
-            y: globals.multiAxisRotation.y.toFixed(4),
-            z: globals.multiAxisRotation.z.toFixed(4)
-        });
+
+        // console.log('🎲 New random rotation speeds:', {
+        //     x: globals.multiAxisRotation.x.toFixed(4),
+        //     y: globals.multiAxisRotation.y.toFixed(4),
+        //     z: globals.multiAxisRotation.z.toFixed(4)
+        // });
     }
 
     function startAnimation(){
-        console.log("starting animation");
+        // console.log("starting animation");
         renderer.animate(_loop);
     }
 
     function pauseSimulation(){
         globals.simulationRunning = false;
-        console.log("pausing simulation");
+        // console.log("pausing simulation");
     }
 
     function startSimulation(){
-        console.log("starting simulation");
+        // console.log("starting simulation");
         globals.simulationRunning = true;
     }
 
@@ -277,7 +277,7 @@ function initThreeView(globals) {
                 
                 // Check if animation phase is complete
                 if (progress >= 1) {
-                    console.log('📊 Slider animation phase completed, starting pause');
+                    // console.log('📊 Slider animation phase completed, starting pause');
                     globals.sliderAnimationState = 'pausing';
                     globals.sliderAnimationPauseStartTime = currentTime;
                     globals.sliderAnimationStartTime = null;
@@ -286,12 +286,12 @@ function initThreeView(globals) {
                 if (globals.sliderAnimationPauseStartTime === null) {
                     globals.sliderAnimationPauseStartTime = currentTime;
                 }
-                
+
                 var pauseElapsed = currentTime - globals.sliderAnimationPauseStartTime;
-                
+
                 // Check if pause is complete
                 if (pauseElapsed >= globals.sliderAnimationPauseTime) {
-                    console.log('⏰ Pause completed, reversing animation direction');
+                    // console.log('⏰ Pause completed, reversing animation direction');
                     
                     if (globals.sliderAnimationLoop) {
                         // Reverse direction and values for next animation
@@ -304,13 +304,13 @@ function initThreeView(globals) {
                         globals.sliderAnimationState = 'animating';
                         globals.sliderAnimationPauseStartTime = null;
                         globals.sliderAnimationStartTime = null;
-                        
-                        console.log('🔄 Starting next animation phase: ' + 
-                                  globals.sliderAnimationStartValue + ' → ' + 
-                                  globals.sliderAnimationEndValue);
+
+                        // console.log('🔄 Starting next animation phase: ' +
+                        //           globals.sliderAnimationStartValue + ' → ' +
+                        //           globals.sliderAnimationEndValue);
                     } else {
                         // Stop looping
-                        console.log('⏹️ Slider animation loop completed');
+                        // console.log('⏹️ Slider animation loop completed');
                         globals.sliderAutoAnimationEnabled = false;
                         globals.sliderAnimationStartTime = null;
                         globals.sliderAnimationPauseStartTime = null;
