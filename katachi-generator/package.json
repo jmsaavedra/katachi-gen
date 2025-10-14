@@ -18,6 +18,7 @@
     "arweave": "^1.15.7",
     "canvas": "^3.2.0",
     "dotenv": "^17.2.1",
+    "ejs": "^3.1.10",
     "inliner": "^1.13.1",
     "mime-types": "^3.0.1",
     "playwright": "^1.55.0",
