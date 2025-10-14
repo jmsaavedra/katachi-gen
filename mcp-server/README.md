@@ -2,6 +2,8 @@
 
 Model Context Protocol (MCP) server for Shape, built with [xmcp](https://xmcp.dev). This server provides AI assistants access to Shape's onchain data: [gasback](https://docs.shape.network/gasback) distribution, collections analytics, stack users & more.
 
+Deployed on Vercel with automatic build skipping for monorepo optimization.
+
 Contributions are welcome! Fork and add your own tools, feel free to submit a PR.
 
 Check our docs about how to build AI on Shape: https://docs.shape.network/building-on-shape/ai
