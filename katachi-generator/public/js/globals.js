@@ -777,9 +777,26 @@ function initGlobals(){
         }
 
         if (!faces || faces.length === 0) {
-            console.warn("No faces found in model");
+            // Model not ready yet - defer texture assignment
+            if (!_globals.textureAssignmentRetryCount) {
+                _globals.textureAssignmentRetryCount = 0;
+            }
+
+            if (_globals.textureAssignmentRetryCount < 10) {
+                _globals.textureAssignmentRetryCount++;
+                // console.log("⏳ Model faces not ready, retrying in 200ms (attempt", _globals.textureAssignmentRetryCount, "/10)");
+                setTimeout(function() {
+                    assignRandomTextures();
+                }, 200);
+            } else {
+                console.warn("❌ No faces found in model after 10 retries");
+                _globals.textureAssignmentRetryCount = 0;
+            }
             return;
         }
+
+        // Reset retry count on success
+        _globals.textureAssignmentRetryCount = 0;
 
         // console.log("🎲 Assigning", _globals.textureLibrary.length, "textures randomly to", faces.length, "faces");
         

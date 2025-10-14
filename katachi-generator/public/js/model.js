@@ -221,11 +221,23 @@ function initModel(globals){
                 
                 if (globals.isCellGeneratedTexture && globals.useSimpleTextureMode) {
                     // console.log("🎯 Using simple UV mapping for cell-generated texture");
-                    setSimpleUVMapping();
+                    // Check if geometry is ready before applying UV mapping
+                    if (geometry && geometry.attributes && geometry.attributes.position) {
+                        setSimpleUVMapping();
+                    } else {
+                        // Geometry not ready yet, defer UV mapping
+                        // console.log("⏳ Geometry not ready, deferring UV mapping until buildModel completes");
+                        globals.needsUVMapping = true;
+                    }
                 } else {
                     // Update UV coordinates for face-based texture mapping
                     // console.log("🔄 Updating UV coordinates for texture mapping (fallback)");
-                    updateFaceBasedUVs();
+                    if (geometry && geometry.attributes && geometry.attributes.position) {
+                        updateFaceBasedUVs();
+                    } else {
+                        // console.log("⏳ Geometry not ready, deferring UV mapping until buildModel completes");
+                        globals.needsUVMapping = true;
+                    }
                 }
                 // console.log("✅ Texture material applied successfully");
             } else {
@@ -1051,13 +1063,24 @@ function initModel(globals){
 
         updateEdgeVisibility();
         updateMeshVisibility();
-        
+
         // If in NFT processing mode, override visibility to keep objects hidden
         if (globals.isNFTProcessing || globals.hideUntilTextured) {
             console.log('🙈 NFT processing detected in buildModel - forcing objects hidden');
             if (frontside) frontside.visible = false;
             if (backside) backside.visible = false;
             if (edges) edges.visible = false;
+        }
+
+        // Apply deferred UV mapping if needed (geometry is now ready)
+        if (globals.needsUVMapping) {
+            // console.log("✅ Geometry ready, applying deferred UV mapping");
+            if (globals.isCellGeneratedTexture && globals.useSimpleTextureMode) {
+                setSimpleUVMapping();
+            } else {
+                updateFaceBasedUVs();
+            }
+            globals.needsUVMapping = false;
         }
 
         syncSolver();
