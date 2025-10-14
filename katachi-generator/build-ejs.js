@@ -31,20 +31,9 @@ ejs.renderFile(templatePath, templateData, {
     process.exit(1);
   }
 
-  // Write the rendered HTML to the public directory for webpack
+  // Write the rendered HTML to the public directory for testing/validation
   const outputPath = path.join(__dirname, 'public/generated-index.html');
   fs.writeFileSync(outputPath, html);
-  console.log('EJS template rendered successfully to', outputPath);
-  
-  // Also write directly to dist as webpack has issues with the large file
-  const distPath = path.join(__dirname, 'dist/template.html');
-  
-  // Ensure dist directory exists
-  const distDir = path.dirname(distPath);
-  if (!fs.existsSync(distDir)) {
-    fs.mkdirSync(distDir, { recursive: true });
-  }
-  
-  fs.writeFileSync(distPath, html);
-  console.log('EJS template also written directly to', distPath);
+  console.log('✅ EJS template compiled successfully to', outputPath);
+  console.log('   (This file is for testing only - production uses server-side EJS rendering)');
 });

@@ -6,15 +6,8 @@
     "start": "NODE_ENV=development node server.js",
     "start:prod": "NODE_ENV=production node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node build-ejs.js && webpack --mode production",
-    "dev": "NODE_ENV=development node server.js",
-    "webpack:dev": "node build-ejs.js && webpack --mode development",
-    "webpack:build": "node build-ejs.js && webpack --mode production",
-    "watch": "webpack --mode development --watch",
-    "serve": "webpack serve --mode development",
-    "rollup:build": "NODE_ENV=production rollup -c",
-    "rollup:dev": "rollup -c --watch",
-    "rollup:bundle": "rollup -c"
+    "build": "node build-ejs.js",
+    "dev": "NODE_ENV=development node server.js"
   },
   "keywords": [],
   "author": "",
