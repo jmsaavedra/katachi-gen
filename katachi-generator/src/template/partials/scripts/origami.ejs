@@ -1,18 +1,11 @@
 <!-- Origami Pattern Loading and NFT Processing -->
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // NFT Display Mode - always hide navigation and suppress alerts
-        // console.log('🚫 NFT Display mode - hiding navigation and suppressing alerts');
+        // NFT Display Mode - suppress alerts
+        // console.log('🚫 NFT Display mode - suppressing alerts');
 
         // Add CSS class to body for styling
         document.body.classList.add('edit-mode-disabled');
-
-        // Hide navigation bar
-        var navBar = document.getElementById('globalNav');
-        if (navBar) {
-            navBar.style.display = 'none';
-            // console.log('✅ Navigation bar hidden');
-        }
 
         // Initially hide all controls
         var controlsBottom = document.getElementById('controlsBottom');
