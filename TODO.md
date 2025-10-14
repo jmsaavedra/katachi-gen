@@ -443,6 +443,20 @@ katachi-generator/
 
 ## 📋 Backlog
 
+### Interactive NFT Preview Improvements
+- [ ] **Fix iframe sandbox restrictions for Interactive NFT Preview**
+  - **Issue**: "Download is disallowed. The frame initiating or instantiating the download is sandboxed, but the flag 'allow-downloads' is not set."
+  - **Location**: Generate and Mint step iframe in public-site
+  - **Solution**: Add `allow-downloads` flag to iframe sandbox attribute
+  - **Details**: See https://www.chromestatus.com/feature/5706745674465280
+  - **Example Fix**:
+    ```jsx
+    <iframe
+      sandbox="allow-scripts allow-same-origin allow-downloads"
+      src={previewUrl}
+    />
+    ```
+
 ### Documentation
 - [ ] Add comprehensive EJS template system documentation
   - Template structure and component responsibilities

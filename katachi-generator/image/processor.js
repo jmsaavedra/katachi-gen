@@ -5,7 +5,7 @@ const sharp = require('sharp');
 const https = require('https');
 const http = require('http');
 const { THUMB_WIDTH, THUMB_HEIGHT } = require('../config');
-const { getNFTWithRaribleImages, getBestImageUrl } = require('../utils/raribleClient');
+const { getNFTMetadataFromAlchemy, getBestImageUrl } = require('../utils/alchemyClient');
 
 /**
  * Save thumbnail to file
@@ -176,25 +176,33 @@ function parseNFTInfoFromUrl(imageUrl, metadata = {}) {
 }
 
 /**
- * Try to fetch optimized image from Rarible API
+ * Try to fetch optimized image from Alchemy API
  * @param {string} contractAddress - NFT contract address
  * @param {string} tokenId - NFT token ID
  * @returns {Promise<string|null>} Optimized image URL or null if not available
  */
-async function getOptimizedImageFromRarible(contractAddress, tokenId) {
+async function getOptimizedImageFromAlchemy(contractAddress, tokenId) {
     try {
-        const nftData = await getNFTWithRaribleImages(contractAddress, tokenId);
+        const nftData = await getNFTMetadataFromAlchemy(contractAddress, tokenId);
+
+        // Log which image sizes are available for this NFT
+        console.log(`📸 Alchemy image availability for ${contractAddress}:${tokenId}:`);
+        console.log(`   - thumbnail (256x256): ${nftData.images.thumbnail ? '✅ available' : '❌ not available'}`);
+        console.log(`   - medium (512x512): ${nftData.images.medium ? '✅ available' : '❌ not available'}`);
+        console.log(`   - cached: ${nftData.images.cached ? '✅ available' : '❌ not available'}`);
+        console.log(`   - original: ${nftData.images.original ? '✅ available' : '❌ not available'}`);
+
         const optimizedUrl = getBestImageUrl(nftData.images);
 
         if (optimizedUrl) {
-            console.log(`✅ Using Rarible optimized image: ${optimizedUrl.slice(0, 80)}...`);
+            console.log(`✅ Using Alchemy optimized image: ${optimizedUrl.slice(0, 80)}...`);
             return optimizedUrl;
         }
 
-        console.log(`⚠️ No optimized images found in Rarible, falling back to direct download`);
+        console.log(`⚠️ No optimized images found in Alchemy, falling back to direct download`);
         return null;
     } catch (error) {
-        console.warn(`⚠️ Rarible API failed: ${error.message}, falling back to direct download`);
+        console.warn(`⚠️ Alchemy API failed: ${error.message}, falling back to direct download`);
         return null;
     }
 }
@@ -282,16 +290,16 @@ async function processImagesAsBase64(data) {
                     }
 
                     let imageUrlToDownload = image.url;
-                    let usedRarible = false;
+                    let usedAlchemy = false;
 
-                    // Try Rarible first if we have contract and token info
+                    // Try Alchemy first if we have contract and token info
                     if (image.contractAddress && image.tokenId) {
-                        console.log(`🔍 Attempting to fetch optimized image from Rarible for ${image.contractAddress}:${image.tokenId}`);
-                        const raribleUrl = await getOptimizedImageFromRarible(image.contractAddress, image.tokenId);
-                        if (raribleUrl) {
-                            imageUrlToDownload = raribleUrl;
-                            usedRarible = true;
-                            image.source = 'rarible';
+                        console.log(`🔍 Attempting to fetch optimized image from Alchemy for ${image.contractAddress}:${image.tokenId}`);
+                        const alchemyUrl = await getOptimizedImageFromAlchemy(image.contractAddress, image.tokenId);
+                        if (alchemyUrl) {
+                            imageUrlToDownload = alchemyUrl;
+                            usedAlchemy = true;
+                            image.source = 'alchemy';
                         }
                     } else {
                         console.log(`⚠️ No contract/token info for image ${i + 1}, using direct download`);
@@ -316,9 +324,9 @@ async function processImagesAsBase64(data) {
                     image.url = `data:${mimeType};base64,${base64String}`;
                     image.size = downloadResult.size;
                     image.compressedSize = downloadResult.compressedSize;
-                    image.usedRarible = usedRarible;
+                    image.usedAlchemy = usedAlchemy;
 
-                    console.log(`✅ Image ${i + 1} processed${usedRarible ? ' (via Rarible)' : ''}: ${downloadResult.size} → ${downloadResult.compressedSize} bytes`);
+                    console.log(`✅ Image ${i + 1} processed${usedAlchemy ? ' (via Alchemy)' : ''}: ${downloadResult.size} → ${downloadResult.compressedSize} bytes`);
 
                 } catch (error) {
                     console.error(`❌ Failed to process image ${i + 1}: ${error.message}`);
@@ -334,7 +342,7 @@ async function processImagesAsBase64(data) {
         totalImages: processedData.images?.length || 0,
         processedImages: processedData.images?.filter(img => img.url && img.url.startsWith('data:')).length || 0,
         failedImages: processedData.images?.filter(img => img.error).length || 0,
-        raribleOptimized: processedData.images?.filter(img => img.usedRarible).length || 0,
+        alchemyOptimized: processedData.images?.filter(img => img.usedAlchemy).length || 0,
         timestamp: new Date().toISOString()
     };
 
@@ -348,5 +356,5 @@ module.exports = {
     downloadWithStrategy,
     downloadImageAsBase64,
     processImagesAsBase64,
-    getOptimizedImageFromRarible
+    getOptimizedImageFromAlchemy
 };
