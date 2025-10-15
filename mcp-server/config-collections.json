@@ -97,6 +97,24 @@
       "name": "DeePle Stuff",
       "preferOriginal": true,
       "reason": "Small file size, benefits from full resolution"
+    },
+    {
+      "address": "0x78569eBB153AaEC55601efE4b54d0e65014c4Ea8",
+      "name": "RCS Guy",
+      "preferOriginal": true,
+      "reason": "Small file size, benefits from full resolution"
+    },
+    {
+      "address": "0x619d8DDAecf310049bAE7B2a1e629aF46De50C98",
+      "name": "Infinite Moments",
+      "preferOriginal": true,
+      "reason": "Thumbnails are high quality and smaller file size"
+    },
+    {
+      "address": "0x2967b7a0fa5115735d9f0d4c4867beaf9e76214d",
+      "name": "Aerial Art Club",
+      "preferOriginal": false,
+      "reason": "Thumbnails are high quality and smaller file size"
     }
   ],
 
