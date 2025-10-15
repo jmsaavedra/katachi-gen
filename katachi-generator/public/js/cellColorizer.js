@@ -431,12 +431,24 @@ function initCellColorizer(globals) {
                 const imageAspect = texture.image.width / texture.image.height;
                 const patternAspect = scaledWidth / scaledHeight;
 
+                // Get the configured texture scale (zoom level) from texture userData
+                // Higher scale = more zoom = texture appears larger
+                const textureScale = (texture.userData && texture.userData.configuredScale) || 1.0;
+                if (textureScale !== 1.0) {
+                    console.log(`🔍 Applying texture scale ${textureScale}x to texture ${textureIndex} (${texture.name})`);
+                }
+
                 // FORCE texture to EXACT pattern size (no aspect ratio fitting)
                 // This ensures texture size matches fold lines exactly
-                const drawWidth = scaledWidth;
-                const drawHeight = scaledHeight;
-                const drawX = offsetX;
-                const drawY = offsetY;
+                // Apply texture scale: scale > 1.0 means zoom in (draw larger texture, centered)
+                const scaledDrawWidth = scaledWidth * textureScale;
+                const scaledDrawHeight = scaledHeight * textureScale;
+
+                // Center the scaled texture within the pattern bounds
+                const drawWidth = scaledDrawWidth;
+                const drawHeight = scaledDrawHeight;
+                const drawX = offsetX - (scaledDrawWidth - scaledWidth) / 2;
+                const drawY = offsetY - (scaledDrawHeight - scaledHeight) / 2;
 
                 // console.log("Texture", textureIndex, "STRETCHED to EXACT pattern size:");
                 // console.log("  - Image size:", texture.image.width + "x" + texture.image.height, "aspect:", imageAspect.toFixed(3));
