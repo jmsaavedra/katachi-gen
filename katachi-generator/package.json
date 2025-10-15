@@ -24,6 +24,7 @@
     "@aws-sdk/client-s3": "^3.879.0",
     "arweave": "^1.15.7",
     "canvas": "^3.2.0",
+    "clean-css": "^5.3.3",
     "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
     "inliner": "^1.13.1",
@@ -31,7 +32,8 @@
     "playwright": "^1.55.0",
     "puppeteer": "^24.17.0",
     "puppeteer-core": "^24.17.0",
-    "sharp": "^0.34.3"
+    "sharp": "^0.34.3",
+    "terser": "^5.36.0"
   },
   "devDependencies": {
     "@babel/core": "^7.28.3",
@@ -41,7 +43,6 @@
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-terser": "^0.4.4",
     "babel-loader": "^10.0.0",
-    "clean-css": "^5.3.3",
     "css-loader": "^7.1.2",
     "file-loader": "^6.2.0",
     "html-bundler-webpack-plugin": "^4.21.1",
@@ -52,7 +53,6 @@
     "rollup-plugin-copy": "^3.5.0",
     "rollup-plugin-html-bundle": "^0.0.3",
     "style-loader": "^4.0.0",
-    "terser": "^5.36.0",
     "url-loader": "^4.1.1",
     "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4",
