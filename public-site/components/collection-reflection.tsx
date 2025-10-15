@@ -259,9 +259,9 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                           className="block"
                         >
                           <div className="w-32 h-32 rounded-lg overflow-hidden bg-muted relative group cursor-pointer">
-                            {(nft.alchemyImages?.thumbnailUrl || nft.imageUrl) ? (
+                            {(nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl) ? (
                               <Image
-                                src={nft.alchemyImages?.thumbnailUrl || nft.imageUrl || ''}
+                                src={nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl || ''}
                                 alt={nft.name || 'NFT'}
                                 fill
                                 className="object-cover transition-transform group-hover:scale-105"
