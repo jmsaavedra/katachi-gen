@@ -16,6 +16,14 @@ interface InterpretedNFT {
   description: string | null;
   imageUrl: string | null;
   collectionName: string | null;
+  alchemyImages?: {
+    cachedUrl?: string;
+    thumbnailUrl?: string;
+    pngUrl?: string;
+    originalUrl?: string;
+    contentType?: string;
+    size?: number;
+  };
   reason: string;
   matchScore: number;
   matchDetails?: {
@@ -251,9 +259,9 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                           className="block"
                         >
                           <div className="w-32 h-32 rounded-lg overflow-hidden bg-muted relative group cursor-pointer">
-                            {nft.imageUrl ? (
+                            {(nft.alchemyImages?.thumbnailUrl || nft.imageUrl) ? (
                               <Image
-                                src={nft.imageUrl}
+                                src={nft.alchemyImages?.thumbnailUrl || nft.imageUrl || ''}
                                 alt={nft.name || 'NFT'}
                                 fill
                                 className="object-cover transition-transform group-hover:scale-105"
