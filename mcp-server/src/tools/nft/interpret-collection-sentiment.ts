@@ -396,20 +396,24 @@ export default async function interpretCollectionSentiment({
       const collectionAddress = nftItem.nft.contract.address.toLowerCase();
       const currentCount = collectionCounts.get(collectionAddress) || 0;
       const contentType = nftItem.nft.image?.contentType;
-      
+      const hasThumbnail = nftItem.nft.image?.thumbnailUrl;
+      const hasPng = nftItem.nft.image?.pngUrl;
+
       console.log(`🔍 [${index + 1}/${scoredNfts.length}] Evaluating: ${nftItem.nft.name || 'Unnamed'} (score: ${nftItem.score.toFixed(2)})`);
       console.log(`    ContentType: ${contentType || 'unknown'}`);
+      console.log(`    Alchemy Images: thumbnail=${!!hasThumbnail}, png=${!!hasPng}`);
       console.log(`    Contract: ${collectionAddress} (currentCount: ${currentCount})`);
-      
+
       // Filter out blocked contracts
       if (BLOCKED_CONTRACTS.includes(collectionAddress)) {
         console.log(`🚫 Skipped (blocked contract): ${nftItem.nft.name || 'Unnamed'} from ${collectionAddress}`);
         continue;
       }
-      
-      // Filter out non-image content types and unknown types
-      if (!contentType || !contentType.startsWith('image/')) {
-        console.log(`❌ Skipped (non-image): ${nftItem.nft.name || 'Unnamed'} (${contentType || 'unknown'})`);
+
+      // Filter out NFTs where Alchemy doesn't have a processed image (thumbnailUrl or pngUrl)
+      // This allows videos/html/other formats as long as Alchemy converted them to images
+      if (!hasThumbnail && !hasPng) {
+        console.log(`❌ Skipped (no Alchemy image): ${nftItem.nft.name || 'Unnamed'} (contentType: ${contentType || 'unknown'})`);
         continue;
       }
       
