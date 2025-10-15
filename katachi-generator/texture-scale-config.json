@@ -9,16 +9,34 @@
   },
   "contracts": [
     {
-      "address": "0xbb8f2711bd4bc98223990267f771e97d2d9bc167",
-      "name": "Infinite Garden",
-      "scale": 2.5,
-      "reason": "Detailed generative art benefits from closer view"
+      "address": "0xF2E4b2a15872a20D0fFB336a89B94BA782cE9Ba5",
+      "name": "DeePle",
+      "scale": 5,
+      "reason": "deeple is super small in the center of the image"
     },
     {
       "address": "0x520fc638d11a8b83bb49e085a08afda6b4e7a7e5",
       "name": "Postino",
       "scale": 1.5,
       "reason": "Stamp designs work well with slight zoom"
+    },
+    {
+      "address": "0x2967b7a0fa5115735d9f0d4c4867beaf9e76214d",
+      "name": "Aerial Art Club",
+      "scale": 2.5,
+      "reason": "boats are small in the image"
+    },
+    {
+      "address": "0xdad1276ecd6d27116da400b33c81ce49d91d5831",
+      "name": "Shape Punks",
+      "scale": 1.5,
+      "reason": "slight zoom to enlarge dots"
+    },
+    {
+      "address": "0xee8a96efbbe186d0d2bb2adbb70d5cb117320501",
+      "name": "DeePle Stuff",
+      "scale": 5,
+      "reason": "huge zoom for the stuff"
     }
   ],
   "defaultScale": 1.0

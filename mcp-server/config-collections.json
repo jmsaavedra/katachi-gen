@@ -78,7 +78,7 @@
 
   "blockedNftNames": [
     {
-      "pattern": "Grifter #",
+      "pattern": "Grifter by XCOPY",
       "matchType": "startsWith",
       "reason": "Fake Grifter NFTs",
       "caseSensitive": false
@@ -91,12 +91,6 @@
       "name": "DeePle",
       "preferOriginal": true,
       "reason": "Small file size, benefits from full resolution"
-    },
-    {
-      "address": "0x520fc638d11a8b83bb49e085a08afda6b4e7a7e5",
-      "name": "Postino",
-      "preferOriginal": true,
-      "reason": "Small stamps benefit from original resolution"
     },
     {
       "address": "0xEe8A96eFbBE186D0D2BB2adbb70D5CB117320501",
