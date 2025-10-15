@@ -147,6 +147,16 @@ function loadCollectionConfig(): CollectionConfig {
 // Collection configuration
 const COLLECTION_CONFIG = loadCollectionConfig();
 
+// Log loaded config for debugging
+console.log('📋 Collection config loaded:');
+console.log(`   - Blocked contracts: ${COLLECTION_CONFIG.blockedContracts.length}`);
+console.log(`   - Blocked collection names: ${COLLECTION_CONFIG.blockedCollectionNames.length}`);
+console.log(`   - Blocked NFT names: ${COLLECTION_CONFIG.blockedNftNames.length}`);
+console.log(`   - Image preferences: ${COLLECTION_CONFIG.imagePreferences.length}`);
+if (COLLECTION_CONFIG.blockedCollectionNames.length > 0) {
+  console.log('   Collection name patterns:', COLLECTION_CONFIG.blockedCollectionNames.map(r => `"${r.pattern}" (${r.matchType})`).join(', '));
+}
+
 // Helper functions for filtering
 function isContractBlocked(contractAddress: string): boolean {
   const normalized = contractAddress.toLowerCase();
@@ -165,17 +175,21 @@ function isCollectionNameBlocked(collectionName: string | null): { blocked: bool
     switch (rule.matchType) {
       case 'exact':
         isMatch = testName === testPattern;
+        console.log(`      Exact match test: "${testName}" === "${testPattern}" -> ${isMatch}`);
         break;
       case 'startsWith':
         isMatch = testName.startsWith(testPattern);
+        console.log(`      StartsWith test: "${testName}".startsWith("${testPattern}") -> ${isMatch}`);
         break;
       case 'contains':
         isMatch = testName.includes(testPattern);
+        console.log(`      Contains test: "${testName}".includes("${testPattern}") -> ${isMatch}`);
         break;
       case 'regex':
         try {
           const regex = new RegExp(testPattern, rule.caseSensitive ? '' : 'i');
           isMatch = regex.test(collectionName);
+          console.log(`      Regex test: /${testPattern}/i.test("${collectionName}") -> ${isMatch}`);
         } catch (e) {
           console.warn(`Invalid regex pattern: ${testPattern}`);
         }
@@ -183,6 +197,7 @@ function isCollectionNameBlocked(collectionName: string | null): { blocked: bool
     }
 
     if (isMatch) {
+      console.log(`      ✅ MATCH! Blocking collection: "${collectionName}"`);
       return { blocked: true, reason: rule.reason };
     }
   }
@@ -513,6 +528,7 @@ export default async function interpretCollectionSentiment({
 
       // Filter out blocked collection names
       const collectionNameCheck = isCollectionNameBlocked(nftItem.nft.contract.name);
+      console.log(`   🔍 Collection name check: "${nftItem.nft.contract.name}" -> blocked: ${collectionNameCheck.blocked}`);
       if (collectionNameCheck.blocked) {
         console.log(`🚫 Skipped (blocked collection name): ${nftItem.nft.name || 'Unnamed'} from "${nftItem.nft.contract.name}" - ${collectionNameCheck.reason}`);
         continue;
@@ -520,6 +536,7 @@ export default async function interpretCollectionSentiment({
 
       // Filter out blocked NFT names
       const nftNameCheck = isNftNameBlocked(nftItem.nft.name);
+      console.log(`   🔍 NFT name check: "${nftItem.nft.name}" -> blocked: ${nftNameCheck.blocked}`);
       if (nftNameCheck.blocked) {
         console.log(`🚫 Skipped (blocked NFT name): "${nftItem.nft.name}" - ${nftNameCheck.reason}`);
         continue;
