@@ -1,16 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "xmcp build --vercel",
+  "buildCommand": "xmcp build --vercel && cp config-collections.json .vercel/output/functions/api/index.func/ 2>/dev/null || echo 'Note: config-collections.json not copied (may not be needed)'",
   "relatedProjects": ["prj_h38FV306nWJUA6A66REbtT5iUmOc"],
   "crons": [
     {
       "path": "/api/cron/keep-alive",
       "schedule": "*/15 * * * *"
     }
-  ],
-  "functions": {
-    "api/index.func/index.js": {
-      "includeFiles": "config-collections.json"
-    }
-  }
+  ]
 }
