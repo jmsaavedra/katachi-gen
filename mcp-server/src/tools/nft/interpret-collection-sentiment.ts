@@ -446,14 +446,35 @@ export default async function interpretCollectionSentiment({
       // Determine primary image URL based on collection preferences
       const preferOriginal = shouldPreferOriginalImage(contractAddress);
       let primaryImageUrl: string | null;
+      let selectedUrlType: string;
 
       if (preferOriginal) {
         // For collections that benefit from full resolution, prioritize: originalUrl → pngUrl → thumbnailUrl
-        primaryImageUrl = item.nft.image?.originalUrl || item.nft.image?.pngUrl || item.nft.image?.thumbnailUrl || null;
+        if (item.nft.image?.originalUrl) {
+          primaryImageUrl = item.nft.image.originalUrl;
+          selectedUrlType = 'original';
+        } else if (item.nft.image?.pngUrl) {
+          primaryImageUrl = item.nft.image.pngUrl;
+          selectedUrlType = 'png';
+        } else {
+          primaryImageUrl = item.nft.image?.thumbnailUrl || null;
+          selectedUrlType = 'thumbnail';
+        }
       } else {
         // Default: prioritize optimized thumbnails: thumbnailUrl → pngUrl → originalUrl
-        primaryImageUrl = item.nft.image?.thumbnailUrl || item.nft.image?.pngUrl || item.nft.image?.originalUrl || null;
+        if (item.nft.image?.thumbnailUrl) {
+          primaryImageUrl = item.nft.image.thumbnailUrl;
+          selectedUrlType = 'thumbnail';
+        } else if (item.nft.image?.pngUrl) {
+          primaryImageUrl = item.nft.image.pngUrl;
+          selectedUrlType = 'png';
+        } else {
+          primaryImageUrl = item.nft.image?.originalUrl || null;
+          selectedUrlType = 'original';
+        }
       }
+
+      console.log(`   🖼️  Image URL selected: ${selectedUrlType} (preferOriginal: ${preferOriginal})`);
 
       return {
         tokenId,
