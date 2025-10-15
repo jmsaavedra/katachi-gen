@@ -6,7 +6,7 @@ import { alchemy } from '../../clients';
 import { config } from '../../config';
 import type { ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
-import { isContractBlocked, isCollectionNameBlocked, isNftNameBlocked } from '../../utils/collection-config';
+import { isContractBlocked, isCollectionNameBlocked, isNftNameBlocked, shouldPreferOriginalImage } from '../../utils/collection-config';
 
 // Rate limiting and retry utilities
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -145,25 +145,41 @@ export default async function getCuratedNfts({
 
             return nft.image?.originalUrl || nft.image?.thumbnailUrl;
           })
-          .map(nft => ({
-            name: nft.name || null,
-            image: nft.image?.originalUrl || nft.image?.thumbnailUrl || '', // Backwards compatibility
-            contractAddress: nft.contract.address,
-            tokenId: nft.tokenId,
-            images: {
-              thumbnail: nft.image?.thumbnailUrl || null,
-              cachedUrl: nft.image?.cachedUrl || null,
-              pngUrl: nft.image?.pngUrl || null,
-              originalUrl: nft.image?.originalUrl || null,
-              contentType: nft.image?.contentType || null,
-              size: nft.image?.size || null,
-            },
-            metadata: {
-              description: nft.description || null,
-              tokenType: nft.tokenType || null,
-              tokenUri: nft.tokenUri || null,
-            },
-          }))
+          .map(nft => {
+            const contractAddress = nft.contract.address;
+            const preferOriginal = shouldPreferOriginalImage(contractAddress);
+
+            // Determine preferred image URL based on collection config
+            let preferredImageUrl: string | null = null;
+            if (preferOriginal) {
+              // Prefer original for collections that need high-res
+              preferredImageUrl = nft.image?.originalUrl || nft.image?.pngUrl || nft.image?.thumbnailUrl || null;
+            } else {
+              // Default: prefer optimized thumbnails
+              preferredImageUrl = nft.image?.thumbnailUrl || nft.image?.pngUrl || nft.image?.originalUrl || null;
+            }
+
+            return {
+              name: nft.name || null,
+              image: nft.image?.originalUrl || nft.image?.thumbnailUrl || '', // Backwards compatibility
+              contractAddress,
+              tokenId: nft.tokenId,
+              preferredImageUrl, // Add preferred URL for katachi-generator
+              images: {
+                thumbnail: nft.image?.thumbnailUrl || null,
+                cachedUrl: nft.image?.cachedUrl || null,
+                pngUrl: nft.image?.pngUrl || null,
+                originalUrl: nft.image?.originalUrl || null,
+                contentType: nft.image?.contentType || null,
+                size: nft.image?.size || null,
+              },
+              metadata: {
+                description: nft.description || null,
+                tokenType: nft.tokenType || null,
+                tokenUri: nft.tokenUri || null,
+              },
+            };
+          })
           .filter(nft => nft.image); // Ensure we have an image
 
         allNfts.push(...addressNfts);

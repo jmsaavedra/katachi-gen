@@ -6,7 +6,7 @@ import { alchemy } from '../../clients';
 import { config } from '../../config';
 import type { ShapeNftOutput, ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
-import { isContractBlocked, isCollectionNameBlocked, isNftNameBlocked } from '../../utils/collection-config';
+import { isContractBlocked, isCollectionNameBlocked, isNftNameBlocked, shouldPreferOriginalImage } from '../../utils/collection-config';
 
 // Rate limiting and retry utilities
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -124,12 +124,28 @@ export default async function getShapeNft({ address, pageKey, pageSize }: InferS
       ownerAddress: address,
       timestamp: new Date().toISOString(),
       totalNfts: filteredNfts.length,
-      nfts: filteredNfts.map((nft) => ({
-        tokenId: nft.tokenId,
-        contractAddress: nft.contract.address as Address,
-        name: nft.name || null,
-        imageUrl: nft.image?.originalUrl || nft.image?.thumbnailUrl || null,
-      })),
+      nfts: filteredNfts.map((nft) => {
+        const contractAddress = nft.contract.address as Address;
+        const preferOriginal = shouldPreferOriginalImage(contractAddress);
+
+        // Determine preferred image URL based on collection config
+        let preferredImageUrl: string | null = null;
+        if (preferOriginal) {
+          // Prefer original for collections that need high-res
+          preferredImageUrl = nft.image?.originalUrl || nft.image?.pngUrl || nft.image?.thumbnailUrl || null;
+        } else {
+          // Default: prefer optimized thumbnails
+          preferredImageUrl = nft.image?.thumbnailUrl || nft.image?.pngUrl || nft.image?.originalUrl || null;
+        }
+
+        return {
+          tokenId: nft.tokenId,
+          contractAddress,
+          name: nft.name || null,
+          imageUrl: nft.image?.originalUrl || nft.image?.thumbnailUrl || null, // Backwards compatibility
+          preferredImageUrl, // Add preferred URL for katachi-generator
+        };
+      }),
       pagination: {
         currentPage: pageKey ? parseInt(pageKey.split(':')[1] || '1') : 1,
         pageSize: actualPageSize,
