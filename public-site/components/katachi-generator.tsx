@@ -232,6 +232,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         name: nft.name,
         description: nft.description,
         imageUrl: nft.imageUrl,
+        thumbnailUrl: (nft as any).alchemyImages?.thumbnailUrl || (nft as any).thumbnailUrl || null,
         contractAddress: nft.contractAddress,
         tokenId: nft.tokenId
       }))
@@ -287,6 +288,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
           name: nft.name,
           description: nft.description,
           imageUrl: nft.imageUrl,
+          thumbnailUrl: (nft as any).alchemyImages?.thumbnailUrl || (nft as any).thumbnailUrl || null,
           contractAddress: nft.contractAddress,
           tokenId: nft.tokenId
         }))
@@ -337,9 +339,15 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     
     try {
       // Use the passed data instead of state
+      // Include thumbnail URL from MCP data if available, along with contract/token info
       const imageUrls = dataToUse.filteredNfts
         .slice(0, 5)
-        .map(nft => ({ url: nft.imageUrl || '' }))
+        .map(nft => ({
+          url: nft.imageUrl || '',
+          thumbnailUrl: (nft as any).thumbnailUrl || null,
+          contractAddress: nft.contractAddress,
+          tokenId: nft.tokenId
+        }))
         .filter(img => img.url);
 
       if (imageUrls.length === 0) {
@@ -348,7 +356,9 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
 
       console.log('Calling katachi-generator with:', {
         walletAddress: addressToUse,
-        imageCount: imageUrls.length
+        imageCount: imageUrls.length,
+        thumbnailsProvided: imageUrls.filter(img => img.thumbnailUrl).length,
+        sampleImageData: imageUrls[0] // Log first image to verify structure
       });
 
       const response = await fetch('/api/generate-katachi', {

@@ -99,9 +99,22 @@ export const metadata = {
 
 interface CuratedNft {
   name: string | null;
-  image: string;
+  image: string; // Kept for backwards compatibility - will be originalUrl
   contractAddress: string;
   tokenId: string;
+  images?: {
+    thumbnail: string | null;      // 256x256 optimized thumbnail
+    cachedUrl: string | null;      // Alchemy CDN cached version
+    pngUrl: string | null;          // PNG format URL
+    originalUrl: string | null;    // Original image URL
+    contentType: string | null;    // Image content type
+    size: number | null;            // Image size in bytes
+  };
+  metadata?: {
+    description: string | null;
+    tokenType: string | null;
+    tokenUri: string | null;
+  };
 }
 
 export default async function getCuratedNfts({ 
@@ -147,9 +160,22 @@ export default async function getCuratedNfts({
           })
           .map(nft => ({
             name: nft.name || null,
-            image: nft.image?.originalUrl || nft.image?.thumbnailUrl || '',
+            image: nft.image?.originalUrl || nft.image?.thumbnailUrl || '', // Backwards compatibility
             contractAddress: nft.contract.address,
             tokenId: nft.tokenId,
+            images: {
+              thumbnail: nft.image?.thumbnailUrl || null,
+              cachedUrl: nft.image?.cachedUrl || null,
+              pngUrl: nft.image?.pngUrl || null,
+              originalUrl: nft.image?.originalUrl || null,
+              contentType: nft.image?.contentType || null,
+              size: nft.image?.size || null,
+            },
+            metadata: {
+              description: nft.description || null,
+              tokenType: nft.tokenType || null,
+              tokenUri: nft.tokenUri || null,
+            },
           }))
           .filter(nft => nft.image); // Ensure we have an image
 

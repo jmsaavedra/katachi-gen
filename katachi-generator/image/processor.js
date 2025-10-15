@@ -5,7 +5,6 @@ const sharp = require('sharp');
 const https = require('https');
 const http = require('http');
 const { THUMB_WIDTH, THUMB_HEIGHT } = require('../config');
-const { getNFTMetadataFromAlchemy, getBestImageUrl } = require('../utils/alchemyClient');
 
 /**
  * Save thumbnail to file
@@ -175,37 +174,6 @@ function parseNFTInfoFromUrl(imageUrl, metadata = {}) {
     return null;
 }
 
-/**
- * Try to fetch optimized image from Alchemy API
- * @param {string} contractAddress - NFT contract address
- * @param {string} tokenId - NFT token ID
- * @returns {Promise<string|null>} Optimized image URL or null if not available
- */
-async function getOptimizedImageFromAlchemy(contractAddress, tokenId) {
-    try {
-        const nftData = await getNFTMetadataFromAlchemy(contractAddress, tokenId);
-
-        // Log which image sizes are available for this NFT
-        console.log(`📸 Alchemy image availability for ${contractAddress}:${tokenId}:`);
-        console.log(`   - thumbnail (256x256): ${nftData.images.thumbnail ? '✅ available' : '❌ not available'}`);
-        console.log(`   - medium (512x512): ${nftData.images.medium ? '✅ available' : '❌ not available'}`);
-        console.log(`   - cached: ${nftData.images.cached ? '✅ available' : '❌ not available'}`);
-        console.log(`   - original: ${nftData.images.original ? '✅ available' : '❌ not available'}`);
-
-        const optimizedUrl = getBestImageUrl(nftData.images);
-
-        if (optimizedUrl) {
-            console.log(`✅ Using Alchemy optimized image: ${optimizedUrl.slice(0, 80)}...`);
-            return optimizedUrl;
-        }
-
-        console.log(`⚠️ No optimized images found in Alchemy, falling back to direct download`);
-        return null;
-    } catch (error) {
-        console.warn(`⚠️ Alchemy API failed: ${error.message}, falling back to direct download`);
-        return null;
-    }
-}
 
 /**
  * Download image as base64 with retry logic
@@ -290,19 +258,17 @@ async function processImagesAsBase64(data) {
                     }
 
                     let imageUrlToDownload = image.url;
-                    let usedAlchemy = false;
+                    let usedProvidedThumbnail = false;
 
-                    // Try Alchemy first if we have contract and token info
-                    if (image.contractAddress && image.tokenId) {
-                        console.log(`🔍 Attempting to fetch optimized image from Alchemy for ${image.contractAddress}:${image.tokenId}`);
-                        const alchemyUrl = await getOptimizedImageFromAlchemy(image.contractAddress, image.tokenId);
-                        if (alchemyUrl) {
-                            imageUrlToDownload = alchemyUrl;
-                            usedAlchemy = true;
-                            image.source = 'alchemy';
-                        }
+                    // Use pre-fetched thumbnail URL from MCP if available, otherwise use original URL
+                    if (image.thumbnailUrl) {
+                        console.log(`✅ Using pre-fetched thumbnail from MCP: ${image.thumbnailUrl.slice(0, 80)}...`);
+                        imageUrlToDownload = image.thumbnailUrl;
+                        usedProvidedThumbnail = true;
+                        image.source = 'mcp-thumbnail';
                     } else {
-                        console.log(`⚠️ No contract/token info for image ${i + 1}, using direct download`);
+                        console.log(`⚠️ No pre-fetched thumbnail for image ${i + 1}, downloading original URL`);
+                        image.source = 'direct-download';
                     }
 
                     const downloadResult = await downloadImageAsBase64(imageUrlToDownload);
@@ -324,9 +290,10 @@ async function processImagesAsBase64(data) {
                     image.url = `data:${mimeType};base64,${base64String}`;
                     image.size = downloadResult.size;
                     image.compressedSize = downloadResult.compressedSize;
-                    image.usedAlchemy = usedAlchemy;
+                    image.usedProvidedThumbnail = usedProvidedThumbnail;
 
-                    console.log(`✅ Image ${i + 1} processed${usedAlchemy ? ' (via Alchemy)' : ''}: ${downloadResult.size} → ${downloadResult.compressedSize} bytes`);
+                    const sourceLabel = usedProvidedThumbnail ? ' (via MCP thumbnail)' : '';
+                    console.log(`✅ Image ${i + 1} processed${sourceLabel}: ${downloadResult.size} → ${downloadResult.compressedSize} bytes`);
 
                 } catch (error) {
                     console.error(`❌ Failed to process image ${i + 1}: ${error.message}`);
@@ -342,7 +309,8 @@ async function processImagesAsBase64(data) {
         totalImages: processedData.images?.length || 0,
         processedImages: processedData.images?.filter(img => img.url && img.url.startsWith('data:')).length || 0,
         failedImages: processedData.images?.filter(img => img.error).length || 0,
-        alchemyOptimized: processedData.images?.filter(img => img.usedAlchemy).length || 0,
+        mcpThumbnails: processedData.images?.filter(img => img.usedProvidedThumbnail).length || 0,
+        directDownloads: processedData.images?.filter(img => img.source === 'direct-download').length || 0,
         timestamp: new Date().toISOString()
     };
 
@@ -355,6 +323,5 @@ module.exports = {
     compressImage,
     downloadWithStrategy,
     downloadImageAsBase64,
-    processImagesAsBase64,
-    getOptimizedImageFromAlchemy
+    processImagesAsBase64
 };
