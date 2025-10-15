@@ -7,7 +7,7 @@
     "start:skip-minify": "NODE_ENV=development node server.js",
     "start:prod": "npm run minify && NODE_ENV=production node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "node build-ejs.js",
+    "build": "npm run minify",
     "dev": "NODE_ENV=development node server.js",
     "minify": "node scripts/minify-css.js && node scripts/minify-js-libs.js && node scripts/minify-partials.js",
     "minify:css": "node scripts/minify-css.js",
