@@ -332,16 +332,28 @@
                                     function(texture) {
                                         // Success callback
                                         console.log('✅ Texture loaded successfully:', imageData.name || 'Image ' + (index + 1));
-                                        
+
+                                        // Get texture scale (zoom level) from config or use default
+                                        var textureScale = imageData.textureScale || 1.0;
+                                        if (textureScale !== 1.0) {
+                                            console.log('   🔍 Custom texture scale applied: ' + textureScale + 'x zoom');
+                                        }
+
                                         // Configure texture
                                         texture.wrapS = THREE.RepeatWrapping;
                                         texture.wrapT = THREE.RepeatWrapping;
-                                        texture.repeat.set(globals.textureRepeat || 1.0, globals.textureRepeat || 1.0);
+                                        // Apply scale: higher scale = more zoom (smaller repeat value)
+                                        var repeatValue = (globals.textureRepeat || 1.0) / textureScale;
+                                        texture.repeat.set(repeatValue, repeatValue);
                                         texture.flipY = false;
                                         texture.generateMipmaps = true;
                                         texture.minFilter = THREE.LinearFilter;
                                         texture.magFilter = THREE.LinearFilter;
                                         texture.name = 'NFT_Image_' + (index + 1);
+
+                                        // Store scale for debugging
+                                        texture.userData = texture.userData || {};
+                                        texture.userData.configuredScale = textureScale;
                                         
                                         // Add to texture library
                                         globals.textureLibrary.push(texture);
