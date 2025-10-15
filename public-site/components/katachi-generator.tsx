@@ -339,10 +339,11 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     
     try {
       // Use the passed data instead of state
-      // Include ALL image URLs from MCP data so katachi-generator can choose the best quality
+      // Include preferredImageUrl from MCP (based on collection config) plus all available URLs
       const imageUrls = dataToUse.filteredNfts
         .map(nft => ({
           url: nft.imageUrl || '',
+          preferredImageUrl: (nft as any).preferredImageUrl || nft.imageUrl || '', // MCP-determined preferred URL
           thumbnailUrl: (nft as any).alchemyImages?.thumbnailUrl || null,
           pngUrl: (nft as any).alchemyImages?.pngUrl || null,
           originalImageUrl: (nft as any).alchemyImages?.originalUrl || null,

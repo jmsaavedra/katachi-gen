@@ -258,49 +258,22 @@ async function processImagesAsBase64(data) {
                     }
 
                     let imageUrlToDownload = image.url;
-                    let usedProvidedThumbnail = false;
                     let imageSource = 'direct-download';
 
-                    // Check if this collection prefers original images (loaded from texture-scale-config.json)
-                    // Note: The MCP server already selects the appropriate image URL based on collection preferences,
-                    // so image.url should already be the correct choice (original or thumbnail).
-                    // However, we have additional URLs available: originalImageUrl, pngUrl, thumbnailUrl
-
-                    // Priority for image selection:
-                    // 1. If contract address matches texture scale config with high scale (needs detail), prefer original
-                    // 2. Otherwise use thumbnailUrl if available (optimized by Alchemy)
-                    // 3. Fall back to pngUrl if no thumbnail
-                    // 4. Fall back to originalImageUrl if no processed images
-                    // 5. Fall back to original image.url
-
-                    const { getTextureScale } = require('../config');
-                    const textureScale = image.contractAddress ? getTextureScale(image.contractAddress) : 1.0;
-                    const needsHighDetail = textureScale >= 2.0; // Collections with 2x+ zoom benefit from full resolution
-
-                    if (needsHighDetail && (image.originalImageUrl || image.pngUrl)) {
-                        // Use full resolution for collections that zoom in significantly
-                        imageUrlToDownload = image.originalImageUrl || image.pngUrl || image.thumbnailUrl;
-                        imageSource = 'original-for-detail';
-                        console.log(`✅ Using original/PNG for high-detail collection (scale ${textureScale}x): ${imageUrlToDownload.slice(0, 80)}...`);
+                    // Use preferredImageUrl if provided by MCP server (already determined based on collection config)
+                    // This is the cleanest approach - MCP knows which collections need high-res vs thumbnails
+                    if (image.preferredImageUrl) {
+                        imageUrlToDownload = image.preferredImageUrl;
+                        imageSource = 'mcp-preferred';
+                        console.log(`✅ Using MCP preferred image URL: ${imageUrlToDownload.slice(0, 80)}...`);
                     } else if (image.thumbnailUrl) {
-                        // Use optimized thumbnail for normal collections
+                        // Fallback: use thumbnail if no preferred URL
                         imageUrlToDownload = image.thumbnailUrl;
-                        usedProvidedThumbnail = true;
                         imageSource = 'mcp-thumbnail';
                         console.log(`✅ Using pre-fetched thumbnail from MCP: ${image.thumbnailUrl.slice(0, 80)}...`);
-                    } else if (image.pngUrl) {
-                        // Fallback to PNG if no thumbnail
-                        imageUrlToDownload = image.pngUrl;
-                        imageSource = 'mcp-png';
-                        console.log(`✅ Using pre-fetched PNG from MCP: ${image.pngUrl.slice(0, 80)}...`);
-                    } else if (image.originalImageUrl) {
-                        // Fallback to original if no processed images
-                        imageUrlToDownload = image.originalImageUrl;
-                        imageSource = 'mcp-original';
-                        console.log(`✅ Using original image URL from MCP: ${image.originalImageUrl.slice(0, 80)}...`);
                     } else {
                         // Last resort: use the URL provided in image.url
-                        console.log(`⚠️ No pre-fetched images for image ${i + 1}, downloading original URL`);
+                        console.log(`⚠️ No MCP URLs for image ${i + 1}, using original URL`);
                     }
 
                     image.source = imageSource;

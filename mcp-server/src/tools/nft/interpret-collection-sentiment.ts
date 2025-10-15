@@ -584,6 +584,7 @@ export default async function interpretCollectionSentiment({
         name: item.nft.name || `Token #${tokenId}`,
         description: item.nft.description || null,
         imageUrl: primaryImageUrl,
+        preferredImageUrl: primaryImageUrl, // Explicitly set preferred URL for katachi-generator
         collectionName: item.nft.contract.name || null,
         alchemyImages: {
           cachedUrl: item.nft.image?.cachedUrl || undefined,
