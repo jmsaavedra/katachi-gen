@@ -24,6 +24,21 @@ interface KatachiGeneratorProps {
   onGoHome?: () => void;
 }
 
+interface NftWithImages {
+  name: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  contractAddress: string;
+  tokenId: string;
+  preferredImageUrl?: string;
+  thumbnailUrl?: string;
+  alchemyImages?: {
+    thumbnailUrl?: string;
+    pngUrl?: string;
+    originalUrl?: string;
+  };
+}
+
 export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGeneratorProps = {}) {
   const { address: connectedAddress, isConnected } = useAccount();
   const chainId = useChainId();
@@ -228,14 +243,17 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     
     setSentimentData({
       sentiment,
-      filteredNfts: filteredNfts.map(nft => ({
-        name: nft.name,
-        description: nft.description,
-        imageUrl: nft.imageUrl,
-        thumbnailUrl: (nft as any).alchemyImages?.thumbnailUrl || (nft as any).thumbnailUrl || null,
-        contractAddress: nft.contractAddress,
-        tokenId: nft.tokenId
-      }))
+      filteredNfts: filteredNfts.map(nft => {
+        const nftWithImages = nft as NftWithImages;
+        return {
+          name: nft.name,
+          description: nft.description,
+          imageUrl: nft.imageUrl,
+          thumbnailUrl: nftWithImages.alchemyImages?.thumbnailUrl || nftWithImages.thumbnailUrl || null,
+          contractAddress: nft.contractAddress,
+          tokenId: nft.tokenId
+        };
+      })
     });
   };
 
@@ -284,14 +302,17 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       const newSentimentData = {
         ...sentimentData, // Preserve existing sentiment data
         sentiment,
-        filteredNfts: nfts.map(nft => ({
-          name: nft.name,
-          description: nft.description,
-          imageUrl: nft.imageUrl,
-          thumbnailUrl: (nft as any).alchemyImages?.thumbnailUrl || (nft as any).thumbnailUrl || null,
-          contractAddress: nft.contractAddress,
-          tokenId: nft.tokenId
-        }))
+        filteredNfts: nfts.map(nft => {
+          const nftWithImages = nft as unknown as NftWithImages;
+          return {
+            name: nft.name,
+            description: nft.description,
+            imageUrl: nft.imageUrl,
+            thumbnailUrl: nftWithImages.alchemyImages?.thumbnailUrl || nftWithImages.thumbnailUrl || null,
+            contractAddress: nft.contractAddress,
+            tokenId: nft.tokenId
+          };
+        })
       };
       
       setSentimentData(newSentimentData);
@@ -341,15 +362,18 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       // Use the passed data instead of state
       // Include preferredImageUrl from MCP (based on collection config) plus all available URLs
       const imageUrls = dataToUse.filteredNfts
-        .map(nft => ({
-          url: nft.imageUrl || '',
-          preferredImageUrl: (nft as any).preferredImageUrl || nft.imageUrl || '', // MCP-determined preferred URL
-          thumbnailUrl: (nft as any).alchemyImages?.thumbnailUrl || null,
-          pngUrl: (nft as any).alchemyImages?.pngUrl || null,
-          originalImageUrl: (nft as any).alchemyImages?.originalUrl || null,
-          contractAddress: nft.contractAddress,
-          tokenId: nft.tokenId
-        }))
+        .map(nft => {
+          const nftWithImages = nft as unknown as NftWithImages;
+          return {
+            url: nft.imageUrl || '',
+            preferredImageUrl: nftWithImages.preferredImageUrl || nft.imageUrl || '', // MCP-determined preferred URL
+            thumbnailUrl: nftWithImages.alchemyImages?.thumbnailUrl || null,
+            pngUrl: nftWithImages.alchemyImages?.pngUrl || null,
+            originalImageUrl: nftWithImages.alchemyImages?.originalUrl || null,
+            contractAddress: nft.contractAddress,
+            tokenId: nft.tokenId
+          };
+        })
         .filter(img => img.url);
 
       if (imageUrls.length === 0) {
