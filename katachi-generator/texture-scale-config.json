@@ -1,0 +1,25 @@
+{
+  "_comment": "Texture scale configuration for NFT contract addresses",
+  "_description": "Scale values between 1.0 (normal) and 5.0 (max zoom). Higher values zoom in on the texture.",
+  "_examples": {
+    "1.0": "Normal size (default)",
+    "2.0": "2x zoom (texture appears twice as large)",
+    "3.0": "3x zoom (good for detailed artwork)",
+    "5.0": "5x zoom (maximum, shows fine details)"
+  },
+  "contracts": [
+    {
+      "address": "0xbb8f2711bd4bc98223990267f771e97d2d9bc167",
+      "name": "Infinite Garden",
+      "scale": 2.5,
+      "reason": "Detailed generative art benefits from closer view"
+    },
+    {
+      "address": "0x520fc638d11a8b83bb49e085a08afda6b4e7a7e5",
+      "name": "Postino",
+      "scale": 1.5,
+      "reason": "Stamp designs work well with slight zoom"
+    }
+  ],
+  "defaultScale": 1.0
+}

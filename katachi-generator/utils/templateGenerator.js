@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
+const { getTextureScale } = require('../config');
 
 /**
  * Generate HTML template using the modular EJS system
@@ -112,23 +113,33 @@ async function generateModularTemplate(nftData) {
  */
 async function generateNFTTemplate(data) {
     try {
+        // Enrich images with texture scale values based on contract address
+        const enrichedImages = (data.images || []).map((image, index) => {
+            const scale = getTextureScale(image.contractAddress);
+            console.log(`🎨 Image ${index + 1}: ${image.contractAddress ? `${image.contractAddress.slice(0, 10)}... scale=${scale}` : 'no contract, scale=1.0'}`);
+            return {
+                ...image,
+                textureScale: scale
+            };
+        });
+
         // Prepare NFT data structure that matches the original system
         const nftData = {
             // Core NFT information
             walletAddress: data.walletAddress || 'unknown',
             patternType: data.patternType || 'Crane',
             seed2: data.seed2 || Math.random().toString(36),
-            
-            // Image data (base64 encoded)
-            images: data.images || [],
-            
+
+            // Image data (base64 encoded) with texture scales
+            images: enrichedImages,
+
             // Generation metadata
             generatedAt: new Date().toISOString(),
             templateVersion: '2.0-modular',
-            
+
             // Additional metadata
             metadata: {
-                imageCount: data.images ? data.images.length : 0,
+                imageCount: enrichedImages.length,
                 forMinting: data.forMinting || false,
                 testMode: process.env.NODE_ENV === 'development'
             }
