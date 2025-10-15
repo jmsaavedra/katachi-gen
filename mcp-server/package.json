@@ -26,7 +26,8 @@
   "scripts": {
     "build": "xmcp build",
     "dev": "xmcp dev",
-    "start": "node dist/http.js",
+    "start": "npm run build && node dist/http.js",
+    "start:skip-build": "node dist/http.js",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint src --ext .ts,.tsx",
