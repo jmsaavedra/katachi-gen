@@ -89,14 +89,14 @@
     {
       "address": "0xF2E4b2a15872a20D0fFB336a89B94BA782cE9Ba5",
       "name": "DeePle",
-      "preferOriginal": true,
-      "reason": "Small file size, benefits from full resolution"
+      "preferOriginal": false,
+      "reason": "Use Alchemy CDN thumbnails instead of slow IPFS gateway originals"
     },
     {
       "address": "0xEe8A96eFbBE186D0D2BB2adbb70D5CB117320501",
       "name": "DeePle Stuff",
-      "preferOriginal": true,
-      "reason": "Small file size, benefits from full resolution"
+      "preferOriginal": false,
+      "reason": "Use Alchemy CDN thumbnails instead of slow IPFS gateway originals"
     },
     {
       "address": "0x78569eBB153AaEC55601efE4b54d0e65014c4Ea8",
