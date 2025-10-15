@@ -103,34 +103,135 @@ const VISUAL_CHARACTERISTICS = {
   realistic: ['photo', 'realistic', 'portrait', 'landscape', 'detailed'],
 };
 
-// Load blocked contracts from file with graceful fallback
-function loadBlockedContracts(): string[] {
-  // Hardcoded fallback list
-  const FALLBACK_CONTRACTS = [
-    '0x274b9f633e968a31e8f9831308170720d1072135',
-    '0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b',
-  ];
+// Collection configuration interface
+interface CollectionConfig {
+  blockedContracts: Array<{ address: string; reason: string }>;
+  blockedCollectionNames: Array<{ pattern: string; matchType: 'exact' | 'startsWith' | 'contains' | 'regex'; reason: string; caseSensitive: boolean }>;
+  blockedNftNames: Array<{ pattern: string; matchType: 'exact' | 'startsWith' | 'contains' | 'regex'; reason: string; caseSensitive: boolean }>;
+  imagePreferences: Array<{ address: string; name: string; preferOriginal: boolean; reason: string }>;
+  defaultImagePreference: 'thumbnail' | 'original';
+}
+
+// Load collection configuration from JSON file with graceful fallback
+function loadCollectionConfig(): CollectionConfig {
+  // Hardcoded fallback configuration
+  const FALLBACK_CONFIG: CollectionConfig = {
+    blockedContracts: [
+      { address: '0x274b9f633e968a31e8f9831308170720d1072135', reason: 'Blocked collection' },
+      { address: '0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b', reason: 'Blocked collection' },
+    ],
+    blockedCollectionNames: [
+      { pattern: 'Grifter by XCOPY', matchType: 'exact', reason: 'Fake collection', caseSensitive: false },
+    ],
+    blockedNftNames: [
+      { pattern: 'Grifter #', matchType: 'startsWith', reason: 'Fake Grifter NFTs', caseSensitive: false },
+    ],
+    imagePreferences: [],
+    defaultImagePreference: 'thumbnail',
+  };
 
   try {
-    const filePath = path.join(process.cwd(), 'blocked-contracts.txt');
+    const filePath = path.join(process.cwd(), 'config-collections.json');
     const fileContent = fs.readFileSync(filePath, 'utf-8');
-    
-    const contractsFromFile = fileContent
-      .split('\n')
-      .filter(line => line.trim() && !line.trim().startsWith('#'))
-      .map(addr => addr.trim().toLowerCase());
-    
-    console.log(`✅ Loaded ${contractsFromFile.length} blocked contracts from file`);
-    return contractsFromFile;
-    
+    const config: CollectionConfig = JSON.parse(fileContent);
+
+    console.log(`✅ Loaded collection config: ${config.blockedContracts.length} blocked contracts, ${config.blockedCollectionNames.length} blocked collection names, ${config.blockedNftNames.length} blocked NFT names`);
+    return config;
+
   } catch (error) {
-    console.warn('⚠️ Could not load blocked-contracts.txt, using fallback list:', (error as Error).message);
-    return FALLBACK_CONTRACTS.map(addr => addr.toLowerCase());
+    console.warn('⚠️ Could not load config-collections.json, using fallback config:', (error as Error).message);
+    return FALLBACK_CONFIG;
   }
 }
 
-// Blocked contract addresses - NFTs from these contracts will be filtered out
-const BLOCKED_CONTRACTS = loadBlockedContracts();
+// Collection configuration
+const COLLECTION_CONFIG = loadCollectionConfig();
+
+// Helper functions for filtering
+function isContractBlocked(contractAddress: string): boolean {
+  const normalized = contractAddress.toLowerCase();
+  return COLLECTION_CONFIG.blockedContracts.some(blocked => blocked.address.toLowerCase() === normalized);
+}
+
+function isCollectionNameBlocked(collectionName: string | null): { blocked: boolean; reason?: string } {
+  if (!collectionName) return { blocked: false };
+
+  for (const rule of COLLECTION_CONFIG.blockedCollectionNames) {
+    const testName = rule.caseSensitive ? collectionName : collectionName.toLowerCase();
+    const testPattern = rule.caseSensitive ? rule.pattern : rule.pattern.toLowerCase();
+
+    let isMatch = false;
+
+    switch (rule.matchType) {
+      case 'exact':
+        isMatch = testName === testPattern;
+        break;
+      case 'startsWith':
+        isMatch = testName.startsWith(testPattern);
+        break;
+      case 'contains':
+        isMatch = testName.includes(testPattern);
+        break;
+      case 'regex':
+        try {
+          const regex = new RegExp(testPattern, rule.caseSensitive ? '' : 'i');
+          isMatch = regex.test(collectionName);
+        } catch (e) {
+          console.warn(`Invalid regex pattern: ${testPattern}`);
+        }
+        break;
+    }
+
+    if (isMatch) {
+      return { blocked: true, reason: rule.reason };
+    }
+  }
+
+  return { blocked: false };
+}
+
+function isNftNameBlocked(nftName: string | null): { blocked: boolean; reason?: string } {
+  if (!nftName) return { blocked: false };
+
+  for (const rule of COLLECTION_CONFIG.blockedNftNames) {
+    const testName = rule.caseSensitive ? nftName : nftName.toLowerCase();
+    const testPattern = rule.caseSensitive ? rule.pattern : rule.pattern.toLowerCase();
+
+    let isMatch = false;
+
+    switch (rule.matchType) {
+      case 'exact':
+        isMatch = testName === testPattern;
+        break;
+      case 'startsWith':
+        isMatch = testName.startsWith(testPattern);
+        break;
+      case 'contains':
+        isMatch = testName.includes(testPattern);
+        break;
+      case 'regex':
+        try {
+          const regex = new RegExp(testPattern, rule.caseSensitive ? '' : 'i');
+          isMatch = regex.test(nftName);
+        } catch (e) {
+          console.warn(`Invalid regex pattern: ${testPattern}`);
+        }
+        break;
+    }
+
+    if (isMatch) {
+      return { blocked: true, reason: rule.reason };
+    }
+  }
+
+  return { blocked: false };
+}
+
+function shouldPreferOriginalImage(contractAddress: string): boolean {
+  const normalized = contractAddress.toLowerCase();
+  const pref = COLLECTION_CONFIG.imagePreferences.find(p => p.address.toLowerCase() === normalized);
+  return pref?.preferOriginal ?? (COLLECTION_CONFIG.defaultImagePreference === 'original');
+}
 
 // Color keywords mapping
 const COLOR_KEYWORDS = {
@@ -405,8 +506,22 @@ export default async function interpretCollectionSentiment({
       console.log(`    Contract: ${collectionAddress} (currentCount: ${currentCount})`);
 
       // Filter out blocked contracts
-      if (BLOCKED_CONTRACTS.includes(collectionAddress)) {
+      if (isContractBlocked(collectionAddress)) {
         console.log(`🚫 Skipped (blocked contract): ${nftItem.nft.name || 'Unnamed'} from ${collectionAddress}`);
+        continue;
+      }
+
+      // Filter out blocked collection names
+      const collectionNameCheck = isCollectionNameBlocked(nftItem.nft.contract.name);
+      if (collectionNameCheck.blocked) {
+        console.log(`🚫 Skipped (blocked collection name): ${nftItem.nft.name || 'Unnamed'} from "${nftItem.nft.contract.name}" - ${collectionNameCheck.reason}`);
+        continue;
+      }
+
+      // Filter out blocked NFT names
+      const nftNameCheck = isNftNameBlocked(nftItem.nft.name);
+      if (nftNameCheck.blocked) {
+        console.log(`🚫 Skipped (blocked NFT name): "${nftItem.nft.name}" - ${nftNameCheck.reason}`);
         continue;
       }
 
@@ -450,13 +565,25 @@ export default async function interpretCollectionSentiment({
     const mappedNfts = selectedNfts.map((item) => {
       const contractAddress = item.nft.contract.address;
       const tokenId = item.nft.tokenId;
-      
+
+      // Determine primary image URL based on collection preferences
+      const preferOriginal = shouldPreferOriginalImage(contractAddress);
+      let primaryImageUrl: string | null;
+
+      if (preferOriginal) {
+        // For collections that benefit from full resolution, prioritize: originalUrl → pngUrl → thumbnailUrl
+        primaryImageUrl = item.nft.image?.originalUrl || item.nft.image?.pngUrl || item.nft.image?.thumbnailUrl || null;
+      } else {
+        // Default: prioritize optimized thumbnails: thumbnailUrl → pngUrl → originalUrl
+        primaryImageUrl = item.nft.image?.thumbnailUrl || item.nft.image?.pngUrl || item.nft.image?.originalUrl || null;
+      }
+
       return {
         tokenId,
         contractAddress: contractAddress as Address,
         name: item.nft.name || `Token #${tokenId}`,
         description: item.nft.description || null,
-        imageUrl: item.nft.image?.originalUrl || null,
+        imageUrl: primaryImageUrl,
         collectionName: item.nft.contract.name || null,
         alchemyImages: {
           cachedUrl: item.nft.image?.cachedUrl || undefined,
