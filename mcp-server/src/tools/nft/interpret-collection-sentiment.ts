@@ -418,14 +418,14 @@ export default async function interpretCollectionSentiment({
       }
       
       if (
-        currentCount < 1 && // Allow max 1 per collection
+        currentCount < 2 && // Allow max 2 per collection
         selectedNfts.length < count
       ) {
         selectedNfts.push(nftItem);
         collectionCounts.set(collectionAddress, currentCount + 1);
         console.log(`✅ Selected NFT: ${nftItem.nft.name || 'Unnamed'} (${nftItem.reason})`);
       } else {
-        if (currentCount >= 1) {
+        if (currentCount >= 2) {
           console.log(`❌ Skipped (collection limit): ${nftItem.nft.name || 'Unnamed'} (already have ${currentCount} from this collection)`);
           console.log(`    Debug - Selected NFTs so far: ${selectedNfts.map(n => `${n.nft.name} (${n.nft.contract.address.toLowerCase()})`).join(', ')}`);
         } else if (selectedNfts.length >= count) {
