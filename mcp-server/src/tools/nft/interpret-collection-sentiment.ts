@@ -6,8 +6,7 @@ import { config } from '../../config';
 import type { ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
 import { OwnedNft } from 'alchemy-sdk';
-import fs from 'fs';
-import path from 'path';
+import { isContractBlocked as isContractBlockedShared, isCollectionNameBlocked as isCollectionNameBlockedShared, isNftNameBlocked as isNftNameBlockedShared, shouldPreferOriginalImage as shouldPreferOriginalImageShared } from '../../utils/collection-config';
 
 // Define the output type for interpreted NFTs
 export interface InterpretedNFTsOutput {
@@ -103,150 +102,11 @@ const VISUAL_CHARACTERISTICS = {
   realistic: ['photo', 'realistic', 'portrait', 'landscape', 'detailed'],
 };
 
-// Collection configuration interface
-interface CollectionConfig {
-  blockedContracts: Array<{ address: string; reason: string }>;
-  blockedCollectionNames: Array<{ pattern: string; matchType: 'exact' | 'startsWith' | 'contains' | 'regex'; reason: string; caseSensitive: boolean }>;
-  blockedNftNames: Array<{ pattern: string; matchType: 'exact' | 'startsWith' | 'contains' | 'regex'; reason: string; caseSensitive: boolean }>;
-  imagePreferences: Array<{ address: string; name: string; preferOriginal: boolean; reason: string }>;
-  defaultImagePreference: 'thumbnail' | 'original';
-}
-
-// Load collection configuration from JSON file with graceful fallback
-function loadCollectionConfig(): CollectionConfig {
-  // Hardcoded fallback configuration
-  const FALLBACK_CONFIG: CollectionConfig = {
-    blockedContracts: [
-      { address: '0x274b9f633e968a31e8f9831308170720d1072135', reason: 'Blocked collection' },
-      { address: '0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b', reason: 'Blocked collection' },
-    ],
-    blockedCollectionNames: [
-      { pattern: 'Grifter by XCOPY', matchType: 'exact', reason: 'Fake collection', caseSensitive: false },
-    ],
-    blockedNftNames: [
-      { pattern: 'Grifter #', matchType: 'startsWith', reason: 'Fake Grifter NFTs', caseSensitive: false },
-    ],
-    imagePreferences: [],
-    defaultImagePreference: 'thumbnail',
-  };
-
-  try {
-    const filePath = path.join(process.cwd(), 'config-collections.json');
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const config: CollectionConfig = JSON.parse(fileContent);
-
-    console.log(`✅ Loaded collection config: ${config.blockedContracts.length} blocked contracts, ${config.blockedCollectionNames.length} blocked collection names, ${config.blockedNftNames.length} blocked NFT names`);
-    return config;
-
-  } catch (error) {
-    console.warn('⚠️ Could not load config-collections.json, using fallback config:', (error as Error).message);
-    return FALLBACK_CONFIG;
-  }
-}
-
-// Collection configuration
-const COLLECTION_CONFIG = loadCollectionConfig();
-
-// Log loaded config for debugging
-console.log('📋 Collection config loaded:');
-console.log(`   - Blocked contracts: ${COLLECTION_CONFIG.blockedContracts.length}`);
-console.log(`   - Blocked collection names: ${COLLECTION_CONFIG.blockedCollectionNames.length}`);
-console.log(`   - Blocked NFT names: ${COLLECTION_CONFIG.blockedNftNames.length}`);
-console.log(`   - Image preferences: ${COLLECTION_CONFIG.imagePreferences.length}`);
-if (COLLECTION_CONFIG.blockedCollectionNames.length > 0) {
-  console.log('   Collection name patterns:', COLLECTION_CONFIG.blockedCollectionNames.map(r => `"${r.pattern}" (${r.matchType})`).join(', '));
-}
-
-// Helper functions for filtering
-function isContractBlocked(contractAddress: string): boolean {
-  const normalized = contractAddress.toLowerCase();
-  return COLLECTION_CONFIG.blockedContracts.some(blocked => blocked.address.toLowerCase() === normalized);
-}
-
-function isCollectionNameBlocked(collectionName: string | null): { blocked: boolean; reason?: string } {
-  if (!collectionName) return { blocked: false };
-
-  for (const rule of COLLECTION_CONFIG.blockedCollectionNames) {
-    const testName = rule.caseSensitive ? collectionName : collectionName.toLowerCase();
-    const testPattern = rule.caseSensitive ? rule.pattern : rule.pattern.toLowerCase();
-
-    let isMatch = false;
-
-    switch (rule.matchType) {
-      case 'exact':
-        isMatch = testName === testPattern;
-        console.log(`      Exact match test: "${testName}" === "${testPattern}" -> ${isMatch}`);
-        break;
-      case 'startsWith':
-        isMatch = testName.startsWith(testPattern);
-        console.log(`      StartsWith test: "${testName}".startsWith("${testPattern}") -> ${isMatch}`);
-        break;
-      case 'contains':
-        isMatch = testName.includes(testPattern);
-        console.log(`      Contains test: "${testName}".includes("${testPattern}") -> ${isMatch}`);
-        break;
-      case 'regex':
-        try {
-          const regex = new RegExp(testPattern, rule.caseSensitive ? '' : 'i');
-          isMatch = regex.test(collectionName);
-          console.log(`      Regex test: /${testPattern}/i.test("${collectionName}") -> ${isMatch}`);
-        } catch (e) {
-          console.warn(`Invalid regex pattern: ${testPattern}`);
-        }
-        break;
-    }
-
-    if (isMatch) {
-      console.log(`      ✅ MATCH! Blocking collection: "${collectionName}"`);
-      return { blocked: true, reason: rule.reason };
-    }
-  }
-
-  return { blocked: false };
-}
-
-function isNftNameBlocked(nftName: string | null): { blocked: boolean; reason?: string } {
-  if (!nftName) return { blocked: false };
-
-  for (const rule of COLLECTION_CONFIG.blockedNftNames) {
-    const testName = rule.caseSensitive ? nftName : nftName.toLowerCase();
-    const testPattern = rule.caseSensitive ? rule.pattern : rule.pattern.toLowerCase();
-
-    let isMatch = false;
-
-    switch (rule.matchType) {
-      case 'exact':
-        isMatch = testName === testPattern;
-        break;
-      case 'startsWith':
-        isMatch = testName.startsWith(testPattern);
-        break;
-      case 'contains':
-        isMatch = testName.includes(testPattern);
-        break;
-      case 'regex':
-        try {
-          const regex = new RegExp(testPattern, rule.caseSensitive ? '' : 'i');
-          isMatch = regex.test(nftName);
-        } catch (e) {
-          console.warn(`Invalid regex pattern: ${testPattern}`);
-        }
-        break;
-    }
-
-    if (isMatch) {
-      return { blocked: true, reason: rule.reason };
-    }
-  }
-
-  return { blocked: false };
-}
-
-function shouldPreferOriginalImage(contractAddress: string): boolean {
-  const normalized = contractAddress.toLowerCase();
-  const pref = COLLECTION_CONFIG.imagePreferences.find(p => p.address.toLowerCase() === normalized);
-  return pref?.preferOriginal ?? (COLLECTION_CONFIG.defaultImagePreference === 'original');
-}
+// Use shared collection config functions
+const isContractBlocked = isContractBlockedShared;
+const isCollectionNameBlocked = isCollectionNameBlockedShared;
+const isNftNameBlocked = isNftNameBlockedShared;
+const shouldPreferOriginalImage = shouldPreferOriginalImageShared;
 
 // Color keywords mapping
 const COLOR_KEYWORDS = {
