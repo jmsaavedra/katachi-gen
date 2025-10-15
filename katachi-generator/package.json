@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "start": "npm run minify && NODE_ENV=development node server.js",
+    "start": "npm run minify && node server.js",
+    "start:dev": "npm run minify && NODE_ENV=development node server.js",
     "start:skip-minify": "NODE_ENV=development node server.js",
     "start:prod": "npm run minify && NODE_ENV=production node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
