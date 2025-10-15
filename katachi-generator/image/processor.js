@@ -259,17 +259,20 @@ async function processImagesAsBase64(data) {
 
                     let imageUrlToDownload = image.url;
                     let imageSource = 'direct-download';
+                    let usedProvidedThumbnail = false;
 
                     // Use preferredImageUrl if provided by MCP server (already determined based on collection config)
                     // This is the cleanest approach - MCP knows which collections need high-res vs thumbnails
                     if (image.preferredImageUrl) {
                         imageUrlToDownload = image.preferredImageUrl;
                         imageSource = 'mcp-preferred';
+                        usedProvidedThumbnail = true;
                         console.log(`✅ Using MCP preferred image URL: ${imageUrlToDownload.slice(0, 80)}...`);
                     } else if (image.thumbnailUrl) {
                         // Fallback: use thumbnail if no preferred URL
                         imageUrlToDownload = image.thumbnailUrl;
                         imageSource = 'mcp-thumbnail';
+                        usedProvidedThumbnail = true;
                         console.log(`✅ Using pre-fetched thumbnail from MCP: ${image.thumbnailUrl.slice(0, 80)}...`);
                     } else {
                         // Last resort: use the URL provided in image.url
