@@ -7,5 +7,10 @@
       "path": "/api/cron/keep-alive",
       "schedule": "*/15 * * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/index.func/index.js": {
+      "includeFiles": "config-collections.json"
+    }
+  }
 }
