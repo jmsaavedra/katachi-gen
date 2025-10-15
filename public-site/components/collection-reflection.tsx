@@ -16,6 +16,14 @@ interface InterpretedNFT {
   description: string | null;
   imageUrl: string | null;
   collectionName: string | null;
+  alchemyImages?: {
+    cachedUrl?: string;
+    thumbnailUrl?: string;
+    pngUrl?: string;
+    originalUrl?: string;
+    contentType?: string;
+    size?: number;
+  };
   reason: string;
   matchScore: number;
   matchDetails?: {
@@ -54,7 +62,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   };
   
   const [sentiment, setSentiment] = useState(getRandomDevSentiment());
-  const [count, setCount] = useState('5');
+  const [count, setCount] = useState('10');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isCurated, setIsCurated] = useState(false);
@@ -133,7 +141,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
           </span>
         </CardTitle>
         <CardDescription className="text-base">
-          Share your feelings about collecting on Shape. Our AI will interpret your words and curate 5 pieces for your Katachi Gen Shape.
+          Share your feelings about collecting on Shape. Our AI will interpret your words and curate {count} pieces for your Katachi Gen Shape.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -251,9 +259,9 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                           className="block"
                         >
                           <div className="w-32 h-32 rounded-lg overflow-hidden bg-muted relative group cursor-pointer">
-                            {nft.imageUrl ? (
+                            {(nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl) ? (
                               <Image
-                                src={nft.imageUrl}
+                                src={nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl || ''}
                                 alt={nft.name || 'NFT'}
                                 fill
                                 className="object-cover transition-transform group-hover:scale-105"

@@ -24,6 +24,21 @@ interface KatachiGeneratorProps {
   onGoHome?: () => void;
 }
 
+interface NftWithImages {
+  name: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  contractAddress: string;
+  tokenId: string;
+  preferredImageUrl?: string;
+  thumbnailUrl?: string;
+  alchemyImages?: {
+    thumbnailUrl?: string;
+    pngUrl?: string;
+    originalUrl?: string;
+  };
+}
+
 export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGeneratorProps = {}) {
   const { address: connectedAddress, isConnected } = useAccount();
   const chainId = useChainId();
@@ -228,13 +243,17 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     
     setSentimentData({
       sentiment,
-      filteredNfts: filteredNfts.map(nft => ({
-        name: nft.name,
-        description: nft.description,
-        imageUrl: nft.imageUrl,
-        contractAddress: nft.contractAddress,
-        tokenId: nft.tokenId
-      }))
+      filteredNfts: filteredNfts.map(nft => {
+        const nftWithImages = nft as NftWithImages;
+        return {
+          name: nft.name,
+          description: nft.description,
+          imageUrl: nft.imageUrl,
+          thumbnailUrl: nftWithImages.alchemyImages?.thumbnailUrl || nftWithImages.thumbnailUrl || null,
+          contractAddress: nft.contractAddress,
+          tokenId: nft.tokenId
+        };
+      })
     });
   };
 
@@ -283,13 +302,17 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       const newSentimentData = {
         ...sentimentData, // Preserve existing sentiment data
         sentiment,
-        filteredNfts: nfts.map(nft => ({
-          name: nft.name,
-          description: nft.description,
-          imageUrl: nft.imageUrl,
-          contractAddress: nft.contractAddress,
-          tokenId: nft.tokenId
-        }))
+        filteredNfts: nfts.map(nft => {
+          const nftWithImages = nft as unknown as NftWithImages;
+          return {
+            name: nft.name,
+            description: nft.description,
+            imageUrl: nft.imageUrl,
+            thumbnailUrl: nftWithImages.alchemyImages?.thumbnailUrl || nftWithImages.thumbnailUrl || null,
+            contractAddress: nft.contractAddress,
+            tokenId: nft.tokenId
+          };
+        })
       };
       
       setSentimentData(newSentimentData);
@@ -337,9 +360,20 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     
     try {
       // Use the passed data instead of state
+      // Include preferredImageUrl from MCP (based on collection config) plus all available URLs
       const imageUrls = dataToUse.filteredNfts
-        .slice(0, 5)
-        .map(nft => ({ url: nft.imageUrl || '' }))
+        .map(nft => {
+          const nftWithImages = nft as unknown as NftWithImages;
+          return {
+            url: nft.imageUrl || '',
+            preferredImageUrl: nftWithImages.preferredImageUrl || nft.imageUrl || '', // MCP-determined preferred URL
+            thumbnailUrl: nftWithImages.alchemyImages?.thumbnailUrl || null,
+            pngUrl: nftWithImages.alchemyImages?.pngUrl || null,
+            originalImageUrl: nftWithImages.alchemyImages?.originalUrl || null,
+            contractAddress: nft.contractAddress,
+            tokenId: nft.tokenId
+          };
+        })
         .filter(img => img.url);
 
       if (imageUrls.length === 0) {
@@ -348,7 +382,9 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
 
       console.log('Calling katachi-generator with:', {
         walletAddress: addressToUse,
-        imageCount: imageUrls.length
+        imageCount: imageUrls.length,
+        thumbnailsProvided: imageUrls.filter(img => img.thumbnailUrl).length,
+        sampleImageData: imageUrls[0] // Log first image to verify structure
       });
 
       const response = await fetch('/api/generate-katachi', {
@@ -415,7 +451,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
             { trait_type: 'Revealed by', value: overrideAddress && !connectedAddress ? '0x0000' : connectedAddress },
           ])
         },
-        curated_nfts: dataToUse.filteredNfts.slice(0, 5).map(nft => ({
+        curated_nfts: dataToUse.filteredNfts.map(nft => ({
           name: nft.name || '',
           description: nft.description || '',
           image: nft.imageUrl || '',
@@ -484,9 +520,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     resetMint(); // Reset any previous mint state
     
     try {
-      // Get first 5 filtered NFT images for pattern generation
+      // Get all filtered NFT images for pattern generation
       const imageUrls = sentimentData.filteredNfts
-        .slice(0, 5)
         .map(nft => ({ url: nft.imageUrl || '' }))
         .filter(img => img.url); // Remove empty URLs
 
@@ -565,7 +600,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
             { trait_type: 'Pattern Type', value: 'Origami' },
             { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 }
           ],
-          curatedNfts: sentimentData.filteredNfts.slice(0, 5).map(nft => ({
+          curatedNfts: sentimentData.filteredNfts.map(nft => ({
             name: nft.name || 'Untitled',
             image: nft.imageUrl || '',
             contractAddress: nft.contractAddress,

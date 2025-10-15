@@ -1,0 +1,122 @@
+{
+  "_comment": "Collection configuration for NFT filtering and image preferences",
+  "_description": "Manages blocked collections, fake collections, and image source preferences",
+
+  "blockedContracts": [
+    {
+      "address": "0x274b9f633e968a31e8f9831308170720d1072135",
+      "reason": "Blocked collection"
+    },
+    {
+      "address": "0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b",
+      "reason": "Blocked collection"
+    },
+    {
+      "address": "0x11f05370f0c5b0c8298dd2e25c5a653ca5b78c95",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0x1a3e54c90d3cbdbe05d522f283f9cdbac56de5be",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0x203e59fada3dd95f77e1e45d5da1f72c7bb488c3",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0x3ac5dad15ba696c0a8ad8fab51e4c5da2f44a6a1",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0x42653e4e6481f2f07aa15dbd45d3ee1653ba253a",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0x5c5c8c2f4f3d87c80fe3f7e0b0607dd9e95d5f91",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0x60ace44dc74ead970c9d38b2015385bcc7584e35",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0x6b9cf5e7be6eb38f64c81e34e8a22b10c1ef9b04",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0xb43de99f2e3c6f215cb6c81c690e1e9e3cb35eea",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0xc35b1a9cf06ecef95de8ad4073e0ae7bad6f03df",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0xcb83fc3be7e0dd19ba7ed5ef1ea6d075da7ae82e",
+      "reason": "Fake Grifter by XCOPY"
+    },
+    {
+      "address": "0xdf87ed098e0e96af31a34e7b1eb20ea3c17e46b3",
+      "reason": "Fake Grifter by XCOPY"
+    }
+  ],
+
+  "blockedCollectionNames": [
+    {
+      "pattern": "Grifter by XCOPY",
+      "matchType": "exact",
+      "reason": "Fake collection - will never exist on Shape",
+      "caseSensitive": false
+    },
+    {
+      "pattern": "grifter.*xcopy",
+      "matchType": "regex",
+      "reason": "Any variation of fake Grifter collection",
+      "caseSensitive": false
+    }
+  ],
+
+  "blockedNftNames": [
+    {
+      "pattern": "Grifter by XCOPY",
+      "matchType": "startsWith",
+      "reason": "Fake Grifter NFTs",
+      "caseSensitive": false
+    }
+  ],
+
+  "imagePreferences": [
+    {
+      "address": "0xF2E4b2a15872a20D0fFB336a89B94BA782cE9Ba5",
+      "name": "DeePle",
+      "preferOriginal": true,
+      "reason": "Small file size, benefits from full resolution"
+    },
+    {
+      "address": "0xEe8A96eFbBE186D0D2BB2adbb70D5CB117320501",
+      "name": "DeePle Stuff",
+      "preferOriginal": true,
+      "reason": "Small file size, benefits from full resolution"
+    },
+    {
+      "address": "0x78569eBB153AaEC55601efE4b54d0e65014c4Ea8",
+      "name": "RCS Guy",
+      "preferOriginal": true,
+      "reason": "Small file size, benefits from full resolution"
+    },
+    {
+      "address": "0x619d8DDAecf310049bAE7B2a1e629aF46De50C98",
+      "name": "Infinite Moments",
+      "preferOriginal": true,
+      "reason": "Thumbnails are high quality and smaller file size"
+    },
+    {
+      "address": "0x2967b7a0fa5115735d9f0d4c4867beaf9e76214d",
+      "name": "Aerial Art Club",
+      "preferOriginal": false,
+      "reason": "Thumbnails are high quality and smaller file size"
+    }
+  ],
+
+  "defaultImagePreference": "thumbnail"
+}

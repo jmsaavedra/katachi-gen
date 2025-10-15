@@ -60,19 +60,26 @@ async function minifyJSFile(fileName) {
         return null;
     }
 
-    // Skip if .min.js already exists
-    if (fs.existsSync(minFilePath)) {
-        console.log(`  ⏭️  Skipping: ${fileName} (minified version exists)`);
-        return null;
-    }
-
     // Check if file exists
     if (!fs.existsSync(filePath)) {
         console.log(`  ⚠️  Not found: ${fileName}`);
         return null;
     }
 
-    console.log(`\n📄 Processing: ${fileName}`);
+    // Check if .min.js needs updating (compare timestamps)
+    if (fs.existsSync(minFilePath)) {
+        const sourceStats = fs.statSync(filePath);
+        const minStats = fs.statSync(minFilePath);
+
+        if (minStats.mtime > sourceStats.mtime) {
+            console.log(`  ⏭️  Skipping: ${fileName} (minified version is up-to-date)`);
+            return null;
+        } else {
+            console.log(`\n📄 Updating: ${fileName} (source file changed)`);
+        }
+    } else {
+        console.log(`\n📄 Processing: ${fileName}`);
+    }
 
     try {
         const code = fs.readFileSync(filePath, 'utf8');

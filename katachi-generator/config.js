@@ -1,5 +1,7 @@
 // Configuration and constants for Katachi Generator
 const Arweave = require('arweave');
+const fs = require('fs');
+const path = require('path');
 
 // Server configuration
 const port = process.env.PORT || 3001;
@@ -60,6 +62,39 @@ const origamiPatterns = [
     }
 ];
 
+// Load texture scale configuration
+let textureScaleConfig = { contracts: [], defaultScale: 1.0 };
+try {
+    const configPath = path.join(__dirname, 'texture-scale-config.json');
+    const configData = fs.readFileSync(configPath, 'utf-8');
+    textureScaleConfig = JSON.parse(configData);
+    console.log(`✅ Loaded texture scale config: ${textureScaleConfig.contracts.length} contracts configured`);
+} catch (error) {
+    console.warn('⚠️ Could not load texture-scale-config.json, using default scale (1.0):', error.message);
+}
+
+/**
+ * Get the texture scale for a given contract address
+ * @param {string} contractAddress - The NFT contract address
+ * @returns {number} Scale value between 1.0 and 10.0
+ */
+function getTextureScale(contractAddress) {
+    if (!contractAddress) return textureScaleConfig.defaultScale;
+
+    const normalizedAddress = contractAddress.toLowerCase();
+    const contractConfig = textureScaleConfig.contracts.find(
+        c => c.address.toLowerCase() === normalizedAddress
+    );
+
+    if (contractConfig) {
+        const scale = contractConfig.scale;
+        // Clamp between 1.0 and 10.0
+        return Math.max(1.0, Math.min(10.0, scale));
+    }
+
+    return textureScaleConfig.defaultScale;
+}
+
 module.exports = {
     port,
     templateHTML,
@@ -70,5 +105,7 @@ module.exports = {
     arweaveWalletPath,
     walletAddress,
     arweave,
-    origamiPatterns
+    origamiPatterns,
+    getTextureScale,
+    textureScaleConfig
 };

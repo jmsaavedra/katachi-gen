@@ -1,0 +1,50 @@
+{
+  "_comment": "Texture scale configuration for NFT contract addresses",
+  "_description": "Scale values between 1.0 (normal) and 10.0 (max zoom). Higher values zoom in on the texture.",
+  "_examples": {
+    "1.0": "Normal size (default)",
+    "2.0": "2x zoom (texture appears twice as large)",
+    "3.0": "3x zoom (good for detailed artwork)",
+    "5.0": "5x zoom (great for small centered artwork)",
+    "10.0": "10x zoom (maximum, extreme close-up)"
+  },
+  "contracts": [
+    {
+      "address": "0xF2E4b2a15872a20D0fFB336a89B94BA782cE9Ba5",
+      "name": "DeePle",
+      "scale": 3.5,
+      "reason": "deeple is super small in the center of the image"
+    },
+    {
+      "address": "0x520fc638d11a8b83bb49e085a08afda6b4e7a7e5",
+      "name": "Postino",
+      "scale": 1.5,
+      "reason": "Stamp designs work well with slight zoom"
+    },
+    {
+      "address": "0x2967b7a0fa5115735d9f0d4c4867beaf9e76214d",
+      "name": "Aerial Art Club",
+      "scale": 2.5,
+      "reason": "boats are small in the image"
+    },
+    {
+      "address": "0xdad1276ecd6d27116da400b33c81ce49d91d5831",
+      "name": "Shape Punks",
+      "scale": 1.5,
+      "reason": "slight zoom to enlarge dots"
+    },
+    {
+      "address": "0xee8a96efbbe186d0d2bb2adbb70d5cb117320501",
+      "name": "DeePle Stuff",
+      "scale": 3.5,
+      "reason": "huge zoom for the stuff"
+    },
+    {
+      "address": "0x619d8DDAecf310049bAE7B2a1e629aF46De50C98",
+      "name": "Infinite Moments",
+      "scale": 1.1,
+      "reason": "zoom a bit to make details clearer"
+    } 
+  ],
+  "defaultScale": 1.0
+}

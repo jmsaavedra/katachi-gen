@@ -1,8 +1,0 @@
-# Blocked contract addresses - one per line
-# Lines starting with # are comments and will be ignored
-
-0x274b9f633e968a31e8f9831308170720d1072135
-0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b
-
-# Add new blocked contracts here
-# 0xanothercontractaddress

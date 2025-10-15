@@ -6,37 +6,7 @@ import { alchemy } from '../../clients';
 import { config } from '../../config';
 import type { ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
-import fs from 'fs';
-import path from 'path';
-
-// Load blocked contracts from file with graceful fallback
-function loadBlockedContracts(): string[] {
-  // Hardcoded fallback list
-  const FALLBACK_CONTRACTS = [
-    '0x274b9f633e968a31e8f9831308170720d1072135',
-    '0x0602b0fad4d305b2c670808dd9f77b0a68e36c5b',
-  ];
-
-  try {
-    const filePath = path.join(process.cwd(), 'blocked-contracts.txt');
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    
-    const contractsFromFile = fileContent
-      .split('\n')
-      .filter(line => line.trim() && !line.trim().startsWith('#'))
-      .map(addr => addr.trim().toLowerCase());
-    
-    console.log(`✅ Loaded ${contractsFromFile.length} blocked contracts from file`);
-    return contractsFromFile;
-    
-  } catch (error) {
-    console.warn('⚠️ Could not load blocked-contracts.txt, using fallback list:', (error as Error).message);
-    return FALLBACK_CONTRACTS.map(addr => addr.toLowerCase());
-  }
-}
-
-// Blocked contract addresses - NFTs from these contracts will be filtered out
-const BLOCKED_CONTRACTS = loadBlockedContracts();
+import { isContractBlocked, isCollectionNameBlocked, isNftNameBlocked } from '../../utils/collection-config';
 
 // Rate limiting and retry utilities
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -99,9 +69,22 @@ export const metadata = {
 
 interface CuratedNft {
   name: string | null;
-  image: string;
+  image: string; // Kept for backwards compatibility - will be originalUrl
   contractAddress: string;
   tokenId: string;
+  images?: {
+    thumbnail: string | null;      // 256x256 optimized thumbnail
+    cachedUrl: string | null;      // Alchemy CDN cached version
+    pngUrl: string | null;          // PNG format URL
+    originalUrl: string | null;    // Original image URL
+    contentType: string | null;    // Image content type
+    size: number | null;            // Image size in bytes
+  };
+  metadata?: {
+    description: string | null;
+    tokenType: string | null;
+    tokenUri: string | null;
+  };
 }
 
 export default async function getCuratedNfts({ 
@@ -135,21 +118,51 @@ export default async function getCuratedNfts({
           });
         });
 
-        // Convert to our format and add to collection, filtering out blocked contracts
+        // Convert to our format and add to collection, filtering out blocked contracts, collection names, and NFT names
         const addressNfts: CuratedNft[] = nftsResponse.ownedNfts
           .filter(nft => {
             const contractAddress = nft.contract.address.toLowerCase();
-            if (BLOCKED_CONTRACTS.includes(contractAddress)) {
+
+            // Check contract address
+            if (isContractBlocked(contractAddress)) {
               console.log(`🚫 Skipped blocked contract NFT: ${nft.name || 'Unnamed'} from ${contractAddress}`);
               return false;
             }
+
+            // Check collection name
+            const collectionNameCheck = isCollectionNameBlocked(nft.contract.name);
+            if (collectionNameCheck.blocked) {
+              console.log(`🚫 Skipped blocked collection name: ${nft.name || 'Unnamed'} from "${nft.contract.name}" - ${collectionNameCheck.reason}`);
+              return false;
+            }
+
+            // Check NFT name
+            const nftNameCheck = isNftNameBlocked(nft.name);
+            if (nftNameCheck.blocked) {
+              console.log(`🚫 Skipped blocked NFT name: "${nft.name}" - ${nftNameCheck.reason}`);
+              return false;
+            }
+
             return nft.image?.originalUrl || nft.image?.thumbnailUrl;
           })
           .map(nft => ({
             name: nft.name || null,
-            image: nft.image?.originalUrl || nft.image?.thumbnailUrl || '',
+            image: nft.image?.originalUrl || nft.image?.thumbnailUrl || '', // Backwards compatibility
             contractAddress: nft.contract.address,
             tokenId: nft.tokenId,
+            images: {
+              thumbnail: nft.image?.thumbnailUrl || null,
+              cachedUrl: nft.image?.cachedUrl || null,
+              pngUrl: nft.image?.pngUrl || null,
+              originalUrl: nft.image?.originalUrl || null,
+              contentType: nft.image?.contentType || null,
+              size: nft.image?.size || null,
+            },
+            metadata: {
+              description: nft.description || null,
+              tokenType: nft.tokenType || null,
+              tokenUri: nft.tokenUri || null,
+            },
           }))
           .filter(nft => nft.image); // Ensure we have an image
 
