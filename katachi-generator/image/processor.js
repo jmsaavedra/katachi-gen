@@ -4,7 +4,12 @@ const path = require('path');
 const sharp = require('sharp');
 const https = require('https');
 const http = require('http');
-const { THUMB_WIDTH, THUMB_HEIGHT } = require('../config');
+const {
+    THUMB_WIDTH,
+    THUMB_HEIGHT,
+    IMAGE_COMPRESSION_THRESHOLD,
+    IMAGE_COMPRESSION_QUALITY
+} = require('../config');
 
 /**
  * Save thumbnail to file
@@ -119,25 +124,48 @@ function downloadWithStrategy(imageUrl, options) {
             response.on('end', async () => {
                 try {
                     const buffer = Buffer.concat(chunks);
-                    
+
                     if (buffer.length === 0) {
                         throw new Error('Empty response received');
                     }
-                    
-                    // Compress the image
-                    const compressionResult = await compressImage(buffer, {
-                        quality: 85,
-                        maxWidth: 800,
-                        maxHeight: 800
-                    });
-                    
-                    resolve({
-                        buffer: compressionResult.buffer,
-                        originalUrl: imageUrl,
-                        size: buffer.length,
-                        compressedSize: compressionResult.compressedSize,
-                        compressionStats: compressionResult
-                    });
+
+                    // Only compress images over 150KB, preserving original dimensions
+                    if (buffer.length > IMAGE_COMPRESSION_THRESHOLD) {
+                        console.log(`🗜️ Image is ${buffer.length} bytes (>${IMAGE_COMPRESSION_THRESHOLD}), compressing with quality ${IMAGE_COMPRESSION_QUALITY} (preserving dimensions)`);
+
+                        // Get original image metadata to preserve dimensions
+                        const metadata = await sharp(buffer).metadata();
+
+                        const compressionResult = await compressImage(buffer, {
+                            quality: IMAGE_COMPRESSION_QUALITY,
+                            maxWidth: metadata.width,  // Preserve original width
+                            maxHeight: metadata.height  // Preserve original height
+                        });
+
+                        resolve({
+                            buffer: compressionResult.buffer,
+                            originalUrl: imageUrl,
+                            size: buffer.length,
+                            compressedSize: compressionResult.compressedSize,
+                            compressionStats: compressionResult
+                        });
+                    } else {
+                        // Skip compression for images under 150KB
+                        console.log(`✅ Image downloaded: ${buffer.length} bytes (<${IMAGE_COMPRESSION_THRESHOLD}, no compression needed)`);
+
+                        resolve({
+                            buffer: buffer,
+                            originalUrl: imageUrl,
+                            size: buffer.length,
+                            compressedSize: buffer.length,
+                            compressionStats: {
+                                buffer: buffer,
+                                originalSize: buffer.length,
+                                compressedSize: buffer.length,
+                                compressionRatio: 0
+                            }
+                        });
+                    }
                 } catch (error) {
                     reject(new Error(`Processing failed: ${error.message}`));
                 }

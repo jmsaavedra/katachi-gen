@@ -155,9 +155,12 @@ const server = http.createServer(async (req, res) => {
 server.listen(port, () => {
     console.log(`🚀 Katachi Generator Server started on port ${port}`);
     console.log(`📡 http://localhost:${port}`);
-    console.log(`🔧 Environment: NODE_ENV=${process.env.NODE_ENV || 'undefined'}`);
+
+    // Detect environment from NODE_ENV or RAILWAY_ENVIRONMENT
+    const environment = process.env.NODE_ENV || process.env.RAILWAY_ENVIRONMENT || 'development';
+    console.log(`🔧 Environment: ${environment}`);
     console.log(`🧪 Testing Mode: ${TESTING_MODE ? 'ENABLED' : 'DISABLED'} ${TESTING_MODE ? '(local storage)' : '(Arweave uploads)'}`);
-    
+
     // Run initial cleanup
     cleanupTempFiles();
     

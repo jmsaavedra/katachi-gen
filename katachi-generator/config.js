@@ -9,6 +9,10 @@ const templateHTML = 'template.html';
 const TESTING_MODE = process.env.NODE_ENV === 'development';
 const ENABLE_MINTING = process.env.ENABLE_MINTING === 'true';
 
+// Image processing configuration
+const IMAGE_COMPRESSION_THRESHOLD = 200 * 1024; // Only compress images over 200KB
+const IMAGE_COMPRESSION_QUALITY = parseInt(process.env.IMAGE_COMPRESSION_QUALITY) || 85;
+
 // Thumbnail configuration
 const THUMB_WIDTH = 1024;
 const THUMB_HEIGHT = 1024;
@@ -100,6 +104,8 @@ module.exports = {
     templateHTML,
     TESTING_MODE,
     ENABLE_MINTING,
+    IMAGE_COMPRESSION_THRESHOLD,
+    IMAGE_COMPRESSION_QUALITY,
     THUMB_WIDTH,
     THUMB_HEIGHT,
     arweaveWalletPath,

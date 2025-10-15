@@ -189,3 +189,4 @@ katachi-generator/temp/html/
 katachi-generator/temp/thumbnails/
 katachi-generator/public/generated-index.html
 katachi-generator/logs-debug/
+.vercel
