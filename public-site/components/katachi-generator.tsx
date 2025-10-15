@@ -339,11 +339,13 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     
     try {
       // Use the passed data instead of state
-      // Include thumbnail URL from MCP data if available, along with contract/token info
+      // Include ALL image URLs from MCP data so katachi-generator can choose the best quality
       const imageUrls = dataToUse.filteredNfts
         .map(nft => ({
           url: nft.imageUrl || '',
-          thumbnailUrl: (nft as any).thumbnailUrl || null,
+          thumbnailUrl: (nft as any).alchemyImages?.thumbnailUrl || null,
+          pngUrl: (nft as any).alchemyImages?.pngUrl || null,
+          originalImageUrl: (nft as any).alchemyImages?.originalUrl || null,
           contractAddress: nft.contractAddress,
           tokenId: nft.tokenId
         }))
