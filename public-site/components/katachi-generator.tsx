@@ -341,7 +341,6 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       // Use the passed data instead of state
       // Include thumbnail URL from MCP data if available, along with contract/token info
       const imageUrls = dataToUse.filteredNfts
-        .slice(0, 5)
         .map(nft => ({
           url: nft.imageUrl || '',
           thumbnailUrl: (nft as any).thumbnailUrl || null,
@@ -425,7 +424,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
             { trait_type: 'Revealed by', value: overrideAddress && !connectedAddress ? '0x0000' : connectedAddress },
           ])
         },
-        curated_nfts: dataToUse.filteredNfts.slice(0, 5).map(nft => ({
+        curated_nfts: dataToUse.filteredNfts.map(nft => ({
           name: nft.name || '',
           description: nft.description || '',
           image: nft.imageUrl || '',
@@ -494,9 +493,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     resetMint(); // Reset any previous mint state
     
     try {
-      // Get first 5 filtered NFT images for pattern generation
+      // Get all filtered NFT images for pattern generation
       const imageUrls = sentimentData.filteredNfts
-        .slice(0, 5)
         .map(nft => ({ url: nft.imageUrl || '' }))
         .filter(img => img.url); // Remove empty URLs
 
@@ -575,7 +573,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
             { trait_type: 'Pattern Type', value: 'Origami' },
             { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 }
           ],
-          curatedNfts: sentimentData.filteredNfts.slice(0, 5).map(nft => ({
+          curatedNfts: sentimentData.filteredNfts.map(nft => ({
             name: nft.name || 'Untitled',
             image: nft.imageUrl || '',
             contractAddress: nft.contractAddress,
