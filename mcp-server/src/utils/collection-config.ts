@@ -5,6 +5,7 @@
 
 import fs from 'fs';
 import path from 'path';
+import configJson from '../../config-collections.json';
 
 // Collection configuration interface
 export interface CollectionConfig {
@@ -49,16 +50,22 @@ const FALLBACK_CONFIG: CollectionConfig = {
 // Load collection configuration from JSON file with graceful fallback
 function loadCollectionConfig(): CollectionConfig {
   try {
-    const filePath = path.join(process.cwd(), 'config-collections.json');
-    const fileContent = fs.readFileSync(filePath, 'utf-8');
-    const config: CollectionConfig = JSON.parse(fileContent);
-
+    // Try to use the imported JSON (bundled by webpack)
+    const config: CollectionConfig = configJson as CollectionConfig;
     console.log(`✅ Loaded collection config: ${config.blockedContracts.length} blocked contracts, ${config.blockedCollectionNames.length} blocked collection names, ${config.blockedNftNames.length} blocked NFT names`);
     return config;
-
   } catch (error) {
-    console.warn('⚠️ Could not load config-collections.json, using fallback config:', (error as Error).message);
-    return FALLBACK_CONFIG;
+    // Fallback to file system if import fails
+    try {
+      const filePath = path.join(process.cwd(), 'config-collections.json');
+      const fileContent = fs.readFileSync(filePath, 'utf-8');
+      const config: CollectionConfig = JSON.parse(fileContent);
+      console.log(`✅ Loaded collection config from filesystem: ${config.blockedContracts.length} blocked contracts`);
+      return config;
+    } catch (fsError) {
+      console.warn('⚠️ Could not load config-collections.json, using fallback config:', (error as Error).message);
+      return FALLBACK_CONFIG;
+    }
   }
 }
 
