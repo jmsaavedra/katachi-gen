@@ -443,6 +443,13 @@ export default async function interpretCollectionSentiment({
       const contractAddress = item.nft.contract.address;
       const tokenId = item.nft.tokenId;
 
+      // Log all available URLs from Alchemy
+      console.log(`\n📸 ${item.nft.name} - Available URLs from Alchemy:`);
+      console.log(`   cachedUrl: ${item.nft.image?.cachedUrl || 'null'}`);
+      console.log(`   thumbnailUrl: ${item.nft.image?.thumbnailUrl || 'null'}`);
+      console.log(`   pngUrl: ${item.nft.image?.pngUrl || 'null'}`);
+      console.log(`   originalUrl: ${item.nft.image?.originalUrl || 'null'}`);
+
       // Determine primary image URL based on collection preferences
       const preferOriginal = shouldPreferOriginalImage(contractAddress);
       let primaryImageUrl: string | null;
@@ -474,7 +481,8 @@ export default async function interpretCollectionSentiment({
         }
       }
 
-      console.log(`   🖼️  Image URL selected: ${selectedUrlType} (preferOriginal: ${preferOriginal})`);
+      console.log(`   ✅ Selected: ${selectedUrlType} (preferOriginal: ${preferOriginal})`);
+      console.log(`   🔗 URL: ${primaryImageUrl}\n`);
 
       return {
         tokenId,
