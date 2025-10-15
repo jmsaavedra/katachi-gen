@@ -36,20 +36,19 @@ export function mainnetRpcClient() {
 // Redis client with proper error handling for Upstash
 export const redis = config.redisUrl ? (() => {
   try {
-    // Parse Redis URL to extract connection details
+    console.log('Initializing Redis with TCP/TLS connection');
     const url = new URL(config.redisUrl);
     const isUpstash = url.hostname.includes('upstash.io');
-    
+
     const redisConfig = {
       maxRetriesPerRequest: 3,
       connectTimeout: 10000,
       lazyConnect: true,
       retryDelayOnFailover: 100,
-      enableOfflineQueue: true, // Allow commands to queue when disconnected
+      enableOfflineQueue: true,
       // For Upstash, we need TLS
-      ...(isUpstash && { 
+      ...(isUpstash && {
         tls: {
-          // Accept self-signed certificates for Upstash
           rejectUnauthorized: false
         }
       }),
@@ -59,7 +58,6 @@ export const redis = config.redisUrl ? (() => {
 
     // Handle ALL Redis errors silently to prevent unhandled errors
     client.on('error', (err) => {
-      // Silently log and continue - don't throw or crash
       console.warn('Redis error (caching disabled):', err.message);
     });
 

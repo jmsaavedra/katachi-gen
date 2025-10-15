@@ -5,10 +5,10 @@ export const config = {
   // Dual chain support
   readChainId: Number(process.env.READ_CHAIN_ID || process.env.CHAIN_ID || 360), // Default to mainnet for reading data
   mintChainId: Number(process.env.MINT_CHAIN_ID || 11011), // Default to testnet for minting
-  
+
   // Legacy single chain ID (for backwards compatibility) - defaults to read chain
   chainId: Number(process.env.READ_CHAIN_ID || process.env.CHAIN_ID || 360),
-  
+
   alchemyApiKey: process.env.ALCHEMY_API_KEY as string,
   raribleApiKey: process.env.RARIBLE_API_KEY as string,
   redisUrl: process.env.REDIS_URL as string,
