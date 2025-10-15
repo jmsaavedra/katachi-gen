@@ -325,13 +325,10 @@
                             // Check for either url or data property (base64)
                             var imageSource = imageData.url || imageData.data;
                             if (imageSource) {
-                                console.log('🔄 Loading texture', (index + 1) + '/' + dataToProcess.images.length + ':', imageData.name || 'Image ' + (index + 1));
-
                                 loader.load(
                                     imageSource,
                                     function(texture) {
                                         // Success callback
-                                        console.log('✅ Texture loaded successfully:', imageData.name || 'Image ' + (index + 1));
 
                                         // Get texture scale (zoom level) from config or use default
                                         var textureScale = imageData.textureScale || 1.0;

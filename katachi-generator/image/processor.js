@@ -92,7 +92,7 @@ async function compressImage(buffer, options = {}) {
 /**
  * Download image with strategy pattern
  */
-function downloadWithStrategy(imageUrl, options) {
+function downloadWithStrategy(imageUrl, options, prefix = '') {
     const { timeout = 10000, headers = {} } = options;
     
     return new Promise((resolve, reject) => {
@@ -131,7 +131,7 @@ function downloadWithStrategy(imageUrl, options) {
 
                     // Only compress images over 150KB, preserving original dimensions
                     if (buffer.length > IMAGE_COMPRESSION_THRESHOLD) {
-                        console.log(`🗜️ Image is ${buffer.length} bytes (>${IMAGE_COMPRESSION_THRESHOLD}), compressing with quality ${IMAGE_COMPRESSION_QUALITY} (preserving dimensions)`);
+                        console.log(`${prefix}🗜️ Image is ${buffer.length} bytes (>${IMAGE_COMPRESSION_THRESHOLD}), compressing with quality ${IMAGE_COMPRESSION_QUALITY} (preserving dimensions)`);
 
                         // Get original image metadata to preserve dimensions
                         const metadata = await sharp(buffer).metadata();
@@ -151,7 +151,7 @@ function downloadWithStrategy(imageUrl, options) {
                         });
                     } else {
                         // Skip compression for images under 150KB
-                        console.log(`✅ Image downloaded: ${buffer.length} bytes (<${IMAGE_COMPRESSION_THRESHOLD}, no compression needed)`);
+                        console.log(`${prefix}✅ Downloaded: ${buffer.length} bytes (no compression needed)`);
 
                         resolve({
                             buffer: buffer,
@@ -206,9 +206,9 @@ function parseNFTInfoFromUrl(imageUrl, metadata = {}) {
 /**
  * Download image as base64 with retry logic
  */
-async function downloadImageAsBase64(imageUrl, maxRetries = 3) {
-    console.log(`📥 Downloading image: ${imageUrl}`);
-    
+async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 3) {
+    const prefix = imageNumber ? `Image #${imageNumber}: ` : '';
+
     const strategies = [
         {
             name: 'Standard download',
@@ -220,7 +220,7 @@ async function downloadImageAsBase64(imageUrl, maxRetries = 3) {
         },
         {
             name: 'Custom headers',
-            options: { 
+            options: {
                 timeout: 15000,
                 headers: {
                     'Accept': 'image/*,*/*;q=0.8',
@@ -230,22 +230,24 @@ async function downloadImageAsBase64(imageUrl, maxRetries = 3) {
             }
         }
     ];
-    
+
     for (let attempt = 0; attempt < Math.min(maxRetries, strategies.length); attempt++) {
         const strategy = strategies[attempt];
-        console.log(`🔄 Attempt ${attempt + 1}: ${strategy.name} for ${imageUrl}`);
-        
+
+        if (attempt > 0) {
+            console.log(`${prefix}🔄 Retry attempt ${attempt + 1}: ${strategy.name}`);
+        }
+
         try {
-            const result = await downloadWithStrategy(imageUrl, strategy.options);
+            const result = await downloadWithStrategy(imageUrl, strategy.options, prefix);
             if (result) {
-                const base64 = result.buffer.toString('base64');
                 return result;
             }
         } catch (error) {
-            console.warn(`❌ ${strategy.name} failed for ${imageUrl}: ${error.message}`);
+            console.warn(`${prefix}❌ ${strategy.name} failed: ${error.message}`);
         }
     }
-    
+
     throw new Error(`All download attempts failed for ${imageUrl}`);
 }
 
@@ -255,19 +257,22 @@ async function downloadImageAsBase64(imageUrl, maxRetries = 3) {
  */
 async function processImagesAsBase64(data) {
     console.log('🎨 Processing images for base64 embedding...');
+    console.log('═══════════════════════════════════════════════════════════════════');
 
     // Create a deep copy to avoid modifying original data
     const processedData = JSON.parse(JSON.stringify(data));
 
     // Process main images array
     if (processedData.images && Array.isArray(processedData.images)) {
-        console.log(`📋 Processing ${processedData.images.length} images`);
+        console.log(`📋 Processing ${processedData.images.length} NFT images`);
+        console.log('');
 
         for (let i = 0; i < processedData.images.length; i++) {
             const image = processedData.images[i];
             if (image.url) {
                 try {
-                    console.log(`🔄 Processing image ${i + 1}/${processedData.images.length}: ${image.url.slice(0, 50)}...`);
+                    console.log(`\n🖼️  IMAGE ${i + 1}/${processedData.images.length}: ${image.name || 'Unnamed NFT'}`);
+                    console.log('───────────────────────────────────────────────────────────────────');
 
                     // Check if already a data URI (base64 encoded)
                     if (image.url.startsWith('data:')) {
@@ -289,27 +294,41 @@ async function processImagesAsBase64(data) {
                     let imageSource = 'direct-download';
                     let usedProvidedThumbnail = false;
 
+                    // Log available URLs from MCP
+                    console.log('📍 Available URLs:');
+                    if (image.preferredImageUrl) {
+                        console.log(`   • preferredImageUrl: ${image.preferredImageUrl.slice(0, 100)}...`);
+                    }
+                    if (image.thumbnailUrl) {
+                        console.log(`   • thumbnailUrl: ${image.thumbnailUrl.slice(0, 100)}...`);
+                    }
+                    if (image.originalUrl) {
+                        console.log(`   • originalUrl: ${image.originalUrl.slice(0, 100)}...`);
+                    }
+
                     // Use preferredImageUrl if provided by MCP server (already determined based on collection config)
                     // This is the cleanest approach - MCP knows which collections need high-res vs thumbnails
                     if (image.preferredImageUrl) {
                         imageUrlToDownload = image.preferredImageUrl;
                         imageSource = 'mcp-preferred';
                         usedProvidedThumbnail = true;
-                        console.log(`✅ Using MCP preferred image URL: ${imageUrlToDownload.slice(0, 80)}...`);
+                        console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
                     } else if (image.thumbnailUrl) {
                         // Fallback: use thumbnail if no preferred URL
                         imageUrlToDownload = image.thumbnailUrl;
                         imageSource = 'mcp-thumbnail';
                         usedProvidedThumbnail = true;
-                        console.log(`✅ Using pre-fetched thumbnail from MCP: ${image.thumbnailUrl.slice(0, 80)}...`);
+                        console.log(`\nImage #${i + 1}: ✅ Selected: thumbnailUrl (fallback)`);
                     } else {
                         // Last resort: use the URL provided in image.url
-                        console.log(`⚠️ No MCP URLs for image ${i + 1}, using original URL`);
+                        console.log(`\nImage #${i + 1}: ⚠️  Selected: original URL (no optimized URLs available)`);
                     }
+
+                    console.log(`Image #${i + 1}: 🔗 Downloading from: ${imageUrlToDownload.slice(0, 100)}...`);
 
                     image.source = imageSource;
 
-                    const downloadResult = await downloadImageAsBase64(imageUrlToDownload);
+                    const downloadResult = await downloadImageAsBase64(imageUrlToDownload, i + 1);
                     const base64String = downloadResult.buffer.toString('base64');
 
                     // Determine MIME type from URL or default to PNG
@@ -330,8 +349,22 @@ async function processImagesAsBase64(data) {
                     image.compressedSize = downloadResult.compressedSize;
                     image.usedProvidedThumbnail = usedProvidedThumbnail;
 
-                    const sourceLabel = usedProvidedThumbnail ? ' (via MCP thumbnail)' : '';
-                    console.log(`✅ Image ${i + 1} processed${sourceLabel}: ${downloadResult.size} → ${downloadResult.compressedSize} bytes`);
+                    // Calculate compression info
+                    const wasCompressed = downloadResult.size !== downloadResult.compressedSize;
+                    const compressionRatio = wasCompressed
+                        ? Math.round((1 - downloadResult.compressedSize / downloadResult.size) * 100)
+                        : 0;
+
+                    console.log(`\n📊 Size Information:`);
+                    console.log(`   • Downloaded: ${(downloadResult.size / 1024).toFixed(2)} KB`);
+                    if (wasCompressed) {
+                        console.log(`   • Compressed: ${(downloadResult.compressedSize / 1024).toFixed(2)} KB (${compressionRatio}% reduction)`);
+                        console.log(`   • Compression: ✅ APPLIED (over 150 KB threshold)`);
+                    } else {
+                        console.log(`   • Compressed: ${(downloadResult.compressedSize / 1024).toFixed(2)} KB (no compression needed)`);
+                        console.log(`   • Compression: ⏭️  SKIPPED (under 150 KB threshold)`);
+                    }
+                    console.log(`   • Base64 size: ${(base64String.length / 1024).toFixed(2)} KB`);
 
                 } catch (error) {
                     console.error(`❌ Failed to process image ${i + 1}: ${error.message}`);
@@ -342,6 +375,12 @@ async function processImagesAsBase64(data) {
         }
     }
 
+    // Calculate comprehensive statistics
+    const totalDownloaded = processedData.images?.reduce((sum, img) => sum + (img.size || 0), 0) || 0;
+    const totalCompressed = processedData.images?.reduce((sum, img) => sum + (img.compressedSize || 0), 0) || 0;
+    const numCompressed = processedData.images?.filter(img => img.size !== img.compressedSize).length || 0;
+    const numSkipped = processedData.images?.filter(img => img.size === img.compressedSize).length || 0;
+
     // Add processing metadata
     processedData.imageStats = {
         totalImages: processedData.images?.length || 0,
@@ -349,10 +388,36 @@ async function processImagesAsBase64(data) {
         failedImages: processedData.images?.filter(img => img.error).length || 0,
         mcpThumbnails: processedData.images?.filter(img => img.usedProvidedThumbnail).length || 0,
         directDownloads: processedData.images?.filter(img => img.source === 'direct-download').length || 0,
+        totalDownloadedBytes: totalDownloaded,
+        totalCompressedBytes: totalCompressed,
+        numCompressed: numCompressed,
+        numSkipped: numSkipped,
         timestamp: new Date().toISOString()
     };
 
-    console.log('🎨 Image processing completed:', processedData.imageStats);
+    console.log('\n');
+    console.log('═══════════════════════════════════════════════════════════════════');
+    console.log('📊 IMAGE PROCESSING SUMMARY');
+    console.log('═══════════════════════════════════════════════════════════════════');
+    console.log(`✅ Successfully processed: ${processedData.imageStats.processedImages}/${processedData.imageStats.totalImages} images`);
+    console.log(`❌ Failed: ${processedData.imageStats.failedImages}`);
+    console.log(`📦 MCP thumbnails used: ${processedData.imageStats.mcpThumbnails}`);
+    console.log('');
+    console.log('💾 Bandwidth Usage:');
+    console.log(`   • Total downloaded: ${(totalDownloaded / 1024).toFixed(2)} KB`);
+    console.log(`   • Total after compression: ${(totalCompressed / 1024).toFixed(2)} KB`);
+    if (totalDownloaded > totalCompressed) {
+        const savedBytes = totalDownloaded - totalCompressed;
+        const savedPercent = Math.round((savedBytes / totalDownloaded) * 100);
+        console.log(`   • Bandwidth saved: ${(savedBytes / 1024).toFixed(2)} KB (${savedPercent}%)`);
+    }
+    console.log('');
+    console.log('🗜️  Compression Stats:');
+    console.log(`   • Images compressed: ${numCompressed}`);
+    console.log(`   • Images skipped (< 150 KB): ${numSkipped}`);
+    console.log('═══════════════════════════════════════════════════════════════════');
+    console.log('');
+
     return processedData;
 }
 

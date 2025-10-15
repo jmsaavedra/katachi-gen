@@ -38,7 +38,7 @@ const server = http.createServer(async (req, res) => {
     // Handle POST requests
     if (method === 'POST') {
         let body = '';
-        
+
         // Receive request body
         req.on('data', chunk => {
             body += chunk.toString();
@@ -48,7 +48,17 @@ const server = http.createServer(async (req, res) => {
             try {
                 // Parse as JSON data
                 const data = JSON.parse(body);
-                
+
+                // Log the entire POST request
+                console.log('\n═══════════════════════════════════════════════════════════════════');
+                console.log('📨 INCOMING POST REQUEST');
+                console.log('═══════════════════════════════════════════════════════════════════');
+                console.log(`🔗 Endpoint: ${urlPath}`);
+                console.log(`📦 Request size: ${body.length} bytes (${(body.length / 1024).toFixed(2)} KB)`);
+                console.log('\n📄 Request Body:');
+                console.log(JSON.stringify(data, null, 2));
+                console.log('═══════════════════════════════════════════════════════════════════\n');
+
                 // Route POST requests based on URL path
                 if (urlPath === '/upload-metadata') {
                     await handleMetadataUpload(req, res, data);
