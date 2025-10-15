@@ -1,5 +1,3 @@
-import { withRelatedProject } from '@vercel/related-projects';
-
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     // Log service URLs on server startup
@@ -8,14 +6,10 @@ export async function register() {
     console.log('');
 
     // MCP Server URL
-    const mcpServerUrl = withRelatedProject({
-      defaultHost: process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp',
-      relatedProjectEnvVariable: 'VERCEL_MCP_SERVER_URL',
-    });
+    const mcpServerUrl = process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp';
     console.log('🔗 MCP Server URL:');
     console.log('   Resolved:', mcpServerUrl);
     console.log('   Env var MCP_SERVER_URL:', process.env.MCP_SERVER_URL || '(not set)');
-    console.log('   Vercel related project:', process.env.VERCEL_MCP_SERVER_URL || '(not set)');
     console.log('');
 
     // Generator URL
