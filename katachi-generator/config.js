@@ -76,7 +76,7 @@ try {
 /**
  * Get the texture scale for a given contract address
  * @param {string} contractAddress - The NFT contract address
- * @returns {number} Scale value between 1.0 and 5.0
+ * @returns {number} Scale value between 1.0 and 10.0
  */
 function getTextureScale(contractAddress) {
     if (!contractAddress) return textureScaleConfig.defaultScale;
@@ -88,8 +88,8 @@ function getTextureScale(contractAddress) {
 
     if (contractConfig) {
         const scale = contractConfig.scale;
-        // Clamp between 1.0 and 5.0
-        return Math.max(1.0, Math.min(5.0, scale));
+        // Clamp between 1.0 and 10.0
+        return Math.max(1.0, Math.min(10.0, scale));
     }
 
     return textureScaleConfig.defaultScale;
