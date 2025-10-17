@@ -284,6 +284,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       imageUrl: string | null;
       preferredImageUrl?: string;
       collectionName: string | null;
+      contractDeployer?: string | null;
       alchemyImages?: {
         cachedUrl?: string;
         thumbnailUrl?: string;
@@ -336,8 +337,9 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
             imageUrl: nft.imageUrl,
             preferredImageUrl: nft.preferredImageUrl,
             thumbnailUrl: nft.alchemyImages?.thumbnailUrl || null,
-            collectionName: nft.collectionName || null, // ✅ ADD collection name
-            alchemyImages: nft.alchemyImages, // ✅ PRESERVE alchemyImages object!
+            collectionName: nft.collectionName || null,
+            contractDeployer: nft.contractDeployer || null,
+            alchemyImages: nft.alchemyImages,
             contractAddress: nft.contractAddress,
             tokenId: nft.tokenId
           };
@@ -363,6 +365,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       preferredImageUrl?: string;
       thumbnailUrl?: string | null;
       collectionName?: string | null;
+      contractDeployer?: string | null;
       alchemyImages?: {
         cachedUrl?: string;
         thumbnailUrl?: string;
