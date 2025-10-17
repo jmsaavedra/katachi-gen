@@ -134,8 +134,8 @@ export default async function getShapeNft({ address, pageKey, pageSize }: InferS
           // Prefer original for collections that need high-res
           preferredImageUrl = nft.image?.originalUrl || nft.image?.pngUrl || nft.image?.thumbnailUrl || null;
         } else {
-          // Default: prefer optimized thumbnails
-          preferredImageUrl = nft.image?.thumbnailUrl || nft.image?.pngUrl || nft.image?.originalUrl || null;
+          // Default: prefer pngUrl for better quality
+          preferredImageUrl = nft.image?.pngUrl || nft.image?.thumbnailUrl || nft.image?.originalUrl || null;
         }
 
         return {
