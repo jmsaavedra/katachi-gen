@@ -265,6 +265,141 @@ The codebase makes extensive use of the Alchemy API across multiple components. 
 
 ---
 
+## 🎭 Origami Model Analysis & Enhancements
+
+### Flower Pattern Selection Investigation
+
+**Status**: ✅ Investigation Complete - No Issues Found
+
+**Finding**: The "flower" model is being selected at expected frequency. Analysis of production logs shows flower appearing at 22% (2 out of 9 generations), which is above the expected 20% for 5 total patterns.
+
+#### Pattern Selection Implementation
+
+**Server-Side** ([katachi-generator/handlers/pattern.js:36-44](katachi-generator/handlers/pattern.js#L36-L44))
+- Uses pure `Math.random()` for unbiased random selection
+- All 5 patterns have equal 20% chance
+
+**Client-Side** ([katachi-generator/src/template/partials/scripts/origami.ejs:131-173](katachi-generator/src/template/partials/scripts/origami.ejs#L131-L173))
+- Uses Linear Congruential Generator (LCG) for deterministic randomness
+- Based on `walletAddress + seed2` for consistent generation
+- Still provides equal probability across all patterns
+
+#### Available Patterns
+1. **Traditional Crane** (`Crane`) - intermediate
+2. **Paper Airplane** (`Airplane`) - beginner
+3. **Geometric Pinwheel** (`Pinwheel`) - intermediate
+4. **Hyperbolic Paraboloid** (`Hypar`) - expert
+5. **Blooming Flower** (`Flower`) - intermediate, maxFolding: 70
+
+#### Flower Pattern Specifics
+- **SVG Source**: [FTpoly7.svg](katachi-generator/public/svgs/FTpoly7.svg) (~30KB, 2000+ lines)
+- **Complexity**: 7-sided polygon base with mountain/valley folds
+- **MaxFolding**: 70 (higher than other patterns)
+- **Pattern Loading**: Embedded SVG → Blob URL → `globals.pattern.loadSVG()`
+
+#### Production Distribution (9 generations)
+```
+Airplane:  3 (33%)
+Flower:    2 (22%)  ← Above expected 20%
+Crane:     2 (22%)
+Pinwheel:  1 (11%)
+Hypar:     1 (11%)
+```
+
+**Conclusion**: No technical issue. Small sample size creates perception bias. With larger samples (100+ generations), distribution should normalize to ~20% per pattern.
+
+### Potential Future Enhancements
+
+- [ ] **Pattern Distribution Tracking**
+  - Add analytics to track actual pattern distribution over time
+  - Display pattern statistics in admin dashboard
+  - Monitor for any long-term selection biases
+
+- [ ] **Pattern Preview System**
+  - Add visual previews of each pattern type in UI
+  - Allow users to optionally select preferred pattern
+  - Maintain random selection as default
+
+- [ ] **Pattern Complexity Weighting**
+  - Consider weighting selection by user experience level
+  - Beginners get more airplane/crane, advanced get more hypar/flower
+  - Based on wallet activity or explicit user preference
+
+- [ ] **New Pattern Types**
+  - Research additional origami base patterns
+  - Implement modular pattern addition system
+  - Test with more complex curved fold patterns
+
+---
+
+## 🎨 UI/UX Improvements
+
+### Countdown Text Update
+
+- [ ] **Change countdown text in public-site**
+  - **Current**: "Generating your Katachi Gen... 1s"
+  - **New**: "Revealing your Katachi Gen in... 5s"
+  - **Locations**:
+    - [katachi-generator.tsx:1099](public-site/components/katachi-generator.tsx#L1099)
+    - [katachi-generator.tsx:1160](public-site/components/katachi-generator.tsx#L1160)
+  - **Change**: Update both instances to use "Revealing your Katachi Gen in..." format
+
+### Local Development Links
+
+- [ ] **Surface generated HTML and thumbnail file links in local dev mode**
+  - **Goal**: Make it easy to access generated files during local development
+  - **Current**: Files are saved but URLs not displayed in UI
+  - **Proposed**: Show clickable links in UI when `NODE_ENV === 'development'`
+  - **Files to display**:
+    - HTML file URL (e.g., `http://localhost:3001/temp/html/kg_crane-...html`)
+    - Thumbnail file URL (e.g., `http://localhost:3001/thumbnails/thumbnail_...png`)
+  - **Implementation**: Add dev-only section in generation success state showing:
+    - "📁 Generated Files (Dev Mode)"
+    - Link to HTML file
+    - Link to thumbnail
+
+---
+
+## 🔧 MCP Server Collection Configuration
+
+### maxCount per Collection
+
+- [ ] **Add 'maxCount' key to imagePreferences array items in config-collections.json**
+  - **Current**: Default is 2 max NFTs per collection globally
+  - **Goal**: Allow per-collection customization of max NFT count
+  - **Current imagePreferences structure**:
+
+    ```json
+    "imagePreferences": [
+      {
+        "address": "0xF2E4b2a15872a20D0fFB336a89B94BA782cE9Ba5",
+        "name": "DeePle",
+        "preferOriginal": false,
+        "reason": "Use Alchemy CDN thumbnails instead of slow IPFS gateway originals"
+      }
+    ]
+    ```
+
+  - **Proposed addition**:
+
+    ```json
+    "imagePreferences": [
+      {
+        "address": "0xF2E4b2a15872a20D0fFB336a89B94BA782cE9Ba5",
+        "name": "DeePle",
+        "preferOriginal": false,
+        "maxCount": 1,  // ← NEW: max NFTs from this collection
+        "reason": "Use Alchemy CDN thumbnails instead of slow IPFS gateway originals"
+      }
+    ]
+    ```
+
+  - **Use Case**: Some collections should only contribute 1 NFT max to avoid over-representation
+  - **File**: [mcp-server/config-collections.json](mcp-server/config-collections.json)
+  - **Code Update**: [get-curated-nfts.ts](mcp-server/src/tools/nft/get-curated-nfts.ts) - respect maxCount when selecting NFTs per collection (default to 2 if not specified)
+
+---
+
 ## 📋 Backlog & Future Enhancements
 
 ### Interactive NFT Preview Improvements
