@@ -1,5 +1,151 @@
 # TODO: Project Improvements
 
+## 🔄 Queue System for Concurrent Generation Requests
+
+### Priority: HIGH (Pre-Launch Critical)
+
+### Current Problem
+The katachi-generator service has **no concurrency handling**, which creates serious issues with multiple simultaneous users:
+
+**Issues with Current Architecture:**
+1. **No Queue** - All requests processed immediately in parallel
+2. **Shared Resources** - Same temp directories, Arweave wallet, Puppeteer instance
+3. **Race Conditions** - File naming collisions, temp file cleanup conflicts
+4. **Resource Exhaustion** - Each generation uses ~200MB+ memory + Puppeteer browser
+   - 5 concurrent users = 1GB+ memory spike + 5 browser instances
+5. **No Job Tracking** - Cannot show real progress per user
+6. **Logs Intermixed** - All user logs mixed together in console
+
+### Recommended Solution: Bull Queue System
+
+**Why Bull Queue:**
+- Battle-tested for production workloads
+- Built-in Redis persistence
+- Real progress tracking (`job.progress()`)
+- Automatic retry logic
+- Job status dashboard available
+- Works well with serverless (can offload to separate worker)
+
+### Implementation Plan
+
+#### Phase 1: Basic Queue Setup (2-3 hours)
+```javascript
+// katachi-generator/queue/generator-queue.js
+const Queue = require('bull');
+const Redis = require('ioredis');
+
+const generationQueue = new Queue('katachi-generation', {
+  redis: {
+    host: process.env.REDIS_HOST || 'localhost',
+    port: process.env.REDIS_PORT || 6379,
+  },
+  settings: {
+    maxStalledCount: 1,
+    lockDuration: 180000, // 3 minutes
+  }
+});
+
+// Process one job at a time (or configure concurrency)
+generationQueue.process(1, async (job) => {
+  const { walletAddress, images, pattern, seed2 } = job.data;
+
+  // Update progress at key steps
+  await job.progress(10); // Starting
+  await job.progress(30); // Images processed
+  await job.progress(60); // Pattern generated
+  await job.progress(80); // Thumbnail created
+  await job.progress(90); // Uploading
+
+  const result = await generatePattern(job.data);
+
+  await job.progress(100); // Complete
+  return result;
+});
+```
+
+#### Phase 2: API Updates (1-2 hours)
+```javascript
+// New endpoint: POST / → Returns job ID immediately
+POST /
+Response: { jobId: 'uuid-123', status: 'queued' }
+
+// New endpoint: GET /job-status/:jobId
+GET /job-status/uuid-123
+Response: {
+  status: 'processing',
+  progress: 45,
+  message: 'Processing image 4/8...'
+}
+
+// Result endpoint: GET /job-result/:jobId
+GET /job-result/uuid-123
+Response: {
+  status: 'completed',
+  htmlUrl: '...',
+  thumbnailUrl: '...',
+  arweaveId: '...'
+}
+```
+
+#### Phase 3: Frontend Updates (2 hours)
+```typescript
+// public-site/app/api/generate-katachi/route.ts
+export async function POST(request: NextRequest) {
+  // Submit job to queue
+  const { jobId } = await fetch(GENERATOR_URL, { ... });
+
+  // Start polling for progress
+  const pollInterval = setInterval(async () => {
+    const status = await fetch(`${GENERATOR_URL}/job-status/${jobId}`);
+
+    if (status.progress) {
+      setGenerationProgress(status.progress);
+      setGenerationStatus(status.message);
+    }
+
+    if (status.status === 'completed') {
+      clearInterval(pollInterval);
+      // Get final result
+    }
+  }, 2000); // Poll every 2 seconds
+}
+```
+
+#### Phase 4: Benefits We Get
+- ✅ **Real Progress** - Actual server-side progress updates
+- ✅ **Concurrency Control** - Configure max concurrent jobs (e.g., 3)
+- ✅ **Better UX** - Users see exactly what's happening
+- ✅ **Resilience** - Jobs survive server restarts (Redis persistence)
+- ✅ **Job History** - Can query past jobs
+- ✅ **Failed Job Retry** - Automatic or manual retry
+- ✅ **Launch Day Ready** - Handle traffic spikes gracefully
+
+### Infrastructure Requirements
+- **Redis** - Can use Railway.app free tier or Upstash
+- **Environment Variables** - `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
+- **Optional** - Bull Board for visual job monitoring
+
+### Deployment Strategy
+1. **Development**: Use local Redis (Docker or native)
+2. **Production**: Railway/Upstash Redis
+3. **Monitoring**: Bull Board dashboard at `/admin/queues`
+
+### Estimated Timeline
+- Phase 1: 2-3 hours (queue setup)
+- Phase 2: 1-2 hours (API changes)
+- Phase 3: 2 hours (frontend polling)
+- Testing: 1-2 hours
+- **Total: 1 day of focused work**
+
+### Alternative: Simple In-Memory Queue (Temporary Solution)
+If Redis is not an option immediately, implement a simple in-memory queue:
+- Limit to 1-2 concurrent jobs
+- Jobs lost on restart (acceptable for MVP)
+- Still provides progress tracking within same server instance
+- Can migrate to Bull/Redis later without changing frontend
+
+---
+
 ## 🚀 Vercel Monorepo Deployment Setup
 
 ### Status: ✅ Configuration Ready

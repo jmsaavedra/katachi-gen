@@ -436,8 +436,12 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     setGenerationStatus('Analyzing blockchain data...');
 
     try {
+      // Small delay to ensure UI updates are visible
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       // Simulate progress for initial setup (0-10%)
       setGenerationProgress(5);
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Use the passed data instead of state
       // Include preferredImageUrl from MCP (based on collection config) plus all available URLs
@@ -476,6 +480,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       // Update progress: preparing request (10-20%)
       setGenerationProgress(15);
       setGenerationStatus('Processing NFT collection...');
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Start progress simulation (20% -> 90% over ~180 seconds / 3 minutes)
       // This simulates image processing: 8 images at ~10-15 seconds each = ~2-3 minutes total
@@ -1020,7 +1025,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
                     <div className="space-y-3">
                       <Progress
                         value={generationProgress}
-                        className="h-3 [&>div]:bg-blue-500 [&>div]:shadow-[0_0_10px_rgba(59,130,246,0.6)]"
+                        className="h-3 [&_[data-slot='progress-indicator']]:animate-progress-glow"
                       />
                       <div className="flex justify-between items-center">
                         <p className="text-base text-muted-foreground">{generationStatus}</p>
