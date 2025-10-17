@@ -240,9 +240,9 @@ function parseNFTInfoFromUrl(imageUrl, metadata = {}) {
 
 
 /**
- * Download image as base64 with retry logic and exponential backoff
+ * Download image as base64 with retry logic, exponential backoff, and thumbnail fallback
  */
-async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 4, smartCompression = false) {
+async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 3, smartCompression = false, thumbnailUrl = null) {
     const prefix = imageNumber ? `Image #${imageNumber}: ` : '';
 
     const strategies = [
@@ -267,22 +267,10 @@ async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 
                 }
             },
             backoffMs: 2000  // 2 second delay (exponential backoff)
-        },
-        {
-            name: 'Maximum timeout (retry 3)',
-            options: {
-                timeout: 30000,
-                headers: {
-                    'Accept': 'image/*,*/*;q=0.8',
-                    'Accept-Language': 'en-US,en;q=0.5',
-                    'Cache-Control': 'no-cache',
-                    'Connection': 'keep-alive'
-                }
-            },
-            backoffMs: 4000  // 4 second delay (exponential backoff)
         }
     ];
 
+    // Try main URL with 3 retry attempts
     for (let attempt = 0; attempt < Math.min(maxRetries, strategies.length); attempt++) {
         const strategy = strategies[attempt];
 
@@ -293,28 +281,42 @@ async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 
         }
 
         if (attempt > 0) {
-            console.log(`${prefix}🔄 Retry attempt ${attempt + 1}/${maxRetries - 1}: ${strategy.name}`);
+            console.log(`${prefix}🔄 Retry attempt ${attempt}/${maxRetries}: ${strategy.name}`);
         }
 
         try {
             const result = await downloadWithStrategy(imageUrl, strategy.options, prefix, smartCompression);
             if (result) {
                 if (attempt > 0) {
-                    console.log(`${prefix}✅ Success on retry attempt ${attempt + 1}`);
+                    console.log(`${prefix}✅ Success on retry attempt ${attempt}`);
                 }
                 return result;
             }
         } catch (error) {
             console.warn(`${prefix}❌ ${strategy.name} failed: ${error.message}`);
 
-            // If this was the last attempt, throw the error
+            // If this was the last attempt, log completion
             if (attempt === Math.min(maxRetries, strategies.length) - 1) {
-                console.error(`${prefix}💥 All ${maxRetries} retry attempts exhausted`);
+                console.error(`${prefix}💥 All ${maxRetries} retry attempts exhausted on main URL`);
             }
         }
     }
 
-    throw new Error(`All download attempts failed for ${imageUrl}`);
+    // If all retries failed and we have a thumbnail URL, try it as final fallback
+    if (thumbnailUrl && thumbnailUrl !== imageUrl) {
+        console.log(`${prefix}🔄 Falling back to thumbnail URL...`);
+        try {
+            const result = await downloadWithStrategy(thumbnailUrl, { timeout: 15000 }, prefix, smartCompression);
+            if (result) {
+                console.log(`${prefix}✅ Success using thumbnail fallback`);
+                return result;
+            }
+        } catch (error) {
+            console.error(`${prefix}❌ Thumbnail fallback also failed: ${error.message}`);
+        }
+    }
+
+    throw new Error(`All download attempts failed for ${imageUrl}${thumbnailUrl ? ' (including thumbnail fallback)' : ''}`);
 }
 
 /**
@@ -451,8 +453,9 @@ async function processImagesAsBase64(data) {
 
                     image.source = imageSource;
 
-                    // Note: We no longer pass smartCompression flag since Cloudinary handles optimization via URL parameters
-                    const downloadResult = await downloadImageAsBase64(imageUrlToDownload, i + 1, 3, false);
+                    // Pass thumbnailUrl as fallback (will be used if main URL fails after 3 retries)
+                    const fallbackThumbnailUrl = image.thumbnailUrl && image.thumbnailUrl !== imageUrlToDownload ? image.thumbnailUrl : null;
+                    const downloadResult = await downloadImageAsBase64(imageUrlToDownload, i + 1, 3, false, fallbackThumbnailUrl);
                     const base64String = downloadResult.buffer.toString('base64');
 
                     // Determine MIME type from URL or default to PNG
