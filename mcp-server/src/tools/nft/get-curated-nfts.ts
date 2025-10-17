@@ -46,9 +46,9 @@ export const schema = {
     .describe('Array of wallet addresses to get curated NFTs from'),
   requestedCount: z
     .number()
-    .min(1)
-    .max(20)
-    .default(10)
+    .min(5)
+    .max(8)
+    .default(8)
     .describe('Number of NFTs to return from multiple addresses'),
 };
 

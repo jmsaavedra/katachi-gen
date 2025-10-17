@@ -240,47 +240,77 @@ function parseNFTInfoFromUrl(imageUrl, metadata = {}) {
 
 
 /**
- * Download image as base64 with retry logic
+ * Download image as base64 with retry logic and exponential backoff
  */
-async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 3, smartCompression = false) {
+async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 4, smartCompression = false) {
     const prefix = imageNumber ? `Image #${imageNumber}: ` : '';
 
     const strategies = [
         {
             name: 'Standard download',
-            options: { timeout: 10000 }
+            options: { timeout: 10000 },
+            backoffMs: 0  // No delay on first attempt
         },
         {
-            name: 'Extended timeout',
-            options: { timeout: 20000 }
+            name: 'Extended timeout (retry 1)',
+            options: { timeout: 20000 },
+            backoffMs: 1000  // 1 second delay
         },
         {
-            name: 'Custom headers',
+            name: 'Custom headers (retry 2)',
             options: {
-                timeout: 15000,
+                timeout: 25000,
                 headers: {
                     'Accept': 'image/*,*/*;q=0.8',
                     'Accept-Language': 'en-US,en;q=0.5',
                     'Cache-Control': 'no-cache'
                 }
-            }
+            },
+            backoffMs: 2000  // 2 second delay (exponential backoff)
+        },
+        {
+            name: 'Maximum timeout (retry 3)',
+            options: {
+                timeout: 30000,
+                headers: {
+                    'Accept': 'image/*,*/*;q=0.8',
+                    'Accept-Language': 'en-US,en;q=0.5',
+                    'Cache-Control': 'no-cache',
+                    'Connection': 'keep-alive'
+                }
+            },
+            backoffMs: 4000  // 4 second delay (exponential backoff)
         }
     ];
 
     for (let attempt = 0; attempt < Math.min(maxRetries, strategies.length); attempt++) {
         const strategy = strategies[attempt];
 
+        // Apply exponential backoff delay before retry
+        if (strategy.backoffMs > 0) {
+            console.log(`${prefix}⏳ Waiting ${strategy.backoffMs}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, strategy.backoffMs));
+        }
+
         if (attempt > 0) {
-            console.log(`${prefix}🔄 Retry attempt ${attempt + 1}: ${strategy.name}`);
+            console.log(`${prefix}🔄 Retry attempt ${attempt + 1}/${maxRetries - 1}: ${strategy.name}`);
         }
 
         try {
             const result = await downloadWithStrategy(imageUrl, strategy.options, prefix, smartCompression);
             if (result) {
+                if (attempt > 0) {
+                    console.log(`${prefix}✅ Success on retry attempt ${attempt + 1}`);
+                }
                 return result;
             }
         } catch (error) {
             console.warn(`${prefix}❌ ${strategy.name} failed: ${error.message}`);
+
+            // If this was the last attempt, throw the error
+            if (attempt === Math.min(maxRetries, strategies.length) - 1) {
+                console.error(`${prefix}💥 All ${maxRetries} retry attempts exhausted`);
+            }
         }
     }
 
