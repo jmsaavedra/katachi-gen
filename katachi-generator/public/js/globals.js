@@ -836,9 +836,10 @@ function initGlobals(){
             var texIdx = faceAssignments[j];
             preShuffleUsage[texIdx] = (preShuffleUsage[texIdx] || 0) + 1;
         }
-        for (var texIdx in preShuffleUsage) {
-            console.log("- Texture " + texIdx + ": " + preShuffleUsage[texIdx] + " faces");
-        }
+        // Removed verbose texture face count logs
+        // for (var texIdx in preShuffleUsage) {
+        //     console.log("- Texture " + texIdx + ": " + preShuffleUsage[texIdx] + " faces");
+        // }
         
         // Reset random function state to ensure consistent starting point
         if (_globals.useSeededRandom) {

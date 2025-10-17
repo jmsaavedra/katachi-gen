@@ -62,7 +62,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   };
   
   const [sentiment, setSentiment] = useState(getRandomDevSentiment());
-  const [count, setCount] = useState('10');
+  const [count, setCount] = useState('8');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [isCurated, setIsCurated] = useState(false);

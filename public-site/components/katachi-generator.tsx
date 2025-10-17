@@ -1020,7 +1020,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
                     <div className="space-y-3">
                       <Progress
                         value={generationProgress}
-                        className="h-3 [&>div]:bg-blue-500 [&>div]:shadow-[0_0_10px_rgba(59,130,246,0.6)]"
+                        className="h-3 [&>div]:animate-progress-glow"
                       />
                       <div className="flex justify-between items-center">
                         <p className="text-base text-muted-foreground">{generationStatus}</p>
