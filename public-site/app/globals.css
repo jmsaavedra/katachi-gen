@@ -120,17 +120,18 @@
 /* Progress bar gradient animation */
 @keyframes progress-glow {
   0%, 100% {
-    background: linear-gradient(90deg, rgb(37, 99, 235), rgb(59, 130, 246));
+    background: linear-gradient(90deg, rgb(37, 99, 235), rgb(59, 130, 246)) !important;
     box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
   }
   50% {
-    background: linear-gradient(90deg, rgb(59, 130, 246), rgb(96, 165, 250));
+    background: linear-gradient(90deg, rgb(59, 130, 246), rgb(96, 165, 250)) !important;
     box-shadow: 0 0 15px rgba(96, 165, 250, 0.8);
   }
 }
 
 .animate-progress-glow {
-  animation: progress-glow 2s ease-in-out infinite;
+  animation: progress-glow 2s ease-in-out infinite !important;
+  background: linear-gradient(90deg, rgb(37, 99, 235), rgb(59, 130, 246)) !important;
 }
 
 /* Subtle glow animation for Explore button */
