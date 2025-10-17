@@ -12,6 +12,7 @@ import { config } from '@/lib/config';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Progress } from '@/components/ui/progress';
 import { useState, useEffect } from 'react';
 import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Eye, RefreshCw } from 'lucide-react';
 import Image from 'next/image';
@@ -66,6 +67,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
   const { data: nfts, isLoading, error } = useNFTsForOwner(addressToUse);
   const { data: stackMedals, isLoading: isLoadingMedals, error: medalsError } = useStackMedals(addressToUse);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generationProgress, setGenerationProgress] = useState(0);
+  const [generationStatus, setGenerationStatus] = useState('');
   const [, setIframeLoading] = useState(false);
   const [iframeError, setIframeError] = useState(false);
   const [showEligibilityModal, setShowEligibilityModal] = useState(false);
@@ -184,6 +187,35 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       setPreviewDelay(false);
     }
   }, [previewDelay, previewCountdown]);
+
+  // Rotating status messages during generation
+  useEffect(() => {
+    if (!isGenerating) {
+      setGenerationStatus('');
+      setGenerationProgress(0);
+      return;
+    }
+
+    const statusMessages = [
+      'Processing NFT collection...',
+      'Analyzing token data...',
+      'Generating fold pattern...',
+      'Assigning textures...',
+      'Optimizing 3D geometry...',
+      'Rendering final output...',
+      'Uploading to Arweave...'
+    ];
+
+    let currentIndex = 0;
+    setGenerationStatus(statusMessages[0]);
+
+    const interval = setInterval(() => {
+      currentIndex = (currentIndex + 1) % statusMessages.length;
+      setGenerationStatus(statusMessages[currentIndex]);
+    }, 10000); // Change message every 10 seconds
+
+    return () => clearInterval(interval);
+  }, [isGenerating]);
 
   const handleIframeLoad = () => {
     setIframeLoading(false);
@@ -400,8 +432,13 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     }
 
     setIsGenerating(true);
-    
+    setGenerationProgress(0);
+    setGenerationStatus('Analyzing blockchain data...');
+
     try {
+      // Simulate progress for initial setup (0-10%)
+      setGenerationProgress(5);
+
       // Use the passed data instead of state
       // Include preferredImageUrl from MCP (based on collection config) plus all available URLs
       const imageUrls = dataToUse.filteredNfts
@@ -436,7 +473,25 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         sampleImageData: imageUrls[0] // Log first image to verify structure
       });
 
-      const response = await fetch('/api/generate-katachi', {
+      // Update progress: preparing request (10-20%)
+      setGenerationProgress(15);
+      setGenerationStatus('Processing NFT collection...');
+
+      // Start progress simulation (20% -> 90% over ~180 seconds / 3 minutes)
+      // This simulates image processing: 8 images at ~10-15 seconds each = ~2-3 minutes total
+      const totalImages = imageUrls.length;
+      const progressPerImage = 70 / totalImages; // 70% progress spread across images (20% -> 90%)
+      let currentProgress = 20;
+
+      const progressInterval = setInterval(() => {
+        if (currentProgress < 90) {
+          currentProgress += progressPerImage / 10; // Increment gradually
+          setGenerationProgress(Math.min(currentProgress, 90));
+        }
+      }, 1500); // Update every 1.5 seconds for smooth animation
+
+      // Start the fetch request
+      const responsePromise = fetch('/api/generate-katachi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -450,12 +505,23 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         }),
       });
 
+      const response = await responsePromise;
+      clearInterval(progressInterval);
+
+      // Final stages (90-100%)
+      setGenerationProgress(95);
+      setGenerationStatus('Uploading to Arweave...');
+
       if (!response.ok) {
         throw new Error(`Generation failed: ${response.statusText}`);
       }
 
       const result = await response.json();
-      
+
+      // Complete progress (100%)
+      setGenerationProgress(100);
+      setGenerationStatus('Complete!');
+
       if (result.error || !result.success) {
         throw new Error(result.message || 'Pattern generation failed');
       }
@@ -540,6 +606,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       });
     } finally {
       setIsGenerating(false);
+      setGenerationProgress(0);
+      setGenerationStatus('');
     }
   };
 
@@ -943,35 +1011,59 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         <CardContent className="space-y-4">
             {!generatedPattern ? (
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <div className="w-32 h-32 rounded-lg bg-muted animate-pulse flex items-center justify-center">
-                  <Hash className="h-12 w-12 text-muted-foreground" />
-                </div>
-                <Button 
-                  onClick={handleGenerateKatachi}
-                  disabled={isGenerating || isLoading || !sentimentData?.sentiment}
-                  className={`w-full max-w-xs ${sentimentData?.sentiment && !isGenerating ? 'animate-gradient-button' : ''}`}
-                >
-                  {isGenerating ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Generating Pattern...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="mr-2 h-4 w-4" />
-                      Generate Katachi
-                    </>
-                  )}
-                </Button>
-                {!sentimentData?.sentiment ? (
-                  <p className="text-xs text-muted-foreground text-center mt-2">
-                    Complete the Collection Reflection below to generate your pattern
-                  </p>
-                ) : (
-                  <div className="text-xs text-green-600 text-center mt-2 flex items-center justify-center gap-1">
-                    <Sparkles className="h-3 w-3" />
-                    Sentiment curation complete. Generating Katachi Gen...
+                {isGenerating ? (
+                  <div className="w-full max-w-md space-y-6">
+                    <div className="flex flex-col items-center space-y-3">
+                      <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                      <h3 className="text-lg font-medium">Generating your Katachi</h3>
+                    </div>
+                    <div className="space-y-3">
+                      <Progress
+                        value={generationProgress}
+                        className="h-3 [&>div]:bg-blue-500 [&>div]:shadow-[0_0_10px_rgba(59,130,246,0.6)]"
+                      />
+                      <div className="flex justify-between items-center">
+                        <p className="text-base text-muted-foreground">{generationStatus}</p>
+                        <span className="text-sm font-medium text-muted-foreground">{Math.round(generationProgress)}%</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-center text-muted-foreground">
+                      This typically takes 2-3 minutes. Please don&apos;t close this window.
+                    </p>
                   </div>
+                ) : (
+                  <>
+                    <div className="w-32 h-32 rounded-lg bg-muted animate-pulse flex items-center justify-center">
+                      <Hash className="h-12 w-12 text-muted-foreground" />
+                    </div>
+                    <Button
+                      onClick={handleGenerateKatachi}
+                      disabled={isGenerating || isLoading || !sentimentData?.sentiment}
+                      className={`w-full max-w-xs ${sentimentData?.sentiment && !isGenerating ? 'animate-gradient-button' : ''}`}
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Generating Pattern...
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="mr-2 h-4 w-4" />
+                          Generate Katachi
+                        </>
+                      )}
+                    </Button>
+                    {!sentimentData?.sentiment ? (
+                      <p className="text-xs text-muted-foreground text-center mt-2">
+                        Complete the Collection Reflection below to generate your pattern
+                      </p>
+                    ) : (
+                      <div className="text-xs text-green-600 text-center mt-2 flex items-center justify-center gap-1">
+                        <Sparkles className="h-3 w-3" />
+                        Sentiment curation complete. Generating Katachi Gen...
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
             ) : (
