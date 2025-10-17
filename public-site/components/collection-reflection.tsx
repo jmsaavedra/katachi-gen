@@ -141,7 +141,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
           </span>
         </CardTitle>
         <CardDescription className="text-base">
-          Share your feelings about collecting on Shape. Our AI will interpret your words and curate {count} pieces for your Katachi Gen Shape.
+          Share your feelings about collecting on Shape. Our AI will interpret your words and curate up to {count} pieces for your Katachi Gen Shape.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

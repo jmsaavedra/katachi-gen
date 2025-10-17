@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     // Forward request to katachi-generator service with minting flag
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), 180000); // 180 second (3 minute) timeout
     
     const response = await fetch(KATACHI_GENERATOR_URL, {
       method: 'POST',
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     
     let errorMessage = 'Failed to generate katachi pattern';
     if (errorName === 'AbortError') {
-      errorMessage = 'Request timed out after 120 seconds';
+      errorMessage = 'Request timed out after 3 minutes';
     } else if (errorCode === 'ENOTFOUND') {
       errorMessage = 'Katachi generator service not found';
     } else if (errorCode === 'ECONNREFUSED') {
