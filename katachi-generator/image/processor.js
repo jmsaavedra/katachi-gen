@@ -12,6 +12,23 @@ const {
 } = require('../config');
 
 /**
+ * Format bytes to KB with commas, no decimals
+ * @param {number} bytes - File size in bytes
+ * @returns {string} Formatted string like "1,024 KB"
+ */
+function formatFileSize(bytes) {
+    if (bytes === undefined || bytes === null || bytes === 0) {
+        return '0 KB';
+    }
+
+    // Always convert to KB and round, no decimals
+    const kb = Math.round(bytes / 1024);
+
+    // Add commas for thousands
+    return `${kb.toLocaleString()} KB`;
+}
+
+/**
  * Save thumbnail to file
  */
 async function saveThumbnail(buffer, filename) {
@@ -92,7 +109,7 @@ async function compressImage(buffer, options = {}) {
 /**
  * Download image with strategy pattern
  */
-function downloadWithStrategy(imageUrl, options, prefix = '') {
+function downloadWithStrategy(imageUrl, options, prefix = '', smartCompression = false) {
     const { timeout = 10000, headers = {} } = options;
     
     return new Promise((resolve, reject) => {
@@ -109,7 +126,7 @@ function downloadWithStrategy(imageUrl, options, prefix = '') {
             if (response.statusCode >= 300 && response.statusCode < 400 && response.headers.location) {
                 // Handle redirects
                 console.log(`🔄 Redirecting to: ${response.headers.location}`);
-                return downloadWithStrategy(response.headers.location, options).then(resolve).catch(reject);
+                return downloadWithStrategy(response.headers.location, options, prefix, smartCompression).then(resolve).catch(reject);
             }
             
             if (response.statusCode !== 200) {
@@ -129,8 +146,27 @@ function downloadWithStrategy(imageUrl, options, prefix = '') {
                         throw new Error('Empty response received');
                     }
 
-                    // Only compress images over 150KB, preserving original dimensions
-                    if (buffer.length > IMAGE_COMPRESSION_THRESHOLD) {
+                    // Smart compression mode: Always compress to 750px @ 90% quality
+                    if (smartCompression) {
+                        console.log(`${prefix}🗜️ Smart compression mode: reducing to 750px longest side @ 90% quality`);
+
+                        const compressionResult = await compressImage(buffer, {
+                            quality: 90,
+                            maxWidth: 750,
+                            maxHeight: 750
+                        });
+
+                        resolve({
+                            buffer: compressionResult.buffer,
+                            originalUrl: imageUrl,
+                            size: buffer.length,
+                            compressedSize: compressionResult.compressedSize,
+                            compressionStats: compressionResult,
+                            smartCompression: true
+                        });
+                    }
+                    // Standard compression: Only compress images over 150KB, preserving original dimensions
+                    else if (buffer.length > IMAGE_COMPRESSION_THRESHOLD) {
                         console.log(`${prefix}🗜️ Image is ${buffer.length} bytes (>${IMAGE_COMPRESSION_THRESHOLD}), compressing with quality ${IMAGE_COMPRESSION_QUALITY} (preserving dimensions)`);
 
                         // Get original image metadata to preserve dimensions
@@ -206,7 +242,7 @@ function parseNFTInfoFromUrl(imageUrl, metadata = {}) {
 /**
  * Download image as base64 with retry logic
  */
-async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 3) {
+async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 3, smartCompression = false) {
     const prefix = imageNumber ? `Image #${imageNumber}: ` : '';
 
     const strategies = [
@@ -239,7 +275,7 @@ async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 
         }
 
         try {
-            const result = await downloadWithStrategy(imageUrl, strategy.options, prefix);
+            const result = await downloadWithStrategy(imageUrl, strategy.options, prefix, smartCompression);
             if (result) {
                 return result;
             }
@@ -294,16 +330,47 @@ async function processImagesAsBase64(data) {
                     let imageSource = 'direct-download';
                     let usedProvidedThumbnail = false;
 
-                    // Log available URLs from MCP
+                    // Log available URLs from MCP with file sizes
                     console.log('📍 Available URLs:');
                     if (image.preferredImageUrl) {
-                        console.log(`   • preferredImageUrl: ${image.preferredImageUrl.slice(0, 100)}...`);
+                        console.log(`   • preferredImageUrl: ${image.preferredImageUrl}`);
                     }
                     if (image.thumbnailUrl) {
-                        console.log(`   • thumbnailUrl: ${image.thumbnailUrl.slice(0, 100)}...`);
+                        console.log(`   • thumbnailUrl: ${image.thumbnailUrl}`);
                     }
-                    if (image.originalUrl) {
-                        console.log(`   • originalUrl: ${image.originalUrl.slice(0, 100)}...`);
+                    if (image.pngUrl) {
+                        console.log(`   • pngUrl: ${image.pngUrl}`);
+                    }
+                    if (image.originalImageUrl) {
+                        // Use formatted size from frontend if available, otherwise format here
+                        const sizeStr = image.alchemyImageSizeFormatted
+                            ? ` (${image.alchemyImageSizeFormatted})`
+                            : image.alchemyImageSize
+                                ? ` (${formatFileSize(image.alchemyImageSize)})`
+                                : '';
+                        console.log(`   • originalImageUrl: ${image.originalImageUrl}${sizeStr}`);
+                    }
+
+                    // Waterfall logic: Check file size to determine compression strategy
+                    const SIZE_THRESHOLD_KB = 1024; // 1 MB (1,024 KB) threshold
+                    const SIZE_THRESHOLD_BYTES = SIZE_THRESHOLD_KB * 1024;
+                    const originalSizeBytes = image.alchemyImageSize || 0;
+                    const needsCloudinaryResize = originalSizeBytes > SIZE_THRESHOLD_BYTES;
+
+                    // Check if this is a video URL (Cloudinary video URLs contain 'video/upload')
+                    const isVideoUrl = image.preferredImageUrl?.includes('video/upload') ||
+                                      image.pngUrl?.includes('video/upload') ||
+                                      image.url?.includes('video/upload');
+
+                    // Skip videos that are too large - video-to-image conversion URLs often don't work
+                    if (isVideoUrl && needsCloudinaryResize) {
+                        console.log(`\nImage #${i + 1}: ⚠️  SKIPPING: Video NFT exceeds ${SIZE_THRESHOLD_KB} KB threshold`);
+                        console.log(`   • Name: ${image.name || 'Unknown'}`);
+                        console.log(`   • Original size: ${formatFileSize(originalSizeBytes)}`);
+                        console.log(`   • Reason: Cloudinary video-to-image conversion URLs often fail for large videos`);
+                        console.log(`   • Suggestion: Consider using thumbnail-only collections or smaller video files`);
+                        failedImages++;
+                        continue; // Skip this image
                     }
 
                     // Use preferredImageUrl if provided by MCP server (already determined based on collection config)
@@ -312,7 +379,30 @@ async function processImagesAsBase64(data) {
                         imageUrlToDownload = image.preferredImageUrl;
                         imageSource = 'mcp-preferred';
                         usedProvidedThumbnail = true;
-                        console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
+
+                        // If image exceeds threshold AND it's a Cloudinary image URL (not video), inject transformation parameters
+                        if (needsCloudinaryResize && imageUrlToDownload.includes('res.cloudinary.com') && !isVideoUrl) {
+                            // Inject Cloudinary transformations: w_750,c_limit,q_90
+                            // This will resize to 750px max dimension, only if larger, at 90% quality
+                            const originalUrl = imageUrlToDownload;
+                            imageUrlToDownload = imageUrlToDownload.replace('/upload/', '/upload/w_750,c_limit,q_90/');
+
+                            console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
+                            console.log(`   ⚠️  Original size ${formatFileSize(originalSizeBytes)} exceeds ${SIZE_THRESHOLD_KB} KB threshold`);
+                            console.log(`   ☁️  Using Cloudinary transformations: w_750,c_limit,q_90`);
+                            console.log(`   📐 Original URL: ${originalUrl}`);
+                            console.log(`   📐 Transformed URL: ${imageUrlToDownload}`);
+                            imageSource = 'cloudinary-optimized';
+                        } else if (needsCloudinaryResize) {
+                            console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
+                            console.log(`   ⚠️  Original size ${formatFileSize(originalSizeBytes)} exceeds ${SIZE_THRESHOLD_KB} KB threshold`);
+                            console.log(`   ⚠️  Not a Cloudinary URL - will download full size (consider local compression)`);
+                        } else if (originalSizeBytes > 0) {
+                            console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
+                            console.log(`   ✅ Original size ${formatFileSize(originalSizeBytes)} is under ${SIZE_THRESHOLD_KB} KB threshold, no optimization needed`);
+                        } else {
+                            console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
+                        }
                     } else if (image.thumbnailUrl) {
                         // Fallback: use thumbnail if no preferred URL
                         imageUrlToDownload = image.thumbnailUrl;
@@ -324,11 +414,15 @@ async function processImagesAsBase64(data) {
                         console.log(`\nImage #${i + 1}: ⚠️  Selected: original URL (no optimized URLs available)`);
                     }
 
+                    // Store flag for tracking (no longer used for compression)
+                    image.usedCloudinaryOptimization = needsCloudinaryResize && imageUrlToDownload.includes('w_750,c_limit,q_90');
+
                     console.log(`Image #${i + 1}: 🔗 Downloading from: ${imageUrlToDownload.slice(0, 100)}...`);
 
                     image.source = imageSource;
 
-                    const downloadResult = await downloadImageAsBase64(imageUrlToDownload, i + 1);
+                    // Note: We no longer pass smartCompression flag since Cloudinary handles optimization via URL parameters
+                    const downloadResult = await downloadImageAsBase64(imageUrlToDownload, i + 1, 3, false);
                     const base64String = downloadResult.buffer.toString('base64');
 
                     // Determine MIME type from URL or default to PNG
@@ -356,15 +450,26 @@ async function processImagesAsBase64(data) {
                         : 0;
 
                     console.log(`\n📊 Size Information:`);
-                    console.log(`   • Downloaded: ${(downloadResult.size / 1024).toFixed(2)} KB`);
-                    if (wasCompressed) {
-                        console.log(`   • Compressed: ${(downloadResult.compressedSize / 1024).toFixed(2)} KB (${compressionRatio}% reduction)`);
-                        console.log(`   • Compression: ✅ APPLIED (over 150 KB threshold)`);
+                    console.log(`   • Downloaded: ${formatFileSize(downloadResult.size)}`);
+
+                    // Show Cloudinary optimization info if used
+                    if (image.usedCloudinaryOptimization) {
+                        console.log(`   • Optimization: ☁️  CLOUDINARY (w_750,c_limit,q_90 - server-side resize)`);
+                        console.log(`   • Original size: ${formatFileSize(originalSizeBytes)} → Downloaded: ${formatFileSize(downloadResult.size)}`);
+                        const cloudinaryReduction = Math.round((1 - downloadResult.size / originalSizeBytes) * 100);
+                        console.log(`   • Bandwidth saved: ${cloudinaryReduction}% (Cloudinary handled optimization)`);
+                    } else if (wasCompressed) {
+                        console.log(`   • Compressed: ${formatFileSize(downloadResult.compressedSize)} (${compressionRatio}% reduction)`);
+                        if (downloadResult.smartCompression) {
+                            console.log(`   • Compression: ✅ LOCAL COMPRESSION (750px @ 90% quality, >2,500 KB original)`);
+                        } else {
+                            console.log(`   • Compression: ✅ APPLIED (over 150 KB threshold)`);
+                        }
                     } else {
-                        console.log(`   • Compressed: ${(downloadResult.compressedSize / 1024).toFixed(2)} KB (no compression needed)`);
+                        console.log(`   • Compressed: ${formatFileSize(downloadResult.compressedSize)} (no compression needed)`);
                         console.log(`   • Compression: ⏭️  SKIPPED (under 150 KB threshold)`);
                     }
-                    console.log(`   • Base64 size: ${(base64String.length / 1024).toFixed(2)} KB`);
+                    console.log(`   • Base64 size: ${formatFileSize(base64String.length)}`);
 
                 } catch (error) {
                     console.error(`❌ Failed to process image ${i + 1}: ${error.message}`);
@@ -404,12 +509,12 @@ async function processImagesAsBase64(data) {
     console.log(`📦 MCP thumbnails used: ${processedData.imageStats.mcpThumbnails}`);
     console.log('');
     console.log('💾 Bandwidth Usage:');
-    console.log(`   • Total downloaded: ${(totalDownloaded / 1024).toFixed(2)} KB`);
-    console.log(`   • Total after compression: ${(totalCompressed / 1024).toFixed(2)} KB`);
+    console.log(`   • Total downloaded: ${formatFileSize(totalDownloaded)}`);
+    console.log(`   • Total after compression: ${formatFileSize(totalCompressed)}`);
     if (totalDownloaded > totalCompressed) {
         const savedBytes = totalDownloaded - totalCompressed;
         const savedPercent = Math.round((savedBytes / totalDownloaded) * 100);
-        console.log(`   • Bandwidth saved: ${(savedBytes / 1024).toFixed(2)} KB (${savedPercent}%)`);
+        console.log(`   • Bandwidth saved: ${formatFileSize(savedBytes)} (${savedPercent}%)`);
     }
     console.log('');
     console.log('🗜️  Compression Stats:');

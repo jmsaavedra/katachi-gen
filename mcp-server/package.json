@@ -34,7 +34,9 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "lint:check": "eslint src --ext .ts,.tsx --max-warnings 0",
     "deploy:nft": "npx hardhat run scripts/deploy.ts --network shapeSepolia",
-    "compile": "npx hardhat compile"
+    "compile": "npx hardhat compile",
+    "test:alchemy-single": "node scripts/test-alchemy-single-nft.js",
+    "test:alchemy-wallet": "node scripts/test-alchemy-by-wallet.js"
   },
   "dependencies": {
     "@rarible/protocol-mcp": "^0.0.4",

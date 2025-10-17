@@ -21,6 +21,7 @@ export interface InterpretedNFTsOutput {
     description: string | null;
     imageUrl: string | null;
     collectionName: string | null;
+    contractDeployer: string | null; // Address that deployed the NFT contract (creator/artist)
     alchemyImages: {
       cachedUrl?: string;
       thumbnailUrl?: string;
@@ -57,9 +58,9 @@ export const schema = {
   count: z
     .number()
     .min(5)
-    .max(15)
+    .max(10)
     .default(10)
-    .describe('Number of NFTs to return that match the sentiment (5, 10, or 15)'),
+    .describe('Number of NFTs to return that match the sentiment (5-10)'),
 };
 
 export const metadata = {
@@ -408,7 +409,13 @@ export default async function interpretCollectionSentiment({
         console.log(`❌ Skipped (no Alchemy image): ${nftItem.nft.name || 'Unnamed'} (contentType: ${contentType || 'unknown'})`);
         continue;
       }
-      
+
+      // Filter out video NFTs - video-to-image conversion URLs often fail
+      if (contentType?.startsWith('video/')) {
+        console.log(`❌ Skipped (video NFT): ${nftItem.nft.name || 'Unnamed'} (contentType: ${contentType})`);
+        continue;
+      }
+
       if (
         currentCount < 2 && // Allow max 2 per collection
         selectedNfts.length < count
@@ -468,13 +475,13 @@ export default async function interpretCollectionSentiment({
           selectedUrlType = 'thumbnail';
         }
       } else {
-        // Default: prioritize optimized thumbnails: thumbnailUrl → pngUrl → originalUrl
-        if (item.nft.image?.thumbnailUrl) {
-          primaryImageUrl = item.nft.image.thumbnailUrl;
-          selectedUrlType = 'thumbnail';
-        } else if (item.nft.image?.pngUrl) {
+        // Default: prioritize pngUrl for better quality: pngUrl → thumbnailUrl → originalUrl
+        if (item.nft.image?.pngUrl) {
           primaryImageUrl = item.nft.image.pngUrl;
           selectedUrlType = 'png';
+        } else if (item.nft.image?.thumbnailUrl) {
+          primaryImageUrl = item.nft.image.thumbnailUrl;
+          selectedUrlType = 'thumbnail';
         } else {
           primaryImageUrl = item.nft.image?.originalUrl || null;
           selectedUrlType = 'original';
@@ -492,6 +499,7 @@ export default async function interpretCollectionSentiment({
         imageUrl: primaryImageUrl,
         preferredImageUrl: primaryImageUrl, // Explicitly set preferred URL for katachi-generator
         collectionName: item.nft.contract.name || null,
+        contractDeployer: item.nft.contract.contractDeployer || null, // Contract deployer address (creator/artist)
         alchemyImages: {
           cachedUrl: item.nft.image?.cachedUrl || undefined,
           thumbnailUrl: item.nft.image?.thumbnailUrl || undefined,
