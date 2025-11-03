@@ -4,12 +4,11 @@
 
 | Feature | Status | Priority | Notes |
 |---------|--------|----------|-------|
-| Queue System (Bull/Redis) | ❌ Not Implemented | HIGH | Proposal only - no code implemented |
-| Vercel Monorepo Setup | ⚠️ Partial | Medium | Config files exist, dashboard setup required |
+| Queue System (Bull/Redis) | ✅ Implemented | - | Full Bull queue with granular progress tracking |
+| Vercel Monorepo Setup | ✅ Implemented | - | Dashboard configured and fully operational |
 | Visual Analysis (CV/AI) | ❌ Not Implemented | High | Placeholder only - text matching only |
 | Alchemy Caching | ✅ Basic Implementation | Medium | Redis cache working, no batching |
 | Origami Patterns | ✅ Implemented | - | All 5 patterns working correctly |
-| Collection maxCount | ❌ Not Implemented | Low | Hardcoded to 2 per collection |
 | UI Countdown Text | ❌ Not Implemented | Low | Still shows old text |
 | Dev Mode File Links | ❌ Not Implemented | Low | URLs exist but not displayed |
 
@@ -17,192 +16,31 @@
 
 ## 🔄 Queue System for Concurrent Generation Requests
 
-### Status: ❌ NOT IMPLEMENTED - Proposal Only
+### Status: ✅ FULLY IMPLEMENTED
 
-### Priority: HIGH (Pre-Launch Critical)
+**See [Completed Features](#completed-features) below for full implementation details.**
 
-### Current Problem
-The katachi-generator service has **no concurrency handling**, which creates serious issues with multiple simultaneous users:
+The Bull Queue system has been successfully implemented with:
 
-**Issues with Current Architecture:**
-1. **No Queue** - All requests processed immediately in parallel
-2. **Shared Resources** - Same temp directories, Arweave wallet, Puppeteer instance
-3. **Race Conditions** - File naming collisions, temp file cleanup conflicts
-4. **Resource Exhaustion** - Each generation uses ~200MB+ memory + Puppeteer browser
-   - 5 concurrent users = 1GB+ memory spike + 5 browser instances
-5. **No Job Tracking** - Cannot show real progress per user
-6. **Logs Intermixed** - All user logs mixed together in console
-
-### Recommended Solution: Bull Queue System
-
-**Why Bull Queue:**
-- Battle-tested for production workloads
-- Built-in Redis persistence
-- Real progress tracking (`job.progress()`)
-- Automatic retry logic
-- Job status dashboard available
-- Works well with serverless (can offload to separate worker)
-
-### Implementation Plan
-
-#### Phase 1: Basic Queue Setup (2-3 hours)
-```javascript
-// katachi-generator/queue/generator-queue.js
-const Queue = require('bull');
-const Redis = require('ioredis');
-
-const generationQueue = new Queue('katachi-generation', {
-  redis: {
-    host: process.env.REDIS_HOST || 'localhost',
-    port: process.env.REDIS_PORT || 6379,
-  },
-  settings: {
-    maxStalledCount: 1,
-    lockDuration: 180000, // 3 minutes
-  }
-});
-
-// Process one job at a time (or configure concurrency)
-generationQueue.process(1, async (job) => {
-  const { walletAddress, images, pattern, seed2 } = job.data;
-
-  // Update progress at key steps
-  await job.progress(10); // Starting
-  await job.progress(30); // Images processed
-  await job.progress(60); // Pattern generated
-  await job.progress(80); // Thumbnail created
-  await job.progress(90); // Uploading
-
-  const result = await generatePattern(job.data);
-
-  await job.progress(100); // Complete
-  return result;
-});
-```
-
-#### Phase 2: API Updates (1-2 hours)
-```javascript
-// New endpoint: POST / → Returns job ID immediately
-POST /
-Response: { jobId: 'uuid-123', status: 'queued' }
-
-// New endpoint: GET /job-status/:jobId
-GET /job-status/uuid-123
-Response: {
-  status: 'processing',
-  progress: 45,
-  message: 'Processing image 4/8...'
-}
-
-// Result endpoint: GET /job-result/:jobId
-GET /job-result/uuid-123
-Response: {
-  status: 'completed',
-  htmlUrl: '...',
-  thumbnailUrl: '...',
-  arweaveId: '...'
-}
-```
-
-#### Phase 3: Frontend Updates (2 hours)
-```typescript
-// public-site/app/api/generate-katachi/route.ts
-export async function POST(request: NextRequest) {
-  // Submit job to queue
-  const { jobId } = await fetch(GENERATOR_URL, { ... });
-
-  // Start polling for progress
-  const pollInterval = setInterval(async () => {
-    const status = await fetch(`${GENERATOR_URL}/job-status/${jobId}`);
-
-    if (status.progress) {
-      setGenerationProgress(status.progress);
-      setGenerationStatus(status.message);
-    }
-
-    if (status.status === 'completed') {
-      clearInterval(pollInterval);
-      // Get final result
-    }
-  }, 2000); // Poll every 2 seconds
-}
-```
-
-#### Phase 4: Benefits We Get
-- ✅ **Real Progress** - Actual server-side progress updates
-- ✅ **Concurrency Control** - Configure max concurrent jobs (e.g., 3)
-- ✅ **Better UX** - Users see exactly what's happening
-- ✅ **Resilience** - Jobs survive server restarts (Redis persistence)
-- ✅ **Job History** - Can query past jobs
-- ✅ **Failed Job Retry** - Automatic or manual retry
-- ✅ **Launch Day Ready** - Handle traffic spikes gracefully
-
-### Infrastructure Requirements
-- **Redis** - Can use Railway.app free tier or Upstash
-- **Environment Variables** - `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`
-- **Optional** - Bull Board for visual job monitoring
-
-### Deployment Strategy
-1. **Development**: Use local Redis (Docker or native)
-2. **Production**: Railway/Upstash Redis
-3. **Monitoring**: Bull Board dashboard at `/admin/queues`
-
-### Estimated Timeline
-- Phase 1: 2-3 hours (queue setup)
-- Phase 2: 1-2 hours (API changes)
-- Phase 3: 2 hours (frontend polling)
-- Testing: 1-2 hours
-- **Total: 1 day of focused work**
-
-### Alternative: Simple In-Memory Queue (Temporary Solution)
-If Redis is not an option immediately, implement a simple in-memory queue:
-- Limit to 1-2 concurrent jobs
-- Jobs lost on restart (acceptable for MVP)
-- Still provides progress tracking within same server instance
-- Can migrate to Bull/Redis later without changing frontend
+- Real-time progress tracking (8 granular steps during image processing)
+- Job status polling with live updates
+- Graceful fallback if Redis unavailable
+- Progress distribution: 8-82% images, 82-90% pattern, 90-100% uploads
 
 ---
 
 ## 🚀 Vercel Monorepo Deployment Setup
 
-### Status: ⚠️ PARTIALLY IMPLEMENTED
+### Status: ✅ FULLY IMPLEMENTED
 
-**What's Done:**
-- ✅ `vercel.json` files exist for both projects
-- ✅ Related Projects linking configured (public-site ↔ mcp-server)
-- ✅ MCP server has custom build command: `xmcp build --vercel`
-- ✅ MCP server has keep-alive cron job (every 15 minutes)
-- ✅ Documentation exists: [VERCEL_SETUP.md](VERCEL_SETUP.md)
+**See [Completed Features](#completed-features) below for full implementation details.**
 
-**What's Required (Manual Dashboard Setup):**
+The Vercel monorepo setup has been successfully configured with:
 
-Configure Vercel to only redeploy `public-site` when that folder is updated in the monorepo.
-
-#### Implementation Steps (2 minutes per project)
-
-**In Vercel Dashboard:**
-
-1. **Settings → General → Root Directory**
-   - Set to: `public-site` (for public-site project)
-   - Set to: `mcp-server` (for mcp-server project)
-
-2. **Settings → Git → Ignored Build Step**
-   - For public-site: `git diff HEAD^ HEAD --quiet -- public-site/`
-   - For mcp-server: `git diff HEAD^ HEAD --quiet -- mcp-server/`
-   - This prevents rebuilds when only other folders change
-
-3. **Settings → Environment Variables** (Optional but recommended)
-   - Enable "Automatically expose System Environment Variables"
-
-**Note:** These settings CANNOT be configured via vercel.json and must be set manually in the dashboard.
-
-#### Documentation
-See [VERCEL_SETUP.md](VERCEL_SETUP.md) for complete setup guide, testing instructions, and troubleshooting.
-
-#### Benefits
-- Faster deployments and reduced build minutes
-- Better CI/CD with clear separation of app deployments
-- No custom scripts needed - uses Vercel's built-in features
+- Root directory settings configured for both projects
+- Ignored build step logic to prevent unnecessary rebuilds
+- Environment variables properly exposed
+- Documentation complete in [VERCEL_SETUP.md](VERCEL_SETUP.md)
 
 ---
 
@@ -427,51 +265,6 @@ Hypar:     1 (11%)
 
 ---
 
-## 🔧 MCP Server Collection Configuration
-
-### Status: ❌ NOT IMPLEMENTED
-
-### maxCount per Collection
-
-**Current Implementation:** Hardcoded to 2 NFTs per collection ([interpret-collection-sentiment.ts:420](mcp-server/src/tools/nft/interpret-collection-sentiment.ts#L420))
-
-- [ ] **Add 'maxCount' key to imagePreferences array items in config-collections.json**
-  - **Current**: Default is 2 max NFTs per collection globally (hardcoded)
-  - **Goal**: Allow per-collection customization of max NFT count
-  - **Priority**: Low
-  - **Current imagePreferences structure**:
-
-    ```json
-    "imagePreferences": [
-      {
-        "address": "0xF2E4b2a15872a20D0fFB336a89B94BA782cE9Ba5",
-        "name": "DeePle",
-        "preferOriginal": false,
-        "reason": "Use Alchemy CDN thumbnails instead of slow IPFS gateway originals"
-      }
-    ]
-    ```
-
-  - **Proposed addition**:
-
-    ```json
-    "imagePreferences": [
-      {
-        "address": "0xF2E4b2a15872a20D0fFB336a89B94BA782cE9Ba5",
-        "name": "DeePle",
-        "preferOriginal": false,
-        "maxCount": 1,  // ← NEW: max NFTs from this collection
-        "reason": "Use Alchemy CDN thumbnails instead of slow IPFS gateway originals"
-      }
-    ]
-    ```
-
-  - **Use Case**: Some collections should only contribute 1 NFT max to avoid over-representation
-  - **File**: [mcp-server/config-collections.json](mcp-server/config-collections.json)
-  - **Code Update**: [get-curated-nfts.ts](mcp-server/src/tools/nft/get-curated-nfts.ts) - respect maxCount when selecting NFTs per collection (default to 2 if not specified)
-
----
-
 ## 📋 Backlog & Future Enhancements
 
 ### Interactive NFT Preview Improvements
@@ -521,6 +314,7 @@ Hypar:     1 (11%)
   - R2 and Arweave uploads working correctly for both HTML and thumbnails
 
 ### File Cleanup
+
 - [x] **Old Template File Removal**
   - Removed unused monolithic template files from [katachi-generator/public/](katachi-generator/public/)
   - Deleted `template.html` (1.7MB - old monolithic template)
@@ -528,3 +322,33 @@ Hypar:     1 (11%)
   - Deleted `test.html` (24KB)
   - Total cleanup: ~2MB of unused files removed
   - Note: `generated-index.html` is still present as a generated output file (not tracked in git)
+
+### Queue System
+
+- [x] **Bull Queue with Redis for Concurrent Generation** (FULLY IMPLEMENTED & OPERATIONAL)
+  - Bull queue implementation in [katachi-generator/queue/generationQueue.js](katachi-generator/queue/generationQueue.js)
+  - Redis client utilities in [katachi-generator/utils/redis.js](katachi-generator/utils/redis.js)
+  - Upstash Redis integration with TLS support
+  - Real-time progress tracking with 8 granular steps during image processing
+  - Job status polling endpoint: [public-site/app/api/job-status/route.ts](public-site/app/api/job-status/route.ts)
+  - Frontend queue integration in [public-site/components/katachi-generator.tsx](public-site/components/katachi-generator.tsx)
+  - Progress distribution: 8-82% images, 82-90% pattern generation, 90-100% uploads
+  - Backend progress callbacks in [handlers/pattern.js](katachi-generator/handlers/pattern.js) and [image/processor.js](katachi-generator/image/processor.js)
+  - Graceful fallback to direct processing if Redis unavailable
+  - Job retry logic with exponential backoff
+  - Concurrency control (processes 1 job at a time, configurable)
+  - Job logs returned in status endpoint for real-time status messages
+  - Dependencies: `bull`, `ioredis`, `uuid`
+
+### Infrastructure & Deployment
+
+- [x] **Vercel Monorepo Setup** (FULLY IMPLEMENTED & OPERATIONAL)
+  - Root directory settings configured for both public-site and mcp-server projects
+  - Ignored build step logic to prevent unnecessary rebuilds when other folders change
+  - Environment variables properly exposed across projects
+  - Related Projects linking configured (public-site ↔ mcp-server)
+  - MCP server custom build command: `xmcp build --vercel`
+  - MCP server keep-alive cron job (every 15 minutes)
+  - Complete documentation in [VERCEL_SETUP.md](VERCEL_SETUP.md)
+  - Optimized CI/CD with clear separation of app deployments
+  - Reduced build minutes through selective rebuilding
