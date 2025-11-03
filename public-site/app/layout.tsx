@@ -171,7 +171,7 @@ export default function RootLayout({
                     href="https://x.com/Shape_L2/status/1962942181271834826"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:underline"
+                    className="underline"
                   >
                     1ST PL WINNER
                   </Link>
@@ -180,7 +180,7 @@ export default function RootLayout({
                     href="https://shape.network/shapecraft"
                     target="_blank"
                     rel="noreferrer"
-                    className="hover:underline"
+                    className="underline"
                   >
                     SHAPECRAFT² HACKATHON
                   </Link>
