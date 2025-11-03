@@ -165,7 +165,7 @@ export default function RootLayout({
             <div className="bg-background min-h-screen font-[family-name:var(--font-geist-sans)]">
               {/* Announcement Header */}
               {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && (
-                <div className="bg-blue-600 text-white text-center text-xs font-medium h-5 flex items-center justify-center gap-1">
+                <div className="bg-blue-600 text-white text-center text-sm font-medium py-2 flex items-center justify-center gap-1">
                   🥇{' '}
                   <Link
                     href="https://x.com/Shape_L2/status/1962942181271834826"
