@@ -223,20 +223,29 @@ Hypar:     1 (11%)
 
 ## 🎨 UI/UX Improvements
 
-### Status: ❌ NOT IMPLEMENTED
+### Status: ✅ IMPLEMENTED
 
 ### Countdown Text Update
 
-**Status:** ❌ Not Implemented
+**Status:** ✅ Implemented
 
-- [ ] **Change countdown text in public-site**
-  - **Current**: "Generating your Katachi Gen... {previewCountdown}s" ([katachi-generator.tsx:1099, 1160](public-site/components/katachi-generator.tsx#L1099))
-  - **Desired**: "Revealing your Katachi Gen in... 5s"
-  - **Locations to update**:
-    - Line 1099: Preview countdown display
-    - Line 1160: Alternative countdown display
-  - **Change**: Update both instances to use "Revealing your Katachi Gen in..." format
-  - **Estimated time**: 2 minutes
+- [x] **Change countdown text in public-site**
+  - **Previous**: "Generating your Katachi Gen... {previewCountdown}s"
+  - **Current**: "Revealing your Katachi Gen in... {previewCountdown}s"
+  - **Locations updated**:
+    - Line 1188: Mobile preview countdown display
+    - Line 1249: Desktop preview countdown display
+  - **Styling**: Changed background to black (`bg-black`) and text to white (`text-white`)
+
+### Announcement Bar Update
+
+**Status:** ✅ Implemented
+
+- [x] **Update header announcement bar** ([layout.tsx:167-189](public-site/app/layout.tsx#L167-L189))
+  - **Text**: "🥇 1ST PL WINNER, SHAPECRAFT² HACKATHON 🏆 Minting on mainnet soon 🚀"
+  - **Links**:
+    - "1ST PL WINNER" → <https://x.com/Shape_L2/status/1962942181271834826>
+    - "SHAPECRAFT² HACKATHON" → <https://shape.network/shapecraft>
 
 ### Local Development Links
 

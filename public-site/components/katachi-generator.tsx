@@ -1180,12 +1180,12 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
                           />
                         )}
                         {!urlResolved && (
-                          <div className="absolute inset-0 flex items-center justify-center bg-white/90">
+                          <div className="absolute inset-0 flex items-center justify-center bg-black">
                             <div className="text-center space-y-2">
-                              <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-                              <div className="text-sm text-muted-foreground">
+                              <Loader2 className="h-8 w-8 animate-spin mx-auto text-white" />
+                              <div className="text-sm text-white">
                                 {previewDelay ? (
-                                  <>Generating your Katachi Gen... {previewCountdown}s</>
+                                  <>Revealing your Katachi Gen in... {previewCountdown}s</>
                                 ) : (
                                   <>Loading interactive pattern...</>
                                 )}
@@ -1241,12 +1241,12 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
                             />
                           )}
                           {!urlResolved && (
-                            <div className="absolute inset-0 flex items-center justify-center bg-white/90 rounded-lg">
+                            <div className="absolute inset-0 flex items-center justify-center bg-black rounded-lg">
                               <div className="text-center space-y-2">
-                                <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-                                <div className="text-sm text-muted-foreground">
+                                <Loader2 className="h-8 w-8 animate-spin mx-auto text-white" />
+                                <div className="text-sm text-white">
                                   {previewDelay ? (
-                                    <>Generating your Katachi Gen... {previewCountdown}s</>
+                                    <>Revealing your Katachi Gen in... {previewCountdown}s</>
                                   ) : (
                                     <>Loading interactive pattern...</>
                                   )}

@@ -163,10 +163,28 @@ export default function RootLayout({
         <Providers>
           <HeaderProvider>
             <div className="bg-background min-h-screen font-[family-name:var(--font-geist-sans)]">
-              {/* Testnet Header */}
+              {/* Announcement Header */}
               {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && (
-                <div className="bg-blue-600 text-white text-center text-xs font-medium h-5 flex items-center justify-center">
-                  Currently Minting on Shape Sepolia. Mainnet soon 🚀
+                <div className="bg-blue-600 text-white text-center text-xs font-medium h-5 flex items-center justify-center gap-1">
+                  🥇{' '}
+                  <Link
+                    href="https://x.com/Shape_L2/status/1962942181271834826"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:underline"
+                  >
+                    1ST PL WINNER
+                  </Link>
+                  ,{' '}
+                  <Link
+                    href="https://shape.network/shapecraft"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:underline"
+                  >
+                    SHAPECRAFT² HACKATHON
+                  </Link>
+                  {' '}🏆 Minting on mainnet soon 🚀
                 </div>
               )}
               
