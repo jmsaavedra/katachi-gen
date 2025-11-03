@@ -51,9 +51,22 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-    console.log('Katachi generator FULL response!:', JSON.stringify(data, null, 2));
+    console.log('Katachi generator response:', JSON.stringify(data, null, 2));
 
-    // Create complete token metadata for minting
+    // Check if this is a queue response (jobId present) or direct response
+    if (data.jobId && data.status === 'queued') {
+      console.log('✅ Job queued successfully:', data.jobId);
+      // Return job info for polling
+      return NextResponse.json({
+        success: true,
+        jobId: data.jobId,
+        status: data.status,
+        statusUrl: data.statusUrl,
+        message: data.message || 'Generation queued'
+      });
+    }
+
+    // Create complete token metadata for minting (direct response or completed job)
     if (data.success && data.thumbnailId && data.htmlId) {
       const tokenMetadata = {
         name: `Katachi Gen`,

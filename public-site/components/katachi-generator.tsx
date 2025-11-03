@@ -69,6 +69,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationProgress, setGenerationProgress] = useState(0);
   const [generationStatus, setGenerationStatus] = useState('');
+  const [isUsingQueue, setIsUsingQueue] = useState(false);
   const [, setIframeLoading] = useState(false);
   const [iframeError, setIframeError] = useState(false);
   const [showEligibilityModal, setShowEligibilityModal] = useState(false);
@@ -188,11 +189,10 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     }
   }, [previewDelay, previewCountdown]);
 
-  // Rotating status messages during generation
+  // Rotating status messages during generation (only when NOT using queue)
   useEffect(() => {
-    if (!isGenerating) {
-      setGenerationStatus('');
-      setGenerationProgress(0);
+    if (!isGenerating || isUsingQueue) {
+      // Don't run rotating messages if using queue - queue provides real progress
       return;
     }
 
@@ -215,7 +215,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     }, 10000); // Change message every 10 seconds
 
     return () => clearInterval(interval);
-  }, [isGenerating]);
+  }, [isGenerating, isUsingQueue]);
 
   const handleIframeLoad = () => {
     setIframeLoading(false);
@@ -388,6 +388,77 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     }
   };
 
+  // Poll job status until completion
+  const pollJobStatus = async (jobId: string) => {
+    console.log('📡 Starting to poll job status:', jobId);
+    const maxPolls = 180; // 180 * 2s = 6 minutes max
+    let polls = 0;
+
+    while (polls < maxPolls) {
+      try {
+        const statusResponse = await fetch(`/api/job-status?jobId=${jobId}`);
+
+        if (!statusResponse.ok) {
+          throw new Error(`Status check failed: ${statusResponse.statusText}`);
+        }
+
+        const status = await statusResponse.json();
+        console.log(`📊 Job ${jobId} status:`, status.status, `(${status.progress}%)`);
+
+        // Update progress UI
+        if (status.progress !== undefined) {
+          setGenerationProgress(status.progress);
+        }
+
+        // Update status message - prefer logs from backend if available
+        if (status.status === 'waiting') {
+          setGenerationStatus('Waiting in queue...');
+        } else if (status.status === 'active') {
+          // Check if we have recent logs from the backend with the latest message
+          const latestLog = status.logs?.[status.logs.length - 1];
+          if (latestLog && typeof latestLog === 'string') {
+            // Use the actual message from the backend (e.g., "Processing image 3/8...")
+            setGenerationStatus(latestLog.replace(/^\[.*?\]\s*/, '')); // Remove "[XX%]" prefix if present
+          } else if (status.message) {
+            // Fallback to status.message if available
+            setGenerationStatus(status.message);
+          } else {
+            // Final fallback: use progress-based messages
+            if (status.progress < 10) {
+              setGenerationStatus('Starting generation...');
+            } else if (status.progress < 82) {
+              setGenerationStatus('Processing images...');
+            } else if (status.progress < 90) {
+              setGenerationStatus('Generating origami pattern...');
+            } else if (status.progress < 97) {
+              setGenerationStatus('Creating thumbnail...');
+            } else {
+              setGenerationStatus('Uploading and finalizing...');
+            }
+          }
+        } else if (status.status === 'completed') {
+          setGenerationProgress(100);
+          setGenerationStatus('Complete!');
+
+          // Return the completed result
+          return status.result;
+        } else if (status.status === 'failed') {
+          throw new Error(status.failedReason || 'Job failed');
+        }
+
+        // Wait 2 seconds before next poll
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        polls++;
+
+      } catch (error) {
+        console.error('❌ Error polling job status:', error);
+        throw error;
+      }
+    }
+
+    throw new Error('Job timed out - exceeded maximum poll time');
+  };
+
   const handleGenerateKatachiWithData = async (dataToUse: {
     sentiment: string;
     filteredNfts: Array<{
@@ -432,15 +503,17 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     }
 
     setIsGenerating(true);
+    setIsUsingQueue(false); // Reset queue flag
     setGenerationProgress(0);
-    setGenerationStatus('Analyzing blockchain data...');
+    setGenerationStatus('Preparing request...');
 
     try {
       // Small delay to ensure UI updates are visible
       await new Promise(resolve => setTimeout(resolve, 100));
 
-      // Simulate progress for initial setup (0-10%)
-      setGenerationProgress(5);
+      // Initial progress
+      setGenerationProgress(2);
+      setGenerationStatus('Preparing NFT data...');
       await new Promise(resolve => setTimeout(resolve, 300));
 
       // Use the passed data instead of state
@@ -477,26 +550,13 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         sampleImageData: imageUrls[0] // Log first image to verify structure
       });
 
-      // Update progress: preparing request (10-20%)
-      setGenerationProgress(15);
-      setGenerationStatus('Processing NFT collection...');
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Start progress simulation (20% -> 90% over ~180 seconds / 3 minutes)
-      // This simulates image processing: 8 images at ~10-15 seconds each = ~2-3 minutes total
-      const totalImages = imageUrls.length;
-      const progressPerImage = 70 / totalImages; // 70% progress spread across images (20% -> 90%)
-      let currentProgress = 20;
-
-      const progressInterval = setInterval(() => {
-        if (currentProgress < 90) {
-          currentProgress += progressPerImage / 10; // Increment gradually
-          setGenerationProgress(Math.min(currentProgress, 90));
-        }
-      }, 1500); // Update every 1.5 seconds for smooth animation
+      // Update progress: preparing request
+      setGenerationProgress(5);
+      setGenerationStatus('Sending request to generator...');
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Start the fetch request
-      const responsePromise = fetch('/api/generate-katachi', {
+      const response = await fetch('/api/generate-katachi', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -510,25 +570,53 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         }),
       });
 
-      const response = await responsePromise;
-      clearInterval(progressInterval);
-
-      // Final stages (90-100%)
-      setGenerationProgress(95);
-      setGenerationStatus('Uploading to Arweave...');
-
       if (!response.ok) {
         throw new Error(`Generation failed: ${response.statusText}`);
       }
 
       const result = await response.json();
 
-      // Complete progress (100%)
-      setGenerationProgress(100);
-      setGenerationStatus('Complete!');
+      // Check if this is a queue response (has jobId) or direct response
+      if (result.jobId && result.status === 'queued') {
+        console.log('✅ Job queued, starting polling:', result.jobId);
 
-      if (result.error || !result.success) {
-        throw new Error(result.message || 'Pattern generation failed');
+        // Enable queue mode - this will use real progress from backend
+        setIsUsingQueue(true);
+        setGenerationProgress(0);
+        setGenerationStatus('Job queued, waiting to start...');
+
+        // Start polling for job status
+        const pollResult = await pollJobStatus(result.jobId);
+
+        // Continue with the completed result
+        if (pollResult.error || !pollResult.success) {
+          throw new Error(pollResult.message || 'Pattern generation failed');
+        }
+
+        // Use pollResult as the final result
+        result.success = pollResult.success;
+        result.thumbnailId = pollResult.thumbnailId;
+        result.htmlId = pollResult.htmlId;
+        result.thumbnailUrl = pollResult.thumbnailUrl;
+        result.htmlUrl = pollResult.htmlUrl;
+        result.previewHtmlUrl = pollResult.previewHtmlUrl;
+        result.patternType = pollResult.patternType;
+        result.imageStats = pollResult.imageStats;
+        result.metadata = pollResult.metadata;
+
+        // Progress already at 100% from polling
+      } else {
+        // Direct response (no queue) - use simulated progress
+        setGenerationProgress(95);
+        setGenerationStatus('Uploading to Arweave...');
+
+        // Complete progress (100%)
+        setGenerationProgress(100);
+        setGenerationStatus('Complete!');
+
+        if (result.error || !result.success) {
+          throw new Error(result.message || 'Pattern generation failed');
+        }
       }
 
       console.log('Katachi generation result:', {
@@ -611,6 +699,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       });
     } finally {
       setIsGenerating(false);
+      setIsUsingQueue(false);
       setGenerationProgress(0);
       setGenerationStatus('');
     }

@@ -24,17 +24,20 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.879.0",
     "arweave": "^1.15.7",
+    "bull": "^4.12.9",
     "canvas": "^3.2.0",
     "clean-css": "^5.3.3",
     "dotenv": "^17.2.1",
     "ejs": "^3.1.10",
     "inliner": "^1.13.1",
+    "ioredis": "^5.3.2",
     "mime-types": "^3.0.1",
     "playwright": "^1.55.0",
     "puppeteer": "^24.17.0",
     "puppeteer-core": "^24.17.0",
     "sharp": "^0.34.3",
-    "terser": "^5.36.0"
+    "terser": "^5.36.0",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@babel/core": "^7.28.3",

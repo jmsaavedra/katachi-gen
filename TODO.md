@@ -1,6 +1,23 @@
 # TODO: Project Improvements
 
+## Implementation Status Summary
+
+| Feature | Status | Priority | Notes |
+|---------|--------|----------|-------|
+| Queue System (Bull/Redis) | ❌ Not Implemented | HIGH | Proposal only - no code implemented |
+| Vercel Monorepo Setup | ⚠️ Partial | Medium | Config files exist, dashboard setup required |
+| Visual Analysis (CV/AI) | ❌ Not Implemented | High | Placeholder only - text matching only |
+| Alchemy Caching | ✅ Basic Implementation | Medium | Redis cache working, no batching |
+| Origami Patterns | ✅ Implemented | - | All 5 patterns working correctly |
+| Collection maxCount | ❌ Not Implemented | Low | Hardcoded to 2 per collection |
+| UI Countdown Text | ❌ Not Implemented | Low | Still shows old text |
+| Dev Mode File Links | ❌ Not Implemented | Low | URLs exist but not displayed |
+
+---
+
 ## 🔄 Queue System for Concurrent Generation Requests
+
+### Status: ❌ NOT IMPLEMENTED - Proposal Only
 
 ### Priority: HIGH (Pre-Launch Critical)
 
@@ -148,27 +165,36 @@ If Redis is not an option immediately, implement a simple in-memory queue:
 
 ## 🚀 Vercel Monorepo Deployment Setup
 
-### Status: ✅ Configuration Ready
+### Status: ⚠️ PARTIALLY IMPLEMENTED
+
+**What's Done:**
+- ✅ `vercel.json` files exist for both projects
+- ✅ Related Projects linking configured (public-site ↔ mcp-server)
+- ✅ MCP server has custom build command: `xmcp build --vercel`
+- ✅ MCP server has keep-alive cron job (every 15 minutes)
+- ✅ Documentation exists: [VERCEL_SETUP.md](VERCEL_SETUP.md)
+
+**What's Required (Manual Dashboard Setup):**
+
 Configure Vercel to only redeploy `public-site` when that folder is updated in the monorepo.
 
-#### Current Situation
-This monorepo doesn't use npm/yarn/pnpm workspaces, so Vercel's automatic build skipping won't work. Instead, use Vercel's built-in "Ignored Build Step" feature.
-
-#### Implementation Steps (2 minutes)
+#### Implementation Steps (2 minutes per project)
 
 **In Vercel Dashboard:**
 
 1. **Settings → General → Root Directory**
-   - Set to: `public-site`
+   - Set to: `public-site` (for public-site project)
+   - Set to: `mcp-server` (for mcp-server project)
 
 2. **Settings → Git → Ignored Build Step**
-   - Select: **"Only build if there are changes in public-site/"**
-   - Or use custom command: `git diff HEAD^ HEAD --quiet -- public-site/`
+   - For public-site: `git diff HEAD^ HEAD --quiet -- public-site/`
+   - For mcp-server: `git diff HEAD^ HEAD --quiet -- mcp-server/`
+   - This prevents rebuilds when only other folders change
 
 3. **Settings → Environment Variables** (Optional but recommended)
    - Enable "Automatically expose System Environment Variables"
 
-**That's it!** Changes to `katachi-generator/` or `mcp-server/` won't trigger rebuilds.
+**Note:** These settings CANNOT be configured via vercel.json and must be set manually in the dashboard.
 
 #### Documentation
 See [VERCEL_SETUP.md](VERCEL_SETUP.md) for complete setup guide, testing instructions, and troubleshooting.
@@ -182,15 +208,29 @@ See [VERCEL_SETUP.md](VERCEL_SETUP.md) for complete setup guide, testing instruc
 
 ## 🎨 Enhanced Visual Analysis for NFT Collection Reflection
 
+### Status: ❌ NOT IMPLEMENTED - Text-Based Heuristics Only
+
 ### Priority: High
+
+**Current Implementation Status:**
+
+The `analyzeVisualContent` function in [interpret-collection-sentiment.ts:128-179](mcp-server/src/tools/nft/interpret-collection-sentiment.ts#L128-L179) is a **placeholder** that only performs text matching:
+
+```typescript
+// Line 146: "In a full implementation, this would analyze the actual image pixels"
+```
+
+**What It Actually Does:**
+- ✅ Checks if color keywords appear in NFT name/description/collection name
+- ✅ Checks if color keywords appear in image URL/filename (e.g., "green" in URL → +1 score)
+- ✅ Basic heuristics (URL contains "ocean" + sentiment mentions "blue" → match)
+- ❌ **Cannot** actually analyze image pixels, detect objects, or identify colors in artwork
+- ❌ **No** computer vision API integration (OpenAI, Google Vision, etc.)
+- ❌ **No** CV dependencies in package.json
+
+### Proposal: Implement Real Computer Vision
+
 Implement real computer vision to analyze actual NFT image content for objects, colors, and themes.
-
-### Current Limitation
-The MCP server's `interpretCollectionSentiment` tool currently cannot perform true visual analysis of NFT artwork. When users mention objects like "apples", "cats", "mountains", etc., the system only:
-
-- ✅ Checks if the word appears in NFT name/description/collection name
-- ✅ Analyzes image URL/filename for keyword hints
-- ❌ **Cannot** actually detect objects, colors, or visual elements in the artwork
 
 ### Implementation Options
 
@@ -233,26 +273,37 @@ The MCP server's `interpretCollectionSentiment` tool currently cannot perform tr
 
 ## 🔧 Optimize Alchemy API Usage
 
+### Status: ⚠️ BASIC CACHING IMPLEMENTED, Advanced Features Not Implemented
+
 ### Priority: Medium
 
-The codebase makes extensive use of the Alchemy API across multiple components. Optimization opportunities:
+**What's Implemented:**
+- ✅ Redis-based caching system: [mcp-server/src/utils/cache.ts](mcp-server/src/utils/cache.ts)
+- ✅ Upstash-compatible with TLS support
+- ✅ Graceful fallback if Redis unavailable (3-second timeout)
+- ✅ Per-tool TTL configuration (default 60s, sentiment analysis uses 5min)
+- ✅ Pagination limits (max 2000 NFTs in sentiment analysis)
+- ✅ Alchemy SDK used in both public-site and mcp-server
 
-#### 1. Enhanced Caching Strategy (HIGH PRIORITY)
-- **Issue**: Current caching is per-tool with short TTLs
+**What's NOT Implemented (Optimization Opportunities):**
+
+#### 1. Enhanced Caching Strategy (NOT IMPLEMENTED)
+- **Issue**: Current caching is per-tool with independent cache keys
 - **Solution**: Implement cross-tool data sharing and longer cache periods for stable data
 - **Impact**: Significantly reduce redundant API calls
 
-#### 2. Request Batching & Deduplication
+#### 2. Request Batching & Deduplication (NOT IMPLEMENTED)
 - **Issue**: Multiple tools make similar API calls independently
 - **Solution**: Implement request batching and deduplication layer
 - **Impact**: Reduce API quota usage and improve response times
 
-#### 3. Smart Pagination
-- **Issue**: Sentiment analysis tool can fetch up to 2000 NFTs per request
+#### 3. Smart Pagination (NOT IMPLEMENTED)
+- **Issue**: Sentiment analysis tool can fetch up to 2000 NFTs per request (hardcoded)
+- **Current**: Fixed pageSize: 100 with max 20 pages (interpret-collection-sentiment.ts:344)
 - **Solution**: Implement smart stopping conditions based on collection diversity
 - **Impact**: Reduce unnecessary large paginated requests
 
-#### 4. Fallback Strategy (LOW PRIORITY)
+#### 4. Fallback Strategy (NOT IMPLEMENTED)
 - **Issue**: Hard dependency on Alchemy for all NFT data
 - **Solution**: Implement fallback to public RPC endpoints for basic data
 - **Impact**: Better resilience and cost optimization
@@ -334,39 +385,60 @@ Hypar:     1 (11%)
 
 ## 🎨 UI/UX Improvements
 
+### Status: ❌ NOT IMPLEMENTED
+
 ### Countdown Text Update
 
+**Status:** ❌ Not Implemented
+
 - [ ] **Change countdown text in public-site**
-  - **Current**: "Generating your Katachi Gen... 1s"
-  - **New**: "Revealing your Katachi Gen in... 5s"
-  - **Locations**:
-    - [katachi-generator.tsx:1099](public-site/components/katachi-generator.tsx#L1099)
-    - [katachi-generator.tsx:1160](public-site/components/katachi-generator.tsx#L1160)
+  - **Current**: "Generating your Katachi Gen... {previewCountdown}s" ([katachi-generator.tsx:1099, 1160](public-site/components/katachi-generator.tsx#L1099))
+  - **Desired**: "Revealing your Katachi Gen in... 5s"
+  - **Locations to update**:
+    - Line 1099: Preview countdown display
+    - Line 1160: Alternative countdown display
   - **Change**: Update both instances to use "Revealing your Katachi Gen in..." format
+  - **Estimated time**: 2 minutes
 
 ### Local Development Links
 
+**Status:** ❌ Not Implemented (Backend provides URLs, Frontend doesn't display them)
+
 - [ ] **Surface generated HTML and thumbnail file links in local dev mode**
   - **Goal**: Make it easy to access generated files during local development
-  - **Current**: Files are saved but URLs not displayed in UI
-  - **Proposed**: Show clickable links in UI when `NODE_ENV === 'development'`
+  - **Backend Status**: Server DOES generate local URLs in dev mode ([pattern.js:101-103](katachi-generator/handlers/pattern.js#L101-L103))
+  - **Frontend Status**: URLs returned in API response but NOT displayed in UI
+  - **What's Missing**: Dev-only conditional rendering in katachi-generator.tsx
+  - **Proposed Implementation**: Show clickable links when `NODE_ENV === 'development'`
   - **Files to display**:
     - HTML file URL (e.g., `http://localhost:3001/temp/html/kg_crane-...html`)
     - Thumbnail file URL (e.g., `http://localhost:3001/thumbnails/thumbnail_...png`)
-  - **Implementation**: Add dev-only section in generation success state showing:
-    - "📁 Generated Files (Dev Mode)"
-    - Link to HTML file
-    - Link to thumbnail
+  - **UI Addition**: Add dev-only section in generation success state:
+    ```tsx
+    {process.env.NODE_ENV === 'development' && (
+      <div className="dev-files">
+        <p>📁 Generated Files (Dev Mode)</p>
+        <a href={result.htmlUrl} target="_blank">View HTML</a>
+        <a href={result.thumbnailUrl} target="_blank">View Thumbnail</a>
+      </div>
+    )}
+    ```
+  - **Estimated time**: 15 minutes
 
 ---
 
 ## 🔧 MCP Server Collection Configuration
 
+### Status: ❌ NOT IMPLEMENTED
+
 ### maxCount per Collection
 
+**Current Implementation:** Hardcoded to 2 NFTs per collection ([interpret-collection-sentiment.ts:420](mcp-server/src/tools/nft/interpret-collection-sentiment.ts#L420))
+
 - [ ] **Add 'maxCount' key to imagePreferences array items in config-collections.json**
-  - **Current**: Default is 2 max NFTs per collection globally
+  - **Current**: Default is 2 max NFTs per collection globally (hardcoded)
   - **Goal**: Allow per-collection customization of max NFT count
+  - **Priority**: Low
   - **Current imagePreferences structure**:
 
     ```json

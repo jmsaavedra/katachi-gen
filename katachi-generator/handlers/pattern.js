@@ -10,27 +10,17 @@ const { uploadFileToArweave } = require('../storage/arweave');
 const { generateNFTTemplate } = require('../utils/templateGenerator');
 
 /**
- * Handle pattern generation request
+ * Core pattern generation logic with progress tracking
+ * @param {Object} data - Generation data
+ * @param {Object} options - Options including onProgress callback
+ * @returns {Object} Generation result
  */
-async function handlePatternGeneration(req, res, data) {
-    // Process POST data here
-    console.log('Received data summary:', {
-        walletAddress: data.walletAddress,
-        patternType: data.patternType,
-        seed2: data.seed2,
-        imageCount: data.images ? data.images.length : 0,
-        forMinting: data.forMinting || false
-    });
+async function generatePatternCore(data, options = {}) {
+    const { onProgress = async () => {} } = options;
 
     // Validate required fields
     if (!data.walletAddress && !data.stackData?.userAddress) {
-        res.setHeader('Content-Type', 'application/json');
-        res.writeHead(400);
-        res.end(JSON.stringify({
-            success: false,
-            error: 'Wallet address or stack user address is required'
-        }));
-        return;
+        throw new Error('Wallet address or stack user address is required');
     }
 
     // Select random origami pattern if not specified
@@ -45,31 +35,38 @@ async function handlePatternGeneration(req, res, data) {
 
     try {
         // Process images to embed them as base64 before generating anything
+        // Progress tracking happens inside processImagesAsBase64 (5-50%)
         console.log('🎨 Pre-processing images for self-contained HTML...');
-        const processedData = await processImagesAsBase64(data);
+        const processedData = await processImagesAsBase64(data, { onProgress });
         console.log('🎨 Image processing completed, proceeding with generation...');
-        
+
+        // Progress: Start pattern generation at 82% (images are done)
+        await onProgress(82, 'Generating origami pattern...');
+
         // Create HTML content using the new modular template system
         console.log('🎨 Generating HTML using modular EJS template system...');
         const startTime = Date.now();
-        
+
         const htmlContent = await generateNFTTemplate(processedData);
-        
+
         const processingTime = Date.now() - startTime;
         console.log(`✅ Modular template generated in ${processingTime}ms`);
-        
+
+        // Progress: Pattern generated
+        await onProgress(90, 'Pattern generated, creating thumbnail...');
+
         // Create temp HTML file
         const walletAddress = data.walletAddress || data.stackData?.userAddress;
         const timestamp = Date.now();
         const htmlFilename = `kg_${data.patternType.toLowerCase()}-${walletAddress}-${timestamp}.html`;
         const htmlPath = path.join(__dirname, '..', 'temp', 'html', htmlFilename);
-        
+
         // Ensure temp/html directory exists
         const tempHtmlDir = path.dirname(htmlPath);
         if (!fs.existsSync(tempHtmlDir)) {
             fs.mkdirSync(tempHtmlDir, { recursive: true });
         }
-        
+
         // Write HTML to temp file
         fs.writeFileSync(htmlPath, htmlContent);
         console.log('🎯 HTML file created at:', htmlPath);
@@ -78,13 +75,16 @@ async function handlePatternGeneration(req, res, data) {
         console.log('Generating thumbnail from HTML content...');
         const thumbnailBuffer = await generateThumbnail(processedData, htmlPath);
         console.log('Thumbnail generated, size:', thumbnailBuffer.length, 'bytes');
-        
+
+        // Progress: Thumbnail created
+        await onProgress(93, 'Thumbnail created, preparing upload...');
+
         // Save thumbnail (optional)
         const thumbnailFilename = `thumbnail_${timestamp}.png`;
         const thumbnailPath = await saveThumbnail(thumbnailBuffer, thumbnailFilename);
-        
+
         let thumbnailTxId, htmlTxId, thumbnailUrl, htmlUrl, previewHtmlUrl;
-        
+
         // Check if this request is from test.html (testing interface)
         const isTestInterface = data.testInterface === true || data.source === 'test';
 
@@ -92,24 +92,24 @@ async function handlePatternGeneration(req, res, data) {
         // ENABLE_MINTING from .env takes precedence over frontend forMinting flag
         // This gives developers full control via local environment
         const shouldUseArweave = ENABLE_MINTING && !isTestInterface;
-        
+
         if (isTestInterface) {
             // Test interface: Keep files local only
             console.log('🧪 TEST INTERFACE: Keeping files local for evaluation');
-            
+
             // Use local URLs for everything
             thumbnailUrl = `http://localhost:${port}/thumbnails/${thumbnailFilename}`;
             htmlUrl = `http://localhost:${port}/temp/html/${htmlFilename}`;
             previewHtmlUrl = htmlUrl;
-            
+
             // Set transaction IDs to match the actual URLs for metadata consistency
             thumbnailTxId = thumbnailUrl;
             htmlTxId = htmlUrl;
-            
+
             console.log('✅ HTML file saved locally at:', htmlPath);
             console.log('🔗 Access it at:', htmlUrl);
             console.log('📁 Physical location:', htmlPath);
-            
+
         } else if (!shouldUseArweave) {
             // Local development mode: Keep everything local, no uploads
             console.log('🔧 LOCAL DEVELOPMENT MODE: Keeping files local, skipping uploads');
@@ -132,25 +132,31 @@ async function handlePatternGeneration(req, res, data) {
             // Production mode OR minting enabled: Upload to R2 + Arweave
             const modeDescription = ENABLE_MINTING ? 'MINTING MODE (ENABLE_MINTING=true)' : 'PRODUCTION MODE';
             console.log(`🚀 ${modeDescription}: Uploading to Arweave and R2`);
-            
+
+            // Progress: Uploading
+            await onProgress(97, 'Uploading to Arweave and storage...');
+
             // Upload to R2 first for fast gallery access
             const r2Url = await uploadToR2(htmlPath, htmlFilename);
-            
+
             // Upload thumbnail to Arweave
             console.log('Uploading thumbnail to Arweave...');
             const arweaveWalletPath = process.env.ARWEAVE_WALLET_PATH || path.join(__dirname, '..', 'arweave-wallet.json');
             thumbnailTxId = await uploadFileToArweave(thumbnailPath, arweaveWalletPath);
             console.log('Thumbnail uploaded to Arweave:', thumbnailTxId);
-            
+
+            // Progress: Thumbnail uploaded
+            await onProgress(99, 'Finalizing uploads...');
+
             // Upload HTML to Arweave
             console.log('Uploading HTML to Arweave...');
             htmlTxId = await uploadFileToArweave(htmlPath, arweaveWalletPath);
             console.log('HTML uploaded to Arweave:', htmlTxId);
-            
+
             // Set URLs - Arweave for permanent metadata, R2/local for preview
             thumbnailUrl = `https://arweave.net/${thumbnailTxId}`;
             htmlUrl = `https://arweave.net/${htmlTxId}`; // For metadata/tokenURI
-            
+
             // Determine preview URL - prioritize R2, keep local file if R2 failed
             if (r2Url) {
                 previewHtmlUrl = r2Url;
@@ -174,11 +180,12 @@ async function handlePatternGeneration(req, res, data) {
                 console.log('⚠️ R2 upload failed, keeping temp file for preview:', previewHtmlUrl);
             }
         }
-        
-        // Send response with both transaction IDs and image stats
-        res.setHeader('Content-Type', 'application/json');
-        res.writeHead(200);
-        res.end(JSON.stringify({
+
+        // Progress: Complete
+        await onProgress(100, 'Generation complete!');
+
+        // Return result object
+        return {
             success: true,
             message: TESTING_MODE ? 'NFT generated and saved locally for testing' : 'NFT generated and uploaded successfully',
             thumbnailId: thumbnailTxId,
@@ -191,8 +198,8 @@ async function handlePatternGeneration(req, res, data) {
             processingTime: processingTime, // Template generation time
             templateVersion: '2.0-modular',
             testingMode: TESTING_MODE
-        }));
-        
+        };
+
     } catch (uploadError) {
         console.error('Error in NFT generation or upload process:', uploadError);
         console.error('Error details:', {
@@ -200,18 +207,53 @@ async function handlePatternGeneration(req, res, data) {
             stack: uploadError.stack,
             timestamp: new Date().toISOString()
         });
-        
-        // Send response
+
+        throw uploadError;
+    }
+}
+
+/**
+ * Handle pattern generation request (HTTP handler wrapper)
+ */
+async function handlePatternGeneration(req, res, data) {
+    // Process POST data here
+    console.log('Received data summary:', {
+        walletAddress: data.walletAddress,
+        patternType: data.patternType,
+        seed2: data.seed2,
+        imageCount: data.images ? data.images.length : 0,
+        forMinting: data.forMinting || false
+    });
+
+    try {
+        // Call core generation function
+        const result = await generatePatternCore(data);
+
+        // Send success response
+        res.setHeader('Content-Type', 'application/json');
+        res.writeHead(200);
+        res.end(JSON.stringify(result));
+
+    } catch (error) {
+        console.error('Error in NFT generation or upload process:', error);
+        console.error('Error details:', {
+            message: error.message,
+            stack: error.stack,
+            timestamp: new Date().toISOString()
+        });
+
+        // Send error response
         res.setHeader('Content-Type', 'application/json');
         res.writeHead(500);
         res.end(JSON.stringify({
             success: false,
             message: 'NFT generation or upload failed',
-            error: uploadError.message
+            error: error.message
         }));
     }
 }
 
 module.exports = {
-    handlePatternGeneration
+    handlePatternGeneration,
+    generatePatternCore // Export for queue processor
 };

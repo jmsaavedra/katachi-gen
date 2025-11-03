@@ -4,6 +4,7 @@ const http = require('http');
 const url = require('url');
 const path = require('path');
 const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
 const { port, TESTING_MODE } = require('./config');
 
 // Import handlers
@@ -14,6 +15,9 @@ const { handleTestTemplate, handleTestAPI } = require('./handlers/testTemplate')
 // Import utilities
 const { loadArweaveWallet, getWalletAddress, getWalletBalance } = require('./utils/wallet');
 const { serveStaticFile, serveTempFile, cleanupTempFiles } = require('./utils/fileServer');
+
+// Import queue system (may be null if Redis not available)
+const { generationQueue } = require('./queue/generationQueue');
 
 // Create HTTP server
 const server = http.createServer(async (req, res) => {
@@ -62,8 +66,46 @@ const server = http.createServer(async (req, res) => {
                 // Route POST requests based on URL path
                 if (urlPath === '/upload-metadata') {
                     await handleMetadataUpload(req, res, data);
-                } else if (urlPath === '/' || urlPath === '') {
-                    // Original pattern generation endpoint
+                } else if ((urlPath === '/' || urlPath === '') && generationQueue) {
+                    // NEW: Queue-based generation (default if queue available)
+                    const jobId = uuidv4();
+
+                    console.log(`🎯 Queuing generation job: ${jobId}`);
+
+                    try {
+                        // Add job to queue
+                        const job = await generationQueue.add({
+                            jobId,
+                            ...data
+                        }, {
+                            jobId, // Use custom jobId for easier tracking
+                        });
+
+                        console.log(`✅ Job ${jobId} added to queue`);
+
+                        res.setHeader('Content-Type', 'application/json');
+                        res.writeHead(202); // Accepted
+                        res.end(JSON.stringify({
+                            success: true,
+                            jobId: job.id,
+                            status: 'queued',
+                            message: 'Job queued for processing',
+                            statusUrl: `/job/${job.id}`,
+                        }));
+                    } catch (queueError) {
+                        console.error('❌ Failed to add job to queue:', queueError);
+
+                        // Fallback to direct processing
+                        console.warn('⚠️  Falling back to direct processing');
+                        await handlePatternGeneration(req, res, data);
+                    }
+                } else if ((urlPath === '/' || urlPath === '') && !generationQueue) {
+                    // Fallback: Direct processing if queue not available
+                    console.warn('⚠️  Queue not available - processing directly');
+                    await handlePatternGeneration(req, res, data);
+                } else if (urlPath === '/direct') {
+                    // NEW: Direct processing endpoint (for testing/debugging)
+                    console.log('🔧 Direct processing requested');
                     await handlePatternGeneration(req, res, data);
                 } else {
                     res.setHeader('Content-Type', 'application/json');
@@ -86,8 +128,70 @@ const server = http.createServer(async (req, res) => {
     } 
     // Handle GET requests
     else if (method === 'GET') {
+        // NEW: Job status endpoint
+        if (urlPath.startsWith('/job/')) {
+            const pathParts = urlPath.split('/');
+            const jobId = pathParts[2];
+            const includeDetails = urlPath.includes('/details');
+
+            if (!generationQueue) {
+                res.setHeader('Content-Type', 'application/json');
+                res.writeHead(503);
+                res.end(JSON.stringify({
+                    error: 'Queue not available',
+                    message: 'Queue system is not enabled on this server'
+                }));
+                return;
+            }
+
+            try {
+                const job = await generationQueue.getJob(jobId);
+
+                if (!job) {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.writeHead(404);
+                    res.end(JSON.stringify({
+                        error: 'Job not found',
+                        jobId: jobId
+                    }));
+                    return;
+                }
+
+                const state = await job.getState();
+                const progress = job._progress || 0;
+
+                // Always get recent logs for progress tracking (last 10 entries)
+                const jobLogs = await generationQueue.getJobLogs(jobId);
+                const recentLogs = jobLogs?.logs ? jobLogs.logs.slice(-10) : [];
+
+                const response = {
+                    jobId: job.id,
+                    status: state,
+                    progress,
+                    attemptsMade: job.attemptsMade,
+                    data: includeDetails ? job.data : undefined,
+                    result: state === 'completed' ? job.returnvalue : undefined,
+                    failedReason: state === 'failed' ? job.failedReason : undefined,
+                    logs: recentLogs, // Always include recent logs for progress messages
+                    timestamp: job.timestamp,
+                };
+
+                res.setHeader('Content-Type', 'application/json');
+                res.writeHead(200);
+                res.end(JSON.stringify(response));
+
+            } catch (error) {
+                console.error('Error fetching job status:', error);
+                res.setHeader('Content-Type', 'application/json');
+                res.writeHead(500);
+                res.end(JSON.stringify({
+                    error: 'Failed to fetch job status',
+                    message: error.message
+                }));
+            }
+        }
         // Test routes for modular template system
-        if (urlPath === '/test-template') {
+        else if (urlPath === '/test-template') {
             await handleTestTemplate(req, res);
         } else if (urlPath === '/test-api') {
             await handleTestAPI(req, res);

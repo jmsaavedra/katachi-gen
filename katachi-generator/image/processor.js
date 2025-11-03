@@ -322,8 +322,12 @@ async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 
 /**
  * Process images as base64 for embedding
  * Tries to use Rarible optimized thumbnails first, falls back to direct download
+ * @param {Object} data - Data containing images to process
+ * @param {Object} options - Options including onProgress callback
  */
-async function processImagesAsBase64(data) {
+async function processImagesAsBase64(data, options = {}) {
+    const { onProgress = async () => {} } = options;
+
     console.log('🎨 Processing images for base64 embedding...');
     console.log('═══════════════════════════════════════════════════════════════════');
 
@@ -334,6 +338,14 @@ async function processImagesAsBase64(data) {
     if (processedData.images && Array.isArray(processedData.images)) {
         console.log(`📋 Processing ${processedData.images.length} NFT images`);
         console.log('');
+
+        // Initial progress
+        await onProgress(8, 'Processing images...');
+
+        const totalImages = processedData.images.length;
+        // We want 8 progress steps from 8% to 82% (stretched to fill more of the bar)
+        // Steps: 8%, 16%, 25%, 33%, 49%, 57%, 65%, 82%
+        const progressSteps = [8, 16, 25, 33, 49, 57, 65, 82];
 
         for (let i = 0; i < processedData.images.length; i++) {
             const image = processedData.images[i];
@@ -509,8 +521,19 @@ async function processImagesAsBase64(data) {
                     // Keep original URL as fallback
                     image.error = error.message;
                 }
+
+                // Update progress after each image - map to one of 8 steps
+                const progressIndex = Math.min(
+                    Math.floor(((i + 1) / totalImages) * (progressSteps.length - 1)),
+                    progressSteps.length - 1
+                );
+                const currentProgress = progressSteps[progressIndex];
+                await onProgress(currentProgress, `Processing image ${i + 1}/${totalImages}...`);
             }
         }
+
+        // Final progress for image processing
+        await onProgress(82, 'All images processed');
     }
 
     // Calculate comprehensive statistics
