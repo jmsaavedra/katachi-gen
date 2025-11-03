@@ -175,7 +175,7 @@ export default function RootLayout({
                   >
                     1ST PL WINNER
                   </Link>
-                  ,{' '}
+                  {' '}—{' '}
                   <Link
                     href="https://shape.network/shapecraft"
                     target="_blank"
