@@ -133,7 +133,7 @@ export default function Home() {
         </p>
         <div className="space-y-4 max-w-2xl mx-auto">
           <p className="text-white text-lg md:text-xl leading-relaxed text-left md:text-center">
-            Katachi Gen is a collection of digital + physical artifacts representing your on-chain journey, in the form of generative 3D origami patterns. Using AI sentiment analysis and art curation, each pattern reflects your personal participation on{' '}
+            Katachi Gen <span className="italic">(kah-TAH-chee gehn)</span> is a collection of digital + physical artifacts representing your on-chain journey, in the form of generative 3D origami patterns. Using AI sentiment analysis and art curation, each pattern reflects your personal participation on{' '}
             <a 
               href="https://shape.network" 
               target="_blank" 
@@ -360,8 +360,18 @@ export default function Home() {
       </div>
 
       <div className="text-center mt-12">
-        <p className="text-muted-foreground text-sm">
-          🏆 Shapecraft2 Hackathon Submission
+        <p className="text-muted-foreground text-sm flex items-center justify-center gap-2">
+          <img src="/assets/matrix.gif" alt="" className="h-10 w-10" />
+          Built for the{' '}
+          <a
+            href="https://shape.network/shapecraft"
+            target="_blank"
+            rel="noreferrer"
+            className="underline hover:text-foreground"
+          >
+            SHAPECRAFT² hackathon
+          </a>
+          <img src="/assets/matrix.gif" alt="" className="h-10 w-10" />
         </p>
       </div>
       </div>
