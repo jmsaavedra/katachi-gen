@@ -141,7 +141,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
           </span>
         </CardTitle>
         <CardDescription className="text-base">
-          Share your feelings about collecting on Shape. Our AI will interpret your words and curate up to {count} pieces for your Katachi Gen Shape.
+          Share your feelings about collecting on Shape. Feel free to write as little or as much as you'd like! <br /> Our AI will interpret your response and curate up to 8 pieces from your collection based on sentiment heuristics.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -302,12 +302,12 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                             </div>
                             {/* Mobile: Just score chip */}
                             <div className="md:hidden">
-                              <div className="inline-block bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full px-3 py-1 text-xs font-medium">
+                              <div className="inline-block bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full px-3 py-1 text-sm font-medium">
                                 Heuristic Score: <span className="font-bold">{nft.matchScore.toFixed(2)}</span>
                               </div>
                             </div>
                             {/* Desktop: Score chip */}
-                            <span className="hidden md:inline text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full font-medium">
+                            <span className="hidden md:inline text-sm px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full font-medium">
                               Heuristic Score: <span className="font-bold">{nft.matchScore.toFixed(2)}</span>
                             </span>
                           </div>
