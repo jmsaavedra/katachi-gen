@@ -9,7 +9,8 @@
 | Visual Analysis (CV/AI) | ❌ Not Implemented | High | Placeholder only - text matching only |
 | Alchemy Caching | ✅ Basic Implementation | Medium | Redis cache working, no batching |
 | Origami Patterns | ✅ Implemented | - | All 5 patterns working correctly |
-| UI Countdown Text | ❌ Not Implemented | Low | Still shows old text |
+| JunMitani Generative Model | ❌ Not Implemented | High | Real-time generative 6th pattern based on on-chain engagement |
+| UI Countdown Text | ✅ Implemented | - | Updated to "Revealing your Katachi Gen in..." |
 | Dev Mode File Links | ❌ Not Implemented | Low | URLs exist but not displayed |
 
 ---
@@ -218,6 +219,163 @@ Hypar:     1 (11%)
   - Research additional origami base patterns
   - Implement modular pattern addition system
   - Test with more complex curved fold patterns
+
+---
+
+## 🎲 JunMitani Generative Origami Model
+
+### Status: ❌ NOT IMPLEMENTED | Priority: High
+
+**Concept**: Implement a 6th origami fold model that is generatively created in real-time using JunMitani's algorithms, with complexity dynamically determined by the user's on-chain engagement on Shape.
+
+### Key Features
+
+#### 1. Real-Time Generative Pattern
+
+- Use JunMitani's computational origami algorithms to generate unique fold patterns
+- Each pattern is unique and deterministic based on user's wallet address + on-chain data
+- No pre-defined SVG files - patterns are computed on-the-fly
+
+#### 2. On-Chain Engagement Metrics
+
+Complexity and characteristics of the generated pattern determined by:
+
+**Engagement Factors:**
+
+- **Leaderboard Rank**: Higher rank = more complex fold patterns
+- **NFT Collection Size**: Number of NFTs owned on Shape
+- **Transaction Activity**: Volume and frequency of on-chain activity
+- **Time on Platform**: Account age and longevity
+- **Community Participation**: DAO votes, governance activity, etc.
+
+**Pattern Complexity Mapping:**
+
+- **Beginner** (0-100 points): Simple 4-6 panel designs
+- **Intermediate** (101-500 points): 7-12 panel designs with basic folds
+- **Advanced** (501-1000 points): 13-20 panel designs with valley/mountain folds
+- **Expert** (1000+ points): 20+ panel complex curved-crease designs
+
+#### 3. Technical Implementation
+
+**Algorithm Integration:**
+
+- Research and implement JunMitani's computational origami methods
+- Reference: [Jun Mitani's Research](https://mitani.cs.tsukuba.ac.jp/en/)
+- Key algorithms:
+  - Flat-foldable origami design
+  - Tessellation pattern generation
+  - Curved-crease origami synthesis
+
+**Data Pipeline:**
+
+```
+User Wallet → Fetch On-Chain Data → Calculate Engagement Score →
+Generate Pattern Parameters → Run Mitani Algorithm → Create SVG/Mesh →
+Render in Three.js
+```
+
+**Backend Changes Required:**
+
+- New pattern type: `mitani-generative`
+- On-chain data fetcher (Alchemy SDK integration)
+- Engagement scoring algorithm
+- Pattern generation endpoint/service
+- Real-time SVG generation from algorithm output
+
+**Frontend Changes Required:**
+
+- Pattern complexity indicator in UI
+- "Your Shape Engagement Score: X/1000" display
+- Real-time generation progress indicator
+- Explanation of how engagement affects pattern
+
+#### 4. Caching Strategy
+
+- Cache generated patterns by wallet address + engagement score hash
+- Invalidate cache when engagement metrics significantly change
+- Store computed patterns in Redis with 24-hour TTL
+- Background job to update high-activity users' patterns
+
+#### 5. User Experience
+
+**Discovery:**
+
+- Users see their engagement score before generation
+- Preview of complexity tier they'll receive
+- Educational tooltip explaining the generative system
+
+**Generation:**
+
+- Progress indicator showing: "Analyzing your Shape activity..." → "Generating unique pattern..." → "Rendering origami..."
+- Pattern complexity details shown after generation
+- Shareable engagement badge with pattern complexity tier
+
+**Gamification:**
+
+- Achievement system for unlocking higher complexity tiers
+- Leaderboard showing most complex patterns generated
+- Share-to-social with complexity tier badge
+
+### Implementation Phases
+
+#### Phase 1: Research & Prototyping
+
+- [ ] Study JunMitani's published algorithms and papers
+- [ ] Prototype simple flat-foldable pattern generator
+- [ ] Test integration with existing Three.js rendering pipeline
+- [ ] Define engagement scoring algorithm
+
+#### Phase 2: On-Chain Integration
+
+- [ ] Build on-chain data fetcher for Shape network
+- [ ] Implement engagement scoring system
+- [ ] Create API endpoint for score calculation
+- [ ] Add caching layer for on-chain data
+
+#### Phase 3: Pattern Generation
+
+- [ ] Implement core Mitani algorithm
+- [ ] Create complexity-based parameter mapping
+- [ ] Build SVG/mesh generation from algorithm output
+- [ ] Test with various complexity levels
+
+#### Phase 4: Frontend Integration
+
+- [ ] Add engagement score display to UI
+- [ ] Integrate pattern selection logic (5 static + 1 generative)
+- [ ] Implement real-time generation progress
+- [ ] Add educational tooltips and documentation
+
+#### Phase 5: Polish & Launch
+
+- [ ] Performance optimization (caching, generation speed)
+- [ ] Add achievement system and gamification
+- [ ] Create marketing materials explaining the feature
+- [ ] Beta testing with select users
+- [ ] Public launch
+
+### Technical Challenges
+
+1. **Algorithm Complexity**: JunMitani's methods may be computationally intensive
+2. **Real-Time Generation**: Need to generate patterns fast enough for good UX (<5 seconds)
+3. **Pattern Quality**: Ensuring generative patterns are aesthetically pleasing and foldable
+4. **On-Chain Data**: Fetching and processing on-chain metrics efficiently
+5. **Determinism**: Ensuring same wallet + same engagement = same pattern
+
+### References
+
+- [Jun Mitani's Website](https://mitani.cs.tsukuba.ac.jp/en/)
+- [ORI-REVO: Computational Design Tool](https://mitani.cs.tsukuba.ac.jp/ori_revo/)
+- [Origami Tessellation Designer](https://mitani.cs.tsukuba.ac.jp/ss2016/)
+- [Publications on Computational Origami](https://mitani.cs.tsukuba.ac.jp/en/publications/)
+
+### Success Metrics
+
+- **Adoption**: % of users who generate the Mitani pattern vs static patterns
+- **Engagement**: Users returning to regenerate after improving on-chain activity
+- **Social Sharing**: Share rate of Mitani patterns with complexity badges
+- **Pattern Diversity**: Uniqueness score across all generated patterns
+- **Generation Speed**: Average time to generate pattern (<5 seconds target)
 
 ---
 

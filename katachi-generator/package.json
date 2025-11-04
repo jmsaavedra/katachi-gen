@@ -10,10 +10,11 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "npm run minify",
     "dev": "NODE_ENV=development node server.js",
-    "minify": "node scripts/minify-css.js && node scripts/minify-js-libs.js && node scripts/minify-partials.js",
+    "minify": "node scripts/minify-css.js && node scripts/minify-js-libs.js && node scripts/minify-partials.js && ./scripts/minify-public-js.sh",
     "minify:css": "node scripts/minify-css.js",
     "minify:js": "node scripts/minify-js-libs.js",
     "minify:templates": "node scripts/minify-partials.js",
+    "minify:public": "./scripts/minify-public-js.sh",
     "cleanup:r2": "node scripts/cleanup-r2-recent.js",
     "cleanup:r2:dry-run": "node scripts/cleanup-r2-recent.js --dry-run"
   },

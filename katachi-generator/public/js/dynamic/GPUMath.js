@@ -16,7 +16,7 @@ function initGPUMath(){
     gl.disable(gl.DEPTH_TEST);
 
     var maxTexturesInFragmentShader = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
-    console.log(maxTexturesInFragmentShader + " textures max");
+    // Silently store max textures (removed console.log for production)
 
     function notSupported(){
         var elm = '<div id="coverImg" ' +

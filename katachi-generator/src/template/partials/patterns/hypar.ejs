@@ -2,11 +2,15 @@
 <script>
 // Hypar pattern configuration - complete hypar pattern
 const hyparPattern = {
-    maxFolding: 70, 
-    name: "hypar.svg", 
+    maxFolding: 80,
+    name: "hypar.svg",
     patternType: "Hypar",
     svgContent: `<%- fs.readFileSync(path.join(projectRoot, 'public/svgs/hypar.svg'), 'utf8') %>`
 };
+
+// Initialize origamiPatterns array with this single pattern
+// (Optimized: only includes pre-selected pattern instead of all 5)
+origamiPatterns = [hyparPattern];
 
 // Export pattern for use in the template
 if (typeof module !== 'undefined' && module.exports) {

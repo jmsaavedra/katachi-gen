@@ -34,7 +34,7 @@
 ╚════════════════════════════════════════════════════════════════════════╝
 -->
 <html lang="en">
-<%- include('partials/head') %>
+<%- include('partials/head.min.ejs') %>
 <body>
     <!-- Main HTML structure and content -->
     <%- include('partials/body-content') %>
@@ -56,9 +56,9 @@
 
     <!-- UI Controls (Print button, etc.) -->
     <%- include('partials/ui-controls.min.ejs') %>
-    
+
     <!-- SVG Pattern Definitions -->
-    <!-- All origami patterns are now modularized and imported through the index -->
-    <%- include('partials/patterns/index') %>
+    <!-- Single pre-selected origami pattern (optimized for file size) -->
+    <%- include('partials/patterns/' + selectedPatternFile + '.min.ejs') %>
 </body>
 </html>

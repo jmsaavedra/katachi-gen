@@ -368,7 +368,14 @@
                                         
                                         // Check if all textures loaded
                                         if (loadedCount === totalImages) {
-                                            console.log('🎉 All NFT textures loaded successfully!', loadedCount, 'textures');
+                                            // Production log - show essential info only (use console.info to survive minification)
+                                            var walletShort = dataToProcess.walletAddress ?
+                                                dataToProcess.walletAddress.substring(0, 6) + '...' + dataToProcess.walletAddress.substring(dataToProcess.walletAddress.length - 4) :
+                                                'Unknown';
+                                            var patternName = (typeof origamiPatterns !== 'undefined' && origamiPatterns.length > 0) ?
+                                                (origamiPatterns[0].patternType || origamiPatterns[0].name || 'Unknown') :
+                                                'Unknown';
+                                            console.info('Katachi Gen: Loaded ' + loadedCount + ' textures for ' + walletShort + ' (' + patternName + ')');
 
                                             // Enable random texture assignment
                                             var randomTexturesCheckbox = document.getElementById('randomTextures');

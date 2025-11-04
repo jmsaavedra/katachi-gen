@@ -27,7 +27,17 @@ const FILES_TO_MINIFY = [
     'scripts/simulation.ejs',
     'scripts/origami.ejs',
     'scripts/interactions.ejs',
-    'ui-controls.ejs'
+    'ui-controls.ejs',
+
+    // Head (contains initialization JavaScript)
+    'head.ejs',
+
+    // Origami Pattern Files (contain pattern definitions)
+    'patterns/airplane.ejs',
+    'patterns/crane.ejs',
+    'patterns/hypar.ejs',
+    'patterns/pinwheel.ejs',
+    'patterns/flower.ejs'
 ];
 
 /**
@@ -57,26 +67,55 @@ async function minifyScriptTags(content) {
         // Skip shader scripts (they need exact formatting)
         if (m.fullMatch.includes('x-shader')) continue;
 
-        // Skip EJS template tags
-        if (m.code.includes('<%') || m.code.includes('%>')) continue;
+        let codeToMinify = m.code;
+        const ejsPlaceholders = [];
+
+        // If code contains EJS tags, temporarily replace them with placeholders
+        if (m.code.includes('<%') || m.code.includes('%>')) {
+            const ejsRegex = /<%[\s\S]*?%>/g;
+            let ejsMatch;
+            let placeholderIndex = 0;
+
+            while ((ejsMatch = ejsRegex.exec(m.code)) !== null) {
+                const placeholder = `__EJS_PLACEHOLDER_${placeholderIndex}__`;
+                ejsPlaceholders.push({
+                    placeholder: placeholder,
+                    original: ejsMatch[0]
+                });
+                codeToMinify = codeToMinify.replace(ejsMatch[0], placeholder);
+                placeholderIndex++;
+            }
+        }
 
         try {
-            const minified = await terserMinify(m.code, {
+            const minified = await terserMinify(codeToMinify, {
                 compress: {
                     dead_code: true,
-                    drop_console: false, // Keep console logs for debugging
+                    drop_console: false, // Keep console.error/warn/info
                     drop_debugger: true,
-                    pure_funcs: []
+                    pure_funcs: ['console.log'] // Only drop console.log calls (keeps info/warn/error)
                 },
                 mangle: false, // Don't mangle names to preserve functionality
                 format: {
                     comments: false,
-                    semicolons: true
+                    semicolons: true,
+                    quote_style: 3 // Preserve original quotes (including backticks)
                 }
             });
 
             if (minified.code) {
-                const scriptTag = m.fullMatch.replace(m.code, minified.code);
+                let finalCode = minified.code;
+
+                // Restore EJS placeholders
+                ejsPlaceholders.forEach(({ placeholder, original }) => {
+                    finalCode = finalCode.replace(placeholder, original);
+                });
+
+                // Force backticks for svgContent values that contain EJS tags
+                // This prevents syntax errors when SVG has quotes inside
+                finalCode = finalCode.replace(/svgContent:"(<%[^%]*%>)"/g, 'svgContent:`$1`');
+
+                const scriptTag = m.fullMatch.replace(m.code, finalCode);
                 result = result.substring(0, m.index) + scriptTag + result.substring(m.index + m.fullMatch.length);
             }
         } catch (err) {
@@ -136,7 +175,7 @@ async function minifyFile(filePath) {
         // Minify based on content type
         if (filePath.includes('styles/')) {
             content = minifyStyleTags(content);
-        } else if (filePath.includes('scripts/') || filePath === 'ui-controls.ejs') {
+        } else if (filePath.includes('scripts/') || filePath === 'ui-controls.ejs' || filePath === 'head.ejs' || filePath.includes('patterns/')) {
             content = await minifyScriptTags(content);
         }
 
