@@ -168,14 +168,14 @@ export default function RootLayout({
               {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && (
                 <div className="bg-blue-600 text-white text-center text-sm font-medium py-2 flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center gap-1">
-                    📣{' '}
+                    🎉{' '}
                     <Link
                       href="https://x.com/Shape_L2/status/1962942181271834826"
                       target="_blank"
                       rel="noreferrer"
                       className="underline"
                     >
-                      1ST PL WINNER
+                      WINNER, 1ST PL
                     </Link>
                     {' '}🥇{' '}
                     <Link
@@ -186,8 +186,7 @@ export default function RootLayout({
                     >
                       SHAPECRAFT² HACKATHON
                     </Link>
-                    {' '}
-                    <Image src="/assets/matrix.gif" alt="" width={20} height={20} className="inline" unoptimized />
+                    {' '}📣
                   </div>
                   <div>🚀 Minting on mainnet soon 🚀</div>
                 </div>
