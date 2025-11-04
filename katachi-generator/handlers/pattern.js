@@ -53,7 +53,7 @@ async function generatePatternCore(data, options = {}) {
         console.log(`✅ Modular template generated in ${processingTime}ms`);
 
         // Progress: Pattern generated
-        await onProgress(90, 'Pattern generated, creating thumbnail...');
+        await onProgress(90, 'Pattern generated, uploading assets to Arweave...');
 
         // Create temp HTML file
         const walletAddress = data.walletAddress || data.stackData?.userAddress;

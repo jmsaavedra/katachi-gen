@@ -328,7 +328,7 @@ async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 
 async function processImagesAsBase64(data, options = {}) {
     const { onProgress = async () => {} } = options;
 
-    console.log('🎨 Processing images for base64 embedding...');
+    console.log('🎨 Processing textures for base64 embedding...');
     console.log('═══════════════════════════════════════════════════════════════════');
 
     // Create a deep copy to avoid modifying original data
@@ -336,11 +336,11 @@ async function processImagesAsBase64(data, options = {}) {
 
     // Process main images array
     if (processedData.images && Array.isArray(processedData.images)) {
-        console.log(`📋 Processing ${processedData.images.length} NFT images`);
+        console.log(`📋 Processing ${processedData.images.length} NFT textures`);
         console.log('');
 
         // Initial progress
-        await onProgress(8, 'Processing images...');
+        await onProgress(8, 'Processing textures...');
 
         const totalImages = processedData.images.length;
         // We want 8 progress steps from 8% to 82% (stretched to fill more of the bar)
@@ -528,7 +528,7 @@ async function processImagesAsBase64(data, options = {}) {
                     progressSteps.length - 1
                 );
                 const currentProgress = progressSteps[progressIndex];
-                await onProgress(currentProgress, `Processing image ${i + 1}/${totalImages}...`);
+                await onProgress(currentProgress, `Processing texture ${i + 1}/${totalImages}...`);
             }
         }
 
