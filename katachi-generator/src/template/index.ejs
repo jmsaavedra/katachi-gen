@@ -34,7 +34,7 @@
 ╚════════════════════════════════════════════════════════════════════════╝
 -->
 <html lang="en">
-<%- include('partials/head') %>
+<%- include('partials/head.min.ejs') %>
 <body>
     <!-- Main HTML structure and content -->
     <%- include('partials/body-content') %>
@@ -59,6 +59,6 @@
 
     <!-- SVG Pattern Definitions -->
     <!-- Single pre-selected origami pattern (optimized for file size) -->
-    <%- include('partials/patterns/' + selectedPatternFile) %>
+    <%- include('partials/patterns/' + selectedPatternFile + '.min.ejs') %>
 </body>
 </html>
