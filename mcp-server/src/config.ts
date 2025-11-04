@@ -10,6 +10,7 @@ export const config = {
   chainId: Number(process.env.READ_CHAIN_ID || process.env.CHAIN_ID || 360),
 
   alchemyApiKey: process.env.ALCHEMY_API_KEY as string,
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY as string,
   raribleApiKey: process.env.RARIBLE_API_KEY as string,
   redisUrl: process.env.REDIS_URL as string,
   

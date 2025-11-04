@@ -39,6 +39,7 @@
     "test:alchemy-wallet": "node scripts/test-alchemy-by-wallet.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.32.1",
     "@rarible/protocol-mcp": "^0.0.4",
     "alchemy-sdk": "^3.6.1",
     "express-rate-limit": "^8.0.1",

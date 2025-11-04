@@ -302,13 +302,13 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                             </div>
                             {/* Mobile: Just score chip */}
                             <div className="md:hidden">
-                              <div className="inline-block bg-primary/10 text-primary rounded-full px-3 py-1 text-xs font-medium">
-                                Score: {nft.matchScore.toFixed(2)}
+                              <div className="inline-block bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full px-3 py-1 text-xs font-medium">
+                                Heuristic Score: <span className="font-bold">{nft.matchScore.toFixed(2)}</span>
                               </div>
                             </div>
                             {/* Desktop: Score chip */}
-                            <span className="hidden md:inline text-xs px-2 py-1 bg-primary/10 text-primary rounded-full font-medium">
-                              Score: {nft.matchScore.toFixed(2)}
+                            <span className="hidden md:inline text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full font-medium">
+                              Heuristic Score: <span className="font-bold">{nft.matchScore.toFixed(2)}</span>
                             </span>
                           </div>
                           
@@ -331,15 +331,15 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                               {nft.matchDetails.textMatches.length > 0 && (
                                 <div>
                                   <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 mb-1">
-                                    📝 Text: {nft.matchDetails.textMatches.length}
+                                    📝 Word matches: {nft.matchDetails.textMatches.length}
                                   </p>
                                 </div>
                               )}
-                              
+
                               {nft.matchDetails.themeMatches.length > 0 && (
                                 <div>
                                   <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
-                                    🎭 Themes: {nft.matchDetails.themeMatches.length}
+                                    🎭 Theme matches: {nft.matchDetails.themeMatches.length}
                                   </p>
                                 </div>
                               )}

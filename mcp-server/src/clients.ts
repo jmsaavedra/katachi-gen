@@ -2,11 +2,16 @@ import { Alchemy, Network } from 'alchemy-sdk';
 import { createPublicClient, http } from 'viem';
 import { mainnet, shape, shapeSepolia } from 'viem/chains';
 import { Redis } from 'ioredis';
+import Anthropic from '@anthropic-ai/sdk';
 import { config } from './config';
 
 export const alchemy = new Alchemy({
   apiKey: config.alchemyApiKey,
   network: config.chainId === shape.id ? Network.SHAPE_MAINNET : Network.SHAPE_SEPOLIA,
+});
+
+export const anthropic = new Anthropic({
+  apiKey: config.anthropicApiKey,
 });
 
 export function rpcClient() {

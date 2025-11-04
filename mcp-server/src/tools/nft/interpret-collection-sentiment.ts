@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { type InferSchema } from 'xmcp';
 import { Address, isAddress } from 'viem';
-import { alchemy } from '../../clients';
+import { alchemy, anthropic } from '../../clients';
 import { config } from '../../config';
 import type { ToolErrorOutput } from '../../types';
 import { getCached, setCached } from '../../utils/cache';
@@ -178,17 +178,88 @@ async function analyzeVisualContent(imageUrl: string | null, sentiment: string):
   }
 }
 
-function extractThemes(sentiment: string): string[] {
+async function extractThemes(sentiment: string): Promise<string[]> {
+  try {
+    const availableThemes = Object.keys(EMOTIONAL_THEMES).join(', ');
+
+    const prompt = `Analyze the following user sentiment about NFT collecting and select between 2-5 emotional themes that best match their feelings.
+
+User's sentiment: "${sentiment}"
+
+Available themes: ${availableThemes}
+
+Instructions:
+- Select a MINIMUM of 2 themes and a MAXIMUM of 5 themes
+- Choose themes that genuinely resonate with the user's words
+- Prioritize the most relevant themes
+- Return ONLY a JSON array of theme names, nothing else
+
+Example response format: ["joy", "community", "creativity"]`;
+
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 100,
+      messages: [{
+        role: 'user',
+        content: prompt
+      }]
+    });
+
+    // Extract the text content from Claude's response
+    const textContent = response.content.find(block => block.type === 'text');
+    if (!textContent || textContent.type !== 'text') {
+      throw new Error('No text response from Claude');
+    }
+
+    // Parse the JSON array from the response
+    const themesText = textContent.text.trim();
+    const themes = JSON.parse(themesText) as string[];
+
+    // Validate that we got between 2-5 themes
+    if (!Array.isArray(themes) || themes.length < 2 || themes.length > 5) {
+      console.warn(`Claude returned ${themes.length} themes, expected 2-5. Using fallback.`);
+      return fallbackExtractThemes(sentiment);
+    }
+
+    // Validate that all themes are valid
+    const validThemes = themes.filter(theme => theme in EMOTIONAL_THEMES);
+    if (validThemes.length < 2) {
+      console.warn(`Only ${validThemes.length} valid themes returned. Using fallback.`);
+      return fallbackExtractThemes(sentiment);
+    }
+
+    console.log(`✨ AI-selected themes: ${validThemes.join(', ')}`);
+    return validThemes;
+
+  } catch (error) {
+    console.error('Error extracting themes with AI:', error);
+    return fallbackExtractThemes(sentiment);
+  }
+}
+
+// Fallback keyword-based theme extraction (ensures 2-5 themes)
+function fallbackExtractThemes(sentiment: string): string[] {
   const lowerSentiment = sentiment.toLowerCase();
   const themes: string[] = [];
-  
+
+  // Find all matching themes
   for (const [theme, keywords] of Object.entries(EMOTIONAL_THEMES)) {
     if (keywords.some(keyword => lowerSentiment.includes(keyword))) {
       themes.push(theme);
     }
   }
-  
-  // If no themes found, try to infer from general tone
+
+  // If we have 2-5 themes, return them
+  if (themes.length >= 2 && themes.length <= 5) {
+    return themes;
+  }
+
+  // If we have more than 5, take the first 5
+  if (themes.length > 5) {
+    return themes.slice(0, 5);
+  }
+
+  // If we have 0-1 themes, add defaults to reach 2 minimum
   if (themes.length === 0) {
     if (lowerSentiment.includes('love') || lowerSentiment.includes('like')) {
       themes.push('joy');
@@ -197,8 +268,18 @@ function extractThemes(sentiment: string): string[] {
       themes.push('pride');
     }
   }
-  
-  return themes;
+
+  // Still need more themes to reach minimum of 2
+  const defaultThemes = ['joy', 'community', 'creativity', 'pride'];
+  for (const defaultTheme of defaultThemes) {
+    if (!themes.includes(defaultTheme)) {
+      themes.push(defaultTheme);
+      if (themes.length >= 2) break;
+    }
+  }
+
+  // Ensure we return at least 2 themes, max 5
+  return themes.slice(0, 5);
 }
 
 async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Promise<{ 
@@ -224,6 +305,8 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
   
   // Direct word matches in sentiment - deduplicate words to avoid redundant reasons
   const sentimentWords = [...new Set(lowerSentiment.split(/\s+/))];
+  const descriptionMatches: string[] = [];
+
   for (const word of sentimentWords) {
     if (word.length > 3) { // Skip short words
       if (nftName.includes(word)) {
@@ -233,7 +316,7 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
       }
       if (nftDescription.includes(word)) {
         score += 2;
-        reasons.push(`sentiment matches NFT description`);
+        descriptionMatches.push(word);
         textMatches.push(`Description: "${word}"`);
       }
       if (collectionName.includes(word)) {
@@ -241,6 +324,17 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
         reasons.push(`collection relates to "${word}"`);
         textMatches.push(`Collection: "${word}"`);
       }
+    }
+  }
+
+  // Add consolidated description match reason
+  if (descriptionMatches.length > 0) {
+    if (descriptionMatches.length === 1) {
+      reasons.push(`description contains "${descriptionMatches[0]}"`);
+    } else if (descriptionMatches.length === 2) {
+      reasons.push(`description contains "${descriptionMatches[0]}" and "${descriptionMatches[1]}"`);
+    } else {
+      reasons.push(`description matches ${descriptionMatches.length} words`);
     }
   }
   
@@ -287,7 +381,7 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
   // Removed collection balance scoring as it was confusing and not relevant to sentiment matching
   
   // Visual content analysis - prioritize Alchemy's processed images
-  const imageUrl = nft.image?.cachedUrl || nft.image?.pngUrl || nft.image?.thumbnailUrl || nft.image?.originalUrl;
+  const imageUrl = nft.image?.cachedUrl || nft.image?.pngUrl || nft.image?.thumbnailUrl || nft.image?.originalUrl || null;
   const visualAnalysis = await analyzeVisualContent(imageUrl, sentiment);
   score += visualAnalysis.score;
   reasons.push(...visualAnalysis.reasons);
@@ -327,9 +421,9 @@ export default async function interpretCollectionSentiment({
     // Fetch all NFTs for the wallet (we'll need to paginate if needed)
     let allNfts: OwnedNft[] = [];
     let pageKey: string | undefined = undefined;
-    
+
     do {
-      const nftsResponse = await alchemy.nft.getNftsForOwner(address, {
+      const nftsResponse: Awaited<ReturnType<typeof alchemy.nft.getNftsForOwner>> = await alchemy.nft.getNftsForOwner(address, {
         pageSize: 100,
         pageKey: pageKey,
         omitMetadata: false,
@@ -348,8 +442,8 @@ export default async function interpretCollectionSentiment({
       throw new Error('No NFTs found for this address');
     }
     
-    // Extract themes from sentiment
-    const themes = extractThemes(sentiment);
+    // Extract themes from sentiment using AI
+    const themes = await extractThemes(sentiment);
     
     // Score each NFT based on sentiment matching (now async)
     const scoredNfts = await Promise.all(
@@ -388,7 +482,7 @@ export default async function interpretCollectionSentiment({
       }
 
       // Filter out blocked collection names
-      const collectionNameCheck = isCollectionNameBlocked(nftItem.nft.contract.name);
+      const collectionNameCheck = isCollectionNameBlocked(nftItem.nft.contract.name || null);
       console.log(`   🔍 Collection name check: "${nftItem.nft.contract.name}" -> blocked: ${collectionNameCheck.blocked}`);
       if (collectionNameCheck.blocked) {
         console.log(`🚫 Skipped (blocked collection name): ${nftItem.nft.name || 'Unnamed'} from "${nftItem.nft.contract.name}" - ${collectionNameCheck.reason}`);
@@ -396,7 +490,7 @@ export default async function interpretCollectionSentiment({
       }
 
       // Filter out blocked NFT names
-      const nftNameCheck = isNftNameBlocked(nftItem.nft.name);
+      const nftNameCheck = isNftNameBlocked(nftItem.nft.name || null);
       console.log(`   🔍 NFT name check: "${nftItem.nft.name}" -> blocked: ${nftNameCheck.blocked}`);
       if (nftNameCheck.blocked) {
         console.log(`🚫 Skipped (blocked NFT name): "${nftItem.nft.name}" - ${nftNameCheck.reason}`);
@@ -558,15 +652,25 @@ export default async function interpretCollectionSentiment({
 }
 
 function generateInterpretation(sentiment: string, themes: string[], nftCount: number): string {
-  const themeText = themes.length > 0 
-    ? `I detected themes of ${themes.join(', ')} in your reflection. ` 
-    : '';
-    
+  // Format themes with proper grammar: "joy and community" or "joy, pride, and creativity"
+  let themeText = '';
+  if (themes.length > 0) {
+    if (themes.length === 1) {
+      themeText = `I detected themes of ${themes[0]} in your reflection. `;
+    } else if (themes.length === 2) {
+      themeText = `I detected themes of ${themes[0]} and ${themes[1]} in your reflection. `;
+    } else {
+      const lastTheme = themes[themes.length - 1];
+      const otherThemes = themes.slice(0, -1).join(', ');
+      themeText = `I detected themes of ${otherThemes}, and ${lastTheme} in your reflection. `;
+    }
+  }
+
   const interpretations = [
     `Your collection reflects ${sentiment}. ${themeText}These ${nftCount} pieces resonate with your expressed feelings.`,
     `Based on your words "${sentiment.slice(0, 50)}...", ${themeText}I've selected ${nftCount} NFTs that echo your sentiment.`,
     `Your feeling about collecting - "${sentiment.slice(0, 30)}..." - guides this curation. ${themeText}`,
   ];
-  
+
   return interpretations[Math.floor(Math.random() * interpretations.length)];
 }

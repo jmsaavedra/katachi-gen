@@ -104,14 +104,14 @@ export default async function getShapeNft({ address, pageKey, pageSize }: InferS
       }
 
       // Check collection name
-      const collectionNameCheck = isCollectionNameBlocked(nft.contract.name);
+      const collectionNameCheck = isCollectionNameBlocked(nft.contract.name || null);
       if (collectionNameCheck.blocked) {
         console.log(`🚫 Skipped blocked collection name: ${nft.name || 'Unnamed'} from "${nft.contract.name}" - ${collectionNameCheck.reason}`);
         return false;
       }
 
       // Check NFT name
-      const nftNameCheck = isNftNameBlocked(nft.name);
+      const nftNameCheck = isNftNameBlocked(nft.name || null);
       if (nftNameCheck.blocked) {
         console.log(`🚫 Skipped blocked NFT name: "${nft.name}" - ${nftNameCheck.reason}`);
         return false;
