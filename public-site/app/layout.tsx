@@ -4,6 +4,7 @@ import { HeaderProvider } from '@/contexts/header-context';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Github } from 'lucide-react';
 import './globals.css';
 
@@ -165,26 +166,30 @@ export default function RootLayout({
             <div className="bg-background min-h-screen font-[family-name:var(--font-geist-sans)]">
               {/* Announcement Header */}
               {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && (
-                <div className="bg-blue-600 text-white text-center text-sm font-medium py-2 flex items-center justify-center gap-1">
-                  📣{' '}
-                  <Link
-                    href="https://x.com/Shape_L2/status/1962942181271834826"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline"
-                  >
-                    1ST PL WINNER
-                  </Link>
-                  {' '}—{' '}
-                  <Link
-                    href="https://shape.network/shapecraft"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="underline"
-                  >
-                    SHAPECRAFT² HACKATHON
-                  </Link>
-                  {' '}🥇 Minting on mainnet soon 🚀
+                <div className="bg-blue-600 text-white text-center text-sm font-medium py-2 flex flex-col items-center justify-center gap-1">
+                  <div className="flex items-center gap-1">
+                    📣{' '}
+                    <Link
+                      href="https://x.com/Shape_L2/status/1962942181271834826"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline"
+                    >
+                      1ST PL WINNER
+                    </Link>
+                    {' '}🥇{' '}
+                    <Link
+                      href="https://shape.network/shapecraft"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline"
+                    >
+                      SHAPECRAFT² HACKATHON
+                    </Link>
+                    {' '}
+                    <Image src="/assets/matrix.gif" alt="" width={20} height={20} className="inline" unoptimized />
+                  </div>
+                  <div>🚀 Minting on mainnet soon 🚀</div>
                 </div>
               )}
               

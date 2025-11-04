@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
 import { isAddress } from 'viem';
+import Image from 'next/image';
 import { KatachiGenerator } from '@/components/katachi-generator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -361,7 +362,7 @@ export default function Home() {
 
       <div className="text-center mt-12">
         <p className="text-muted-foreground text-sm flex items-center justify-center gap-2">
-          <img src="/assets/matrix.gif" alt="" className="h-10 w-10" />
+          <Image src="/assets/matrix.gif" alt="" width={40} height={40} className="h-10 w-10" unoptimized />
           Built for the{' '}
           <a
             href="https://shape.network/shapecraft"
@@ -371,7 +372,7 @@ export default function Home() {
           >
             SHAPECRAFT² hackathon
           </a>
-          <img src="/assets/matrix.gif" alt="" className="h-10 w-10" />
+          <Image src="/assets/matrix.gif" alt="" width={40} height={40} className="h-10 w-10" unoptimized />
         </p>
       </div>
       </div>
