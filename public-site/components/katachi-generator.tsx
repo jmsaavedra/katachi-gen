@@ -1174,7 +1174,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
                             src={generatedPattern.htmlUrl}
                             className="h-full w-full border-0"
                             title="Interactive Katachi Pattern"
-                            sandbox="allow-scripts allow-same-origin"
+                            sandbox="allow-scripts allow-same-origin allow-downloads"
                             onLoad={handleIframeLoad}
                             onError={handleIframeError}
                           />
@@ -1235,7 +1235,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
                               src={generatedPattern.htmlUrl}
                               className="h-full w-full rounded-lg border-0"
                               title="Interactive Katachi Pattern"
-                              sandbox="allow-scripts allow-same-origin"
+                              sandbox="allow-scripts allow-same-origin allow-downloads"
                               onLoad={handleIframeLoad}
                               onError={handleIframeError}
                             />

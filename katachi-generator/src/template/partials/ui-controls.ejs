@@ -1,9 +1,69 @@
 <!-- UI Controls - Print Button and other interface elements -->
-<div id="uiControls" style="position: fixed; bottom: 20px; right: 20px; z-index: 1000;">
-    <a href="#" id="dlButton" style="font-size:10px;cursor:pointer;font-weight:500;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-printer" viewBox="0 0 16 16">
+<div id="uiControls" style="position: fixed; bottom: 20px; right: 30px; z-index: 1000; opacity: 0; transition: opacity 0.3s ease-in-out; pointer-events: none;">
+    <a href="#" id="dlButton" style="font-size:10px;cursor:pointer;font-weight:500;pointer-events:auto;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="currentColor" class="bi bi-printer" viewBox="0 0 16 16" style="transition: fill 0.2s ease-in-out;">
             <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1"></path>
             <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"></path>
         </svg>
     </a>
 </div>
+
+<!-- Script to show/hide print button on canvas hover -->
+<script>
+(function() {
+    // Wait for DOM to be ready
+    function initPrintButtonHover() {
+        var threeContainer = document.getElementById('threeContainer');
+        var uiControls = document.getElementById('uiControls');
+        var dlButton = document.getElementById('dlButton');
+        var svg = dlButton ? dlButton.querySelector('svg') : null;
+
+        if (!threeContainer || !uiControls || !svg) {
+            // Elements not ready yet, try again shortly
+            setTimeout(initPrintButtonHover, 100);
+            return;
+        }
+
+        // Show button when mouse enters canvas
+        threeContainer.addEventListener('mouseenter', function() {
+            uiControls.style.opacity = '1';
+        });
+
+        // Hide button when mouse leaves canvas (but not when entering the button itself)
+        threeContainer.addEventListener('mouseleave', function(e) {
+            // Only hide if we're not moving to the uiControls element
+            if (!uiControls.contains(e.relatedTarget)) {
+                uiControls.style.opacity = '0';
+            }
+        });
+
+        // Also keep visible when hovering on the button itself
+        uiControls.addEventListener('mouseenter', function() {
+            uiControls.style.opacity = '1';
+        });
+
+        // Hide when leaving the button (and not going back to canvas)
+        uiControls.addEventListener('mouseleave', function(e) {
+            if (!threeContainer.contains(e.relatedTarget)) {
+                uiControls.style.opacity = '0';
+            }
+        });
+
+        // Change SVG color to white on hover
+        dlButton.addEventListener('mouseenter', function() {
+            svg.style.fill = 'white';
+        });
+
+        dlButton.addEventListener('mouseleave', function() {
+            svg.style.fill = 'currentColor';
+        });
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPrintButtonHover);
+    } else {
+        initPrintButtonHover();
+    }
+})();
+</script>
