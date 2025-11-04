@@ -2,11 +2,15 @@
 <script>
 // Flower pattern configuration - complete FTpoly7 pattern
 const flowerPattern = {
-    maxFolding: 70, 
-    name: "FTpoly7.svg", 
+    maxFolding: 70,
+    name: "FTpoly7.svg",
     patternType: "Flower",
     svgContent: `<%- fs.readFileSync(path.join(projectRoot, 'public/svgs/FTpoly7.svg'), 'utf8') %>`
 };
+
+// Initialize origamiPatterns array with this single pattern
+// (Optimized: only includes pre-selected pattern instead of all 5)
+origamiPatterns = [flowerPattern];
 
 // Export pattern for use in the template
 if (typeof module !== 'undefined' && module.exports) {

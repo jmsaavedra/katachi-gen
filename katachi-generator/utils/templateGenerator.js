@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const ejs = require('ejs');
 const { getTextureScale } = require('../config');
+const { selectPattern } = require('./patternSelector');
 
 /**
  * Generate HTML template using the modular EJS system
@@ -44,20 +45,23 @@ async function generateModularTemplate(nftData) {
         const templateData = {
             // NFT-specific data - pass as JSON string for embedding in script tag
             nftData: JSON.stringify(nftData),
-            
+
             // CSS content
             jqueryUICSS: jqueryUICSS,
             mainCSS: mainCSS,
-            
+
             // Configuration
             title: 'Katachi Gen',
             testMode: process.env.NODE_ENV === 'development',
-            
+
+            // Pattern selection for conditional template includes
+            selectedPatternFile: nftData.selectedPattern ? nftData.selectedPattern.name : 'crane',
+
             // File system access for templates
             fs: fs,
             path: path,
             projectRoot: projectRoot,
-            
+
             // Utility functions for EJS
             readFile: (filePath) => {
                 const fullPath = path.join(projectRoot, filePath);
@@ -67,7 +71,7 @@ async function generateModularTemplate(nftData) {
                 console.warn(`⚠️ File not found: ${fullPath}`);
                 return '';
             },
-            
+
             // Asset inlining function
             inlineAsset: (assetPath) => {
                 const fullPath = path.join(projectRoot, 'public/', assetPath);
@@ -113,7 +117,23 @@ async function generateModularTemplate(nftData) {
  */
 async function generateNFTTemplate(data) {
     try {
-        // Enrich images with texture scale values based on contract address
+        // 1. Pre-select origami pattern server-side (deterministic based on wallet + seed)
+        const walletAddress = data.walletAddress || 'unknown';
+        const seed2 = data.seed2 || Math.random().toString(36);
+
+        // Use improved algorithm for perfect uniform distribution
+        const selectedPattern = selectPattern(
+            walletAddress,
+            seed2,
+            data.patternType, // Optional explicit pattern type
+            true // useImproved = true for better distribution
+        );
+
+        console.log(`🎨 Starting NFT template generation...`);
+        console.log(`📐 Pre-selected pattern: ${selectedPattern.type} (index ${selectedPattern.index})`);
+        console.log(`   Algorithm: IMPROVED (modulo) for perfect uniform distribution`);
+
+        // 2. Enrich images with texture scale values based on contract address
         const enrichedImages = (data.images || []).map((image, index) => {
             const scale = getTextureScale(image.contractAddress);
             console.log(`🎨 Image ${index + 1}: ${image.contractAddress ? `${image.contractAddress.slice(0, 10)}... scale=${scale}` : 'no contract, scale=1.0'}`);
@@ -123,31 +143,38 @@ async function generateNFTTemplate(data) {
             };
         });
 
-        // Prepare NFT data structure that matches the original system
+        // 3. Prepare NFT data structure that matches the original system
         const nftData = {
             // Core NFT information
-            walletAddress: data.walletAddress || 'unknown',
-            patternType: data.patternType || 'Crane',
-            seed2: data.seed2 || Math.random().toString(36),
+            walletAddress: walletAddress,
+            patternType: selectedPattern.type, // Use pre-selected pattern type
+            seed2: seed2,
 
             // Image data (base64 encoded) with texture scales
             images: enrichedImages,
 
             // Generation metadata
             generatedAt: new Date().toISOString(),
-            templateVersion: '2.0-modular',
+            templateVersion: '2.1-single-pattern',
+
+            // Pre-selected pattern metadata (for client-side verification)
+            selectedPattern: {
+                index: selectedPattern.index,
+                type: selectedPattern.type,
+                name: selectedPattern.name,
+                maxFolding: selectedPattern.maxFolding
+            },
 
             // Additional metadata
             metadata: {
                 imageCount: enrichedImages.length,
                 forMinting: data.forMinting || false,
-                testMode: process.env.NODE_ENV === 'development'
+                testMode: process.env.NODE_ENV === 'development',
+                patternSelectionAlgorithm: 'improved-modulo'
             }
         };
-        
-        console.log('🎨 Starting NFT template generation...');
-        console.log(`📋 Pattern: ${nftData.patternType}`);
-        console.log(`🖼️ Images: ${nftData.metadata.imageCount}`);
+
+        console.log(`🖼️  Images: ${nftData.metadata.imageCount}`);
         
         // Generate the template
         const html = await generateModularTemplate(nftData);

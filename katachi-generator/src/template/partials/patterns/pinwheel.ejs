@@ -2,11 +2,15 @@
 <script>
 // Pinwheel pattern configuration - complete pinwheel pattern
 const pinwheelPattern = {
-    maxFolding: 80, 
-    name: "pinwheelBase.svg", 
+    maxFolding: 75,
+    name: "pinwheelBase.svg",
     patternType: "Pinwheel",
     svgContent: `<%- fs.readFileSync(path.join(projectRoot, 'public/svgs/pinwheelBase.svg'), 'utf8') %>`
 };
+
+// Initialize origamiPatterns array with this single pattern
+// (Optimized: only includes pre-selected pattern instead of all 5)
+origamiPatterns = [pinwheelPattern];
 
 // Export pattern for use in the template
 if (typeof module !== 'undefined' && module.exports) {
