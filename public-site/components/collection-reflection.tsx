@@ -141,7 +141,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
           </span>
         </CardTitle>
         <CardDescription className="text-base">
-          Share your feelings about collecting on Shape. Feel free to write as little or as much as you'd like! <br /> Our AI will interpret your response and curate up to 8 pieces from your collection based on sentiment heuristics.
+          Share your feelings about collecting on Shape. Feel free to write as little or as much as you&apos;d like! <br /> Our AI will interpret your response and curate up to 8 pieces from your collection based on sentiment heuristics.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
