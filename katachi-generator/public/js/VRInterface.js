@@ -7,8 +7,7 @@ function initViveInterface(globals){
 
     // Check if WEBVR library is available
     if (typeof WEBVR === 'undefined') {
-        console.log('VR mode disabled: WEBVR library not available');
-        return { enabled: false }; // Return mock object
+        return { enabled: false }; // Return mock object (VR mode disabled silently)
     }
 
     var $status = $("#VRstatus");
