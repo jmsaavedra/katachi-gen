@@ -65,6 +65,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   const [sentiment, setSentiment] = useState(getRandomDevSentiment());
   const [count, setCount] = useState('8');
   const [isLoading, setIsLoading] = useState(false);
+  const [curationComplete, setCurationComplete] = useState(false);
   const [error, setError] = useState('');
   const [isCurated, setIsCurated] = useState(false);
   const [hoveredNft, setHoveredNft] = useState<number | null>(null);
@@ -189,30 +190,33 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
       
       // Mark as curated to stop animation
       setIsCurated(true);
-      
+
+      // Set curation complete state (keeps button disabled but changes text)
+      setCurationComplete(true);
+      setIsLoading(false);
+
       // Reset typing state for new interpretation
       hasStartedTyping.current = false;
-      
+
       // Capture current form height before fade out
       if (formRef.current) {
         setFormHeight(formRef.current.offsetHeight);
       }
-      
+
       // Start fade out animation for subtitle and form
       setFadeOutSubtitle(true);
-      
+
       // After 2s fade out, hide form completely and show interpretation
       setTimeout(() => {
         setShowSubtitle(false);
         setHideForm(true); // Completely hide form after fade out
         setShowInterpretation(true);
       }, 2000);
-      
+
       // Grid and Step 2 will be shown by the typewriter effect
     } catch (err) {
       console.error('Error interpreting sentiment:', err);
       setError(err instanceof Error ? err.message : 'Failed to interpret your collection sentiment');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -307,12 +311,17 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                 </Select>
               </div>
 
-              <Button 
+              <Button
                 onClick={handleSubmit}
-                disabled={isLoading || !sentiment.trim()}
-                className={`gap-3 text-lg px-8 py-6 ${!isLoading && sentiment.trim() && !error ? 'animate-gradient-button' : ''}`}
+                disabled={isLoading || curationComplete || !sentiment.trim()}
+                className={`gap-3 text-lg px-8 py-6 ${!isLoading && !curationComplete && sentiment.trim() && !error ? 'animate-gradient-button' : ''}`}
               >
-                {isLoading ? (
+                {curationComplete ? (
+                  <>
+                    <Sparkles className="h-5 w-5" />
+                    Curation Complete.
+                  </>
+                ) : isLoading ? (
                   <>
                     <Loader2 className="h-5 w-5 animate-spin" />
                     Interpreting...
