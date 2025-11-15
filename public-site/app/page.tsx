@@ -16,12 +16,23 @@ export default function Home() {
   const [testAddress, setTestAddress] = useState('');
   const [shouldAutoRedirect, setShouldAutoRedirect] = useState(false);
 
+  // Background origami options - randomly select one on page load
+  const backgroundOptions = [
+    'https://storage.katachi-gen.com/kg_airplane-0xc68c7771ec6a6e5d67d62aa9c6f22df69865e401-1763200871229.html',
+    'https://storage.katachi-gen.com/kg_flower-0xee49f82e58a1c2b306720d0c68047cbf70c11fb5-1760544958242.html',
+    'https://storage.katachi-gen.com/kg_crane-0x51360d99966724b2603182cc367ab9621d96eed2-1761334905087.html',
+    'https://storage.katachi-gen.com/kg_hypar-0x51360d99966724b2603182cc367ab9621d96eed2-1763200851581.html',
+  ];
+  const [backgroundUrl] = useState(() =>
+    backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)]
+  );
+
   // Update header state when generator visibility or wallet connection changes
   useEffect(() => {
     setShowWalletInHeader(showGenerator || isConnected);
     setIsInMintView(showGenerator);
   }, [showGenerator, isConnected, setShowWalletInHeader, setIsInMintView]);
-  
+
   // Auto-redirect only when user connects wallet from this page
   useEffect(() => {
     if (isConnected && connectedAddress && shouldAutoRedirect) {
@@ -38,16 +49,19 @@ export default function Home() {
   };
 
   const handleExploreClick = () => {
-    const topWallets = [
-      '0x136bbfe37988f82f8585ed155615b75371489d45',
-      '0x53bebd20781aaa3a831f45b3c6889010a706ff9f',
-      '0x72fe3c398c9a030b9b2be1fe1ff07701167571d4',
-      '0xee49f82e58a1c2b306720d0c68047cbf70c11fb5',
-      '0x51360d99966724b2603182cc367ab9621d96eed2',
-      '0xc68c7771ec6a6e5d67d62aa9c6f22df69865e401'
-    ];
-    const randomWallet = topWallets[Math.floor(Math.random() * topWallets.length)];
-    setTestAddress(randomWallet);
+    // const topWallets = [
+    //   '0x136bbfe37988f82f8585ed155615b75371489d45',
+    //   '0x53bebd20781aaa3a831f45b3c6889010a706ff9f',
+    //   '0x72fe3c398c9a030b9b2be1fe1ff07701167571d4',
+    //   '0xee49f82e58a1c2b306720d0c68047cbf70c11fb5',
+    //   '0x51360d99966724b2603182cc367ab9621d96eed2',
+    //   '0xc68c7771ec6a6e5d67d62aa9c6f22df69865e401'
+    // ];
+    // const randomWallet = topWallets[Math.floor(Math.random() * topWallets.length)];
+
+    // Fixed wallet for Explore button
+    const explorerWallet = '0xeE49f82e58A1C2B306720D0c68047CBf70C11FB5';
+    setTestAddress(explorerWallet);
     setShowGenerator(true);
   };
   
@@ -65,22 +79,20 @@ export default function Home() {
   }
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12">
-      {/* Background Video */}
-      <video 
-        autoPlay 
-        loop 
-        muted 
-        playsInline
-        className="fixed inset-0 w-full h-full object-cover -z-10"
-      >
-        <source src="/homepage-banner-opti.mp4" type="video/mp4" />
-      </video>
-      
-      {/* Dark overlay to reduce video brightness by 50% */}
-      <div className="fixed inset-0 bg-black/50 -z-10" />
-      
-      <div className="w-full max-w-4xl space-y-12 relative z-10">
+    <>
+      {/* Background iframe - interactive/draggable */}
+      <iframe
+        src={backgroundUrl}
+        className="fixed inset-0 w-full h-full border-0"
+        style={{ zIndex: 0 }}
+        title="Background animation"
+      />
+
+      {/* Dark overlay to reduce brightness by 50% - clicks pass through to iframe */}
+      <div className="fixed inset-0 bg-black/50 pointer-events-none" style={{ zIndex: 1 }} />
+
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12" style={{ zIndex: 2 }}>
+        <div className="w-full max-w-4xl space-y-12">
         {/* Hero Section */}
         <div className="space-y-6 text-center">
           <h1 className="text-5xl font-bold tracking-tight sm:text-7xl font-[family-name:var(--font-montserrat)]">
@@ -89,8 +101,12 @@ export default function Home() {
           </h1>
           
           {/* Japanese Etymology - Compact */}
-          <div className="max-w-md mx-auto">
-            <p className="text-white text-sm leading-relaxed">
+          <div className="max-w-md mx-auto relative">
+            <div
+              className="absolute inset-0 bg-black/50 blur-3xl -m-8"
+              style={{ zIndex: -1 }}
+            />
+            <p className="text-white text-lg md:text-xl leading-relaxed relative">
               <strong className="text-white">Katachi</strong> <span className="text-white/70">(</span>カタチ<span className="text-white/70">)</span> = Shape/Form<br/>
               <strong className="text-white">Gen</strong> <span className="text-white/70">(</span>ゲン<span className="text-white/70">)</span> = To Appear/Manifest<br/>
               カタチ・ゲン = <strong className="text-white">Shape Revealed</strong>
@@ -98,8 +114,8 @@ export default function Home() {
           </div>
 
           {/* Brief Description */}
-          <p className="text-white text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed font-semibold">
-            Transform your on-chain journey<br />into unique 3D origami patterns.
+          <p className="text-white text-2xl md:text-3xl max-w-2xl mx-auto leading-relaxed font-semibold">
+            Generative 3D Origami artifacts of your collection on Shape, co-curated by you and AI.
           </p>
         </div>
 
@@ -165,7 +181,8 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

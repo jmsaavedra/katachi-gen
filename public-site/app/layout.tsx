@@ -165,7 +165,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} antialiased bg-black`}>
         <Providers>
           <HeaderProvider>
             <div className="flex min-h-screen flex-col">
@@ -198,7 +198,7 @@ export default function RootLayout({
               )}
               <HeaderWrapper />
               <main className="flex-1 pt-[152px]">{children}</main>
-              <footer className="border-t py-6">
+              <footer className="border-t py-6 relative bg-black" style={{ zIndex: 10 }}>
               <div className="container mx-auto px-4">
                 <div className="text-center text-sm text-white/80 space-y-2">
                   <div>
