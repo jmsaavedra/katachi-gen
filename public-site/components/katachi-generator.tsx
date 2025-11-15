@@ -117,6 +117,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
   }> | null>(null);
   const [curationInterpretation, setCurationInterpretation] = useState<string>('');
   const [curationThemes, setCurationThemes] = useState<string[]>([]);
+  const [showStep2Panel, setShowStep2Panel] = useState(false);
   const [generatedPattern, setGeneratedPattern] = useState<{
     htmlUrl: string;
     metadataHtmlUrl: string;
@@ -1012,7 +1013,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
             )}
           </div>
           <div className="text-center">
-            <h2 className="text-3xl font-light">Mint a Katachi Gen</h2>
+            <h2 className="text-3xl font-bold font-[family-name:var(--font-montserrat)]">Mint a Katachi Gen</h2>
             <p className="text-muted-foreground">
               Your unique origami pattern based on your Shape journey
             </p>
@@ -1081,6 +1082,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
           totalNfts={totalNfts}
           onSentimentSubmitted={handleSentimentSubmitted}
           onCurationCompleted={handleCurationCompleted}
+          onShowStep2={() => setShowStep2Panel(true)}
           curatedNfts={curatedNfts || undefined}
           curationInterpretation={curationInterpretation}
           curationThemes={curationThemes}
@@ -1089,7 +1091,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
 
 
       {/* Pattern Generation - moved below the grid */}
-      {sentimentData && (
+      {sentimentData && showStep2Panel && (
       <Card className={sentimentData && mintState !== 'success' ? "pulse-blue-border" : ""}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">

@@ -26,7 +26,7 @@ export default function About() {
             About Katachi Gen
           </h1>
           <div className="text-xl opacity-70">
-            形現 - Shape Revealed
+            カタチ・ゲン - Shape Revealed
           </div>
         </div>
 
