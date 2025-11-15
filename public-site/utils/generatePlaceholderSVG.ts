@@ -179,7 +179,7 @@ function generateRandomOrigamiSVG(colors: string[], foldLines: number, patternTy
   
   <!-- Title -->
   <text x="${centerX}" y="30" text-anchor="middle" font-family="serif" font-size="16" font-weight="bold" fill="#1e293b">Katachi Gen</text>
-  <text x="${centerX}" y="${size-20}" text-anchor="middle" font-family="serif" font-size="12" fill="#64748b">形現</text>
+  <text x="${centerX}" y="${size-20}" text-anchor="middle" font-family="serif" font-size="12" fill="#64748b">カタチ・ゲン</text>
 </svg>`;
 }
 

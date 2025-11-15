@@ -2,7 +2,7 @@ import { Providers } from '@/components/providers';
 import { HeaderWrapper } from '@/components/header-wrapper';
 import { HeaderProvider } from '@/contexts/header-context';
 import type { Metadata } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Montserrat } from 'next/font/google';
 import Link from 'next/link';
 import { Github } from 'lucide-react';
 import './globals.css';
@@ -15,6 +15,12 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: '--font-geist-mono',
   subsets: ['latin'],
+});
+
+const montserrat = Montserrat({
+  variable: '--font-montserrat',
+  subsets: ['latin'],
+  weight: ['100', '200', '300', '400', '500', '600', '700', '800', '900'],
 });
 
 export const metadata: Metadata = {
@@ -67,7 +73,7 @@ export const metadata: Metadata = {
         url: '/kg-metaog.jpg',
         width: 1200,
         height: 630,
-        alt: 'Katachi Gen 形現 - Generative Origami representing your Shape L2 journey.',
+        alt: 'Katachi Gen カタチ・ゲン - Generative Origami representing your Shape L2 journey.',
         type: 'image/jpeg',
       },
     ],
@@ -111,7 +117,7 @@ export const metadata: Metadata = {
     'theme-color': '#000000',
     'color-scheme': 'dark light',
     'twitter:image': 'https://katachi-gen.com/kg-metaog.jpg',
-    'twitter:image:alt': 'Katachi Gen 形現 - Generative Origami',
+    'twitter:image:alt': 'Katachi Gen カタチ・ゲン - Generative Origami',
     'og:image:width': '1200',
     'og:image:height': '630',
   },
@@ -125,8 +131,8 @@ export default function RootLayout({
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Katachi Gen 形現 - Shape Revealed",
-    "alternateName": "Katachi Gen 形現 - Shape Revealed",
+    "name": "Katachi Gen カタチ・ゲン - Shape Revealed",
+    "alternateName": "Katachi Gen カタチ・ゲン - Shape Revealed",
     "url": "https://katachi-gen.com",
     "description": "A collection of algorithmically generated 3D Origami forms representing your on-chain journey on Shape L2.",
     "creator": [
@@ -159,13 +165,13 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} ${montserrat.variable} antialiased`}>
         <Providers>
           <HeaderProvider>
-            <div className="bg-background min-h-screen font-[family-name:var(--font-geist-sans)]">
+            <div className="flex min-h-screen flex-col">
               {/* Announcement Header */}
               {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && (
-                <div className="bg-blue-600 text-white text-center text-sm font-medium py-2 flex flex-col items-center justify-center gap-1">
+                <div className="fixed top-0 left-0 right-0 z-50 bg-blue-600/90 backdrop-blur-sm text-white text-center text-sm font-medium py-2 flex flex-col items-center justify-center gap-1">
                   <div className="flex items-center gap-1">
                     🎉{' '}
                     <Link
@@ -190,14 +196,11 @@ export default function RootLayout({
                   <div>🚀 Minting on mainnet soon 🚀</div>
                 </div>
               )}
-              
               <HeaderWrapper />
-
-              <main className="container mx-auto px-4 py-8">{children}</main>
-
-            <footer className="border-t py-6">
+              <main className="flex-1 pt-[152px]">{children}</main>
+              <footer className="border-t py-6">
               <div className="container mx-auto px-4">
-                <div className="text-center text-sm text-muted-foreground space-y-2">
+                <div className="text-center text-sm text-white/80 space-y-2">
                   <div>
                     Made with 🤍 by{' '}
                     <Link
