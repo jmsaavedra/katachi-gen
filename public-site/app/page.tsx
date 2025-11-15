@@ -2,12 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount } from 'wagmi';
-import { isAddress } from 'viem';
-import Image from 'next/image';
-import Link from 'next/link';
 import { KatachiGenerator } from '@/components/katachi-generator';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Search } from 'lucide-react';
 import { useHeader } from '@/contexts/header-context';
@@ -18,11 +14,7 @@ export default function Home() {
   const { setShowWalletInHeader, setIsInMintView } = useHeader();
   const [showGenerator, setShowGenerator] = useState(false);
   const [testAddress, setTestAddress] = useState('');
-  const [testAddressError, setTestAddressError] = useState('');
   const [shouldAutoRedirect, setShouldAutoRedirect] = useState(false);
-  
-  // Check if test mode is enabled via environment variable
-  const isTestModeEnabled = process.env.NEXT_PUBLIC_ENABLE_TEST_MODE === 'true';
 
   // Update header state when generator visibility or wallet connection changes
   useEffect(() => {
@@ -34,7 +26,6 @@ export default function Home() {
   useEffect(() => {
     if (isConnected && connectedAddress && shouldAutoRedirect) {
       setTestAddress(''); // Clear test address when wallet connects
-      setTestAddressError('');
       setShowGenerator(true);
       setShouldAutoRedirect(false); // Reset the flag
     }
@@ -45,22 +36,7 @@ export default function Home() {
     setShouldAutoRedirect(true); // Set flag to auto-redirect after connection
     openConnectModal();
   };
-  
-  const handleTestAddressSubmit = () => {
-    if (!testAddress.trim()) {
-      setTestAddressError('Please enter a wallet address');
-      return;
-    }
-    
-    if (!isAddress(testAddress)) {
-      setTestAddressError('Please enter a valid Ethereum address');
-      return;
-    }
-    
-    setTestAddressError('');
-    setShowGenerator(true);
-  };
-  
+
   const handleExploreClick = () => {
     const topWallets = [
       '0x136bbfe37988f82f8585ed155615b75371489d45',
@@ -72,7 +48,6 @@ export default function Home() {
     ];
     const randomWallet = topWallets[Math.floor(Math.random() * topWallets.length)];
     setTestAddress(randomWallet);
-    setTestAddressError('');
     setShowGenerator(true);
   };
   

@@ -71,7 +71,6 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showInterpretation, setShowInterpretation] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
-  const [showStep2, setShowStep2] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [showSubtitle, setShowSubtitle] = useState(true);
@@ -122,7 +121,6 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
         }, 500);
         // Show Step 2 after grid is displayed (additional 0.5s pause)
         setTimeout(() => {
-          setShowStep2(true);
           // Notify parent to show Step 2 panel
           if (onShowStep2) {
             onShowStep2();

@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { WalletConnect } from '@/components/wallet-connect';
 import { useHeader } from '@/contexts/header-context';
 import {
@@ -38,94 +37,243 @@ export function HeaderWrapper() {
                 About
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[95vw] md:max-w-[90vw] max-h-[90vh] overflow-y-auto w-full">
-              <DialogHeader>
-                <DialogTitle className="text-3xl font-light">
+            <DialogContent className="max-w-[95vw] md:max-w-[1200px] max-h-[90vh] overflow-y-auto w-full">
+              <DialogHeader className="text-center max-w-2xl mx-auto">
+                <DialogTitle className="text-4xl font-light">
                   About Katachi Gen
                 </DialogTitle>
-                <DialogDescription className="text-base pt-4">
+                <DialogDescription className="text-xl pt-4">
                   カタチ・ゲン - Shape Revealed
                 </DialogDescription>
               </DialogHeader>
-              
-              <div className="space-y-6 text-left">
-                <p className="text-base leading-relaxed">
-                  Katachi Gen <span className="italic">(kah-TAH-chee gehn)</span> is a collection of digital + physical artifacts representing your on-chain journey, in the form of generative 3D origami patterns. Using AI sentiment analysis and art curation, each pattern reflects your personal participation on{' '}
-                  <a 
-                    href="https://shape.network" 
-                    target="_blank" 
+
+              <div className="space-y-6 text-center">
+                <p className="text-lg leading-relaxed max-w-2xl mx-auto">
+                  Katachi Gen <span className="italic">(Kah-TAH-chee Gehn)</span> transforms your on-chain participation into a unique 3D origami pattern through AI sentiment analysis and algorithmic artwork curation. Each pattern reflects your personal collecting journey on{' '}
+                  <a
+                    href="https://shape.network"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
                   >
-                    Shape L2
+                    Shape
                   </a>
-                  , creating a one-of-a-kind digital origami that represents a snapshot of your on-chain identity.
+                  , creating a one-of-a-kind digital origami, which can be downloaded, printed on paper, and folded into an origami form. A digital and physical artifact representing a snapshot of your on-chain identity.
                 </p>
 
-                <div className="border-l-4 border-primary pl-6 space-y-2">
-                  <p className="font-medium text-primary">
-                    🏆{' '}
-                    <a
-                      href="https://shape.network/shapecraft"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-blue-600 dark:text-blue-400 hover:underline"
-                    >
-                      Shapecraft2
-                    </a>
-                    {' '}Hackathon Submission
-                  </p>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Image src="/assets/matrix.gif" alt="" width={24} height={24} className="h-6 w-6" unoptimized />
-                    <span className="text-muted-foreground">Built with passion for Shape Network</span>
-                    <Image src="/assets/matrix.gif" alt="" width={24} height={24} className="h-6 w-6" unoptimized />
+                <div className="max-w-2xl mx-auto">
+                  <div className="border-l-4 border-primary pl-6 space-y-2 inline-block text-left">
+                    <p className="font-medium text-primary text-lg">
+                      🏆 Winner,{' '}
+                      <a
+                        href="https://x.com/Shape_L2/status/1962942181271834826"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        First Place
+                      </a>
+                      ,{' '}
+                      <a
+                        href="https://shape.network/shapecraft"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline"
+                      >
+                        Shapecraft2 Hackathon
+                      </a>
+                    </p>
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-4">
-                  <h3 className="text-xl font-semibold">How It Works</h3>
-                  <ol className="space-y-3 list-decimal list-inside text-muted-foreground">
-                    <li>Connect your wallet to analyze your NFT collection on Shape Network</li>
-                    <li>AI analyzes sentiment and patterns in your collection</li>
-                    <li>A unique 3D origami pattern is generated based on your data</li>
-                    <li>Mint your pattern as an NFT and download printable files</li>
-                    <li>Fold your own physical origami from the generated pattern</li>
-                  </ol>
+                <div className="space-y-4 pt-4 max-w-2xl mx-auto">
+                  <h3 className="text-2xl font-semibold">How It Works: Shape to Shape</h3>
+                  <div className="space-y-3 text-lg text-muted-foreground text-left">
+                    <p>
+                      A 2D origami pattern (FOLD file) is generated at time of mint. The fold complexity is determined by Shape MCP data about the wallet that is minting the token.
+                    </p>
+                    <p>
+                      Data used to generate fold lines and graphic texture from your sentiment-curated collection:
+                    </p>
+                    <ul className="list-disc list-outside space-y-2 ml-8">
+                      <li>Stack rank</li>
+                      <li>Shape NFTs owned</li>
+                      <li>AI-interpreted sentiment filter</li>
+                    </ul>
+                    <p>
+                      NFTs owned by your wallet at time of mint (as well as stack achievements) are graphically represented on the 2D asset, which can be printed and folded by you as the collector. All necessary files are included in the token metadata.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-4 pt-4">
-                  <h3 className="text-xl font-semibold">Features</h3>
-                  <ul className="space-y-2 text-muted-foreground">
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-1">•</span>
-                      <span><strong className="text-foreground">Generative Art:</strong> Each pattern is algorithmically unique</span>
+                <div className="space-y-4 pt-4 max-w-2xl mx-auto">
+                  <h3 className="text-2xl font-semibold">Etymology & Philosophy</h3>
+                  <div className="space-y-4">
+                    <div className="grid md:grid-cols-2 gap-4 text-center text-lg">
+                      <div className="space-y-2">
+                        <p className="font-medium">Katachi <span className="text-gray-500">(</span> 形 <span className="text-gray-500">or</span> カタチ <span className="text-gray-500">)</span></p>
+                        <p className="text-muted-foreground">Shape/Form in Japanese</p>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="font-medium">Gen <span className="text-gray-500">(</span> 現 <span className="text-gray-500">or</span> ゲン <span className="text-gray-500">)</span></p>
+                        <p className="text-muted-foreground">To Appear/Manifest</p>
+                      </div>
+                    </div>
+                    <p className="italic text-lg text-center text-muted-foreground">
+                      カタチ・ゲン: &ldquo;Shape Revealed&rdquo; or &ldquo;Shape Manifest&rdquo;, evoking the transformation from flat pattern to dimensional object.
+                    </p>
+                    <p className="text-lg text-muted-foreground">
+                      This project interprets data from ShapeL2, generating physical shapes featuring art from the blockchain. We embrace the playful nature of what Katachi Gen artifacts represent, drawing inspiration from traditional origami forms like the Origami Kabuto, commonly folded by Japanese youth.
+                    </p>
+
+                    <div className="grid md:grid-cols-2 gap-4 mt-4">
+                      <div className="relative aspect-video rounded-lg overflow-hidden">
+                        <Image
+                          src="/img/1.png"
+                          alt="Origami inspiration and cultural context"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="relative aspect-video rounded-lg overflow-hidden">
+                        <Image
+                          src="/img/2.png"
+                          alt="Traditional origami forms and philosophy"
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-4 max-w-2xl mx-auto">
+                  <h3 className="text-2xl font-semibold">Technical Foundation</h3>
+                  <p className="text-lg text-muted-foreground">
+                    Built using cutting-edge computational origami research and tools:
+                  </p>
+                  <ul className="list-disc list-outside space-y-2 ml-8 text-lg text-muted-foreground text-left">
+                    <li>
+                      <a
+                        href="https://www.jst.go.jp/erato/igarashi/publications/001/j15h2mita.pdf"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                      >
+                        Jun Mitani&apos;s research
+                      </a>
+                      {' '}on designing crease patterns for flat-foldable origami with numerical optimization
                     </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-1">•</span>
-                      <span><strong className="text-foreground">AI-Powered:</strong> Sentiment analysis of your NFT collection</span>
+                    <li>
+                      <a
+                        href="https://github.com/amandaghassaei/OrigamiSimulator"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                      >
+                        Origami Simulator
+                      </a>
+                      {' '}for 3D visualization and validation by Amanda Ghassaei
                     </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-1">•</span>
-                      <span><strong className="text-foreground">Physical Artifact:</strong> Download and fold your own origami</span>
+                    <li>
+                      <a
+                        href="https://github.com/rabbit-ear"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                      >
+                        Rabbit Ear
+                      </a>
+                      {' '}computational origami library
                     </li>
-                    <li className="flex items-start gap-2">
-                      <span className="text-primary mt-1">•</span>
-                      <span><strong className="text-foreground">Shape Native:</strong> Built specifically for Shape L2 ecosystem</span>
+                    <li>
+                      <a
+                        href="https://github.com/shape-network/mcp-server"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 dark:text-blue-400 hover:underline font-medium"
+                      >
+                        Shape MCP Server
+                      </a>
+                      {' '}for on-chain data integration and AI sentiment analysis and NFT curation
                     </li>
                   </ul>
+
+                  <div className="grid md:grid-cols-2 gap-4 mt-4">
+                    <div className="relative aspect-video rounded-lg overflow-hidden">
+                      <Image
+                        src="/img/3.png"
+                        alt="Technical implementation and computational origami"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="relative aspect-video rounded-lg overflow-hidden">
+                      <Image
+                        src="/img/4.png"
+                        alt="Shape MCP integration and data processing"
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-muted-foreground">
-                    Created by{' '}
-                    <a href="https://x.com/quietloops" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
-                      @quietloops
-                    </a>
-                    {' '}and{' '}
-                    <a href="https://x.com/1000b" target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">
-                      @sembo
-                    </a>
+                <div className="space-y-4 pt-4 max-w-2xl mx-auto">
+                  <h3 className="text-2xl font-semibold">Eligibility</h3>
+                  <p className="text-lg text-muted-foreground">
+                    All wallets with a Stack NFT are able to mint Katachi Gen NFTs.
                   </p>
+                </div>
+
+                <div className="space-y-4 pt-4 max-w-2xl mx-auto">
+                  <h3 className="text-2xl font-semibold">Team</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
+                        <Image
+                          src="/quietloops.jpg"
+                          alt="quietloops profile"
+                          width={48}
+                          height={48}
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-medium text-lg">Joe</p>
+                        <a
+                          href="https://x.com/quietloops"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline font-medium text-lg"
+                        >
+                          @quietloops
+                        </a>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
+                        <Image
+                          src="/sembo.jpg"
+                          alt="sembo profile"
+                          width={48}
+                          height={48}
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="font-medium text-lg">sembo</p>
+                        <a
+                          href="https://x.com/1000b"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 dark:text-blue-400 hover:underline font-medium text-lg"
+                        >
+                          @1000b
+                        </a>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </DialogContent>
