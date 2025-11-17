@@ -259,3 +259,38 @@
     }
     window.hideLoadingScreenGlobal = hideLoadingScreenGlobal;
 </script>
+
+<!-- Background/Iframe Integration Script -->
+<script>
+    // Disable scroll/wheel events when embedded as background
+    document.addEventListener('DOMContentLoaded', function() {
+        // Prevent all wheel events to avoid scroll interference
+        document.addEventListener('wheel', function(e) {
+            e.preventDefault();
+        }, { passive: false });
+
+        // Disable body scroll
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+
+        // Listen for mouse position messages from parent window
+        window.addEventListener('message', function(event) {
+            // Accept messages for mouse position mirroring
+            if (event.data && event.data.type === 'mousemove') {
+                var canvas = document.querySelector('canvas');
+                if (canvas) {
+                    // Create and dispatch synthetic mouse event
+                    var mouseEvent = new MouseEvent('mousemove', {
+                        clientX: event.data.x,
+                        clientY: event.data.y,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    canvas.dispatchEvent(mouseEvent);
+                }
+            }
+        });
+
+        console.log('🎭 Background mode initialized: scroll disabled, postMessage listener active');
+    });
+</script>
