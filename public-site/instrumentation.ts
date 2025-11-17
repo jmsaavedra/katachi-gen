@@ -13,10 +13,10 @@ export async function register() {
     console.log('');
 
     // Generator URL
-    const generatorUrl = process.env.KATACHI_GENERATOR_URL || 'http://localhost:3001';
+    const generatorUrl = process.env.NEXT_PUBLIC_GENERATOR_URL || 'http://localhost:3001';
     console.log('🎨 Generator URL:');
     console.log('   Resolved:', generatorUrl);
-    console.log('   Env var KATACHI_GENERATOR_URL:', process.env.KATACHI_GENERATOR_URL || '(not set)');
+    console.log('   Env var NEXT_PUBLIC_GENERATOR_URL:', process.env.NEXT_PUBLIC_GENERATOR_URL || '(not set)');
     console.log('');
 
     // Chain configuration
