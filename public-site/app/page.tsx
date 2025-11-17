@@ -28,6 +28,7 @@ export default function Home() {
     setBackgroundUrl(backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+
   // Update header state when generator visibility or wallet connection changes
   useEffect(() => {
     setShowWalletInHeader(showGenerator || isConnected);
@@ -77,12 +78,13 @@ export default function Home() {
 
   return (
     <>
-      {/* Background iframe - responds to mouse movement */}
+      {/* Background iframe - responds to mouse movement but ignores scroll */}
       <iframe
         src={backgroundUrl}
         className="fixed inset-0 w-full h-full border-0"
         style={{ zIndex: 0 }}
         title="Background animation"
+        scrolling="no"
       />
 
       {/* Dark overlay - pointer-events-none allows mouse to pass through to iframe */}
