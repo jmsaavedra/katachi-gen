@@ -34,10 +34,10 @@ export function HeaderWrapper() {
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="ghost" className="px-6 py-3 rounded-md text-lg font-bold">
-                About
+                How It Works
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-[95vw] md:max-w-[1200px] max-h-[90vh] overflow-y-auto w-full">
+            <DialogContent className="max-w-[95vw] md:max-w-[1200px] max-h-[90vh] overflow-y-auto w-full pt-10">
               <DialogHeader className="text-center max-w-2xl mx-auto">
                 <DialogTitle className="text-4xl font-light">
                   About Katachi Gen
@@ -62,9 +62,9 @@ export function HeaderWrapper() {
                 </p>
 
                 <div className="max-w-2xl mx-auto">
-                  <div className="border-l-4 border-primary pl-6 space-y-2 inline-block text-left">
+                  <div className="border border-primary p-4 rounded-md inline-block">
                     <p className="font-medium text-primary text-lg">
-                      🏆 Winner,{' '}
+                      🏆{' '}
                       <a
                         href="https://x.com/Shape_L2/status/1962942181271834826"
                         target="_blank"
@@ -73,14 +73,14 @@ export function HeaderWrapper() {
                       >
                         First Place
                       </a>
-                      ,{' '}
+                      {' '}winner,{' '}
                       <a
                         href="https://shape.network/shapecraft"
                         target="_blank"
                         rel="noreferrer"
                         className="text-blue-600 dark:text-blue-400 hover:underline"
                       >
-                        Shapecraft2 Hackathon
+                        Shapecraft<sup>2</sup> Hackathon
                       </a>
                     </p>
                   </div>
@@ -89,20 +89,20 @@ export function HeaderWrapper() {
                 <div className="space-y-4 pt-4 max-w-2xl mx-auto">
                   <h3 className="text-2xl font-semibold">How It Works: Shape to Shape</h3>
                   <div className="space-y-3 text-lg text-muted-foreground text-left">
-                    <p>
-                      A 2D origami pattern (FOLD file) is generated at time of mint. The fold complexity is determined by Shape MCP data about the wallet that is minting the token.
-                    </p>
-                    <p>
-                      Data used to generate fold lines and graphic texture from your sentiment-curated collection:
-                    </p>
-                    <ul className="list-disc list-outside space-y-2 ml-8">
-                      <li>Stack rank</li>
-                      <li>Shape NFTs owned</li>
-                      <li>AI-interpreted sentiment filter</li>
-                    </ul>
-                    <p>
-                      NFTs owned by your wallet at time of mint (as well as stack achievements) are graphically represented on the 2D asset, which can be printed and folded by you as the collector. All necessary files are included in the token metadata.
-                    </p>
+                    <ol className="list-decimal list-outside space-y-3 ml-8">
+                      <li>
+                        <span className="font-bold">Share your sentiment</span> about collecting on-chain artwork. Answer our simple question, and let our AI interpret your input and curate a selection of artworks from your wallet.
+                      </li>
+                      <li>
+                        <span className="font-bold">AI analyzes your collection</span> using Shape MCP data including your Stack rank and NFTs owned to determine fold complexity and pattern selection.
+                      </li>
+                      <li>
+                        <span className="font-bold">Generate your unique origami</span> - A 2D origami pattern (FOLD file) is created, with your curated artworks graphically represented on the surface.
+                      </li>
+                      <li>
+                        <span className="font-bold">Mint and collect</span> your one-of-a-kind digital origami. Download the printable pattern and fold it into a physical artifact representing your on-chain identity.
+                      </li>
+                    </ol>
                   </div>
                 </div>
 
