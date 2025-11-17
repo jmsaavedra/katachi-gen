@@ -17,7 +17,9 @@ const { loadArweaveWallet, getWalletAddress, getWalletBalance } = require('./uti
 const { serveStaticFile, serveTempFile, cleanupTempFiles } = require('./utils/fileServer');
 
 // Import queue system (may be null if Redis not available)
-const { generationQueue } = require('./queue/generationQueue');
+// DISABLED: Redis quota exceeded - using direct processing
+// const { generationQueue } = require('./queue/generationQueue');
+const generationQueue = null; // Bypass Redis entirely
 
 // Create HTTP server
 const server = http.createServer(async (req, res) => {

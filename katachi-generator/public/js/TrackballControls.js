@@ -453,6 +453,45 @@ THREE.TrackballControls = function ( object, domElement ) {
 
 	}
 
+	// Mouseover rotation: rotate on hover without click
+	function mousemoveHover( event ) {
+
+		if ( _this.enabled === false ) return;
+
+		if ( ! _this.noRotate ) {
+
+			_movePrev.copy( _moveCurr );
+			_moveCurr.copy( getMouseOnCircle( event.pageX, event.pageY ) );
+
+		}
+
+	}
+
+	function mouseenter( event ) {
+
+		if ( _this.enabled === false ) return;
+
+		// Initialize rotation tracking on mouse enter
+		if ( ! _this.noRotate ) {
+			_moveCurr.copy( getMouseOnCircle( event.pageX, event.pageY ) );
+			_movePrev.copy( _moveCurr );
+		}
+
+		_this.dispatchEvent( startEvent );
+
+	}
+
+	function mouseleave( event ) {
+
+		if ( _this.enabled === false ) return;
+
+		// Reset movement vectors when mouse leaves
+		_movePrev.copy( _moveCurr );
+
+		_this.dispatchEvent( endEvent );
+
+	}
+
 	function mouseup( event ) {
 
 		if ( _this.enabled === false ) return;
@@ -595,6 +634,11 @@ THREE.TrackballControls = function ( object, domElement ) {
 		this.domElement.removeEventListener( 'touchend', touchend, false );
 		this.domElement.removeEventListener( 'touchmove', touchmove, false );
 
+		// Remove mouseover rotation listeners
+		this.domElement.removeEventListener( 'mousemove', mousemoveHover, false );
+		this.domElement.removeEventListener( 'mouseenter', mouseenter, false );
+		this.domElement.removeEventListener( 'mouseleave', mouseleave, false );
+
 		document.removeEventListener( 'mousemove', mousemove, false );
 		document.removeEventListener( 'mouseup', mouseup, false );
 
@@ -610,6 +654,11 @@ THREE.TrackballControls = function ( object, domElement ) {
 	this.domElement.addEventListener( 'touchstart', touchstart, false );
 	this.domElement.addEventListener( 'touchend', touchend, false );
 	this.domElement.addEventListener( 'touchmove', touchmove, false );
+
+	// Add mouseover rotation listeners (rotate on hover without click)
+	this.domElement.addEventListener( 'mousemove', mousemoveHover, false );
+	this.domElement.addEventListener( 'mouseenter', mouseenter, false );
+	this.domElement.addEventListener( 'mouseleave', mouseleave, false );
 
 	window.addEventListener( 'keydown', keydown, false );
 	window.addEventListener( 'keyup', keyup, false );

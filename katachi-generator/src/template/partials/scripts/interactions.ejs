@@ -251,56 +251,11 @@
     window.resetRandomSeed = resetRandomSeed;
 </script>
 
-<!-- Loading Screen Control Script -->
+<!-- Loading Screen Control Script (simplified for background version) -->
 <script>
-    // Loading screen management
-    var loadingScreenHidden = false;
-    
+    // Stub for compatibility - no loading screen in this version
     function hideLoadingScreenGlobal() {
-        if (loadingScreenHidden) return;
-        loadingScreenHidden = true;
-
-        // console.log('🎬 Global loading screen hide triggered');
-
-        try {
-            var loadingScreen = document.getElementById('loadingScreen');
-            if (loadingScreen) {
-                // console.log('🎬 Hiding loading screen with fade-out animation');
-
-                // Add fade-out class for smooth animation
-                document.body.classList.add('fade-out-loading');
-
-                // Remove the loading screen after animation completes
-                setTimeout(function() {
-                    loadingScreen.style.display = 'none';
-                    document.body.classList.remove('fade-out-loading');
-                    document.body.classList.add('loading-hidden');
-                    // console.log('✅ Loading screen hidden successfully');
-                }, 800); // Match the animation duration
-            }
-        } catch (error) {
-            console.error('❌ Error hiding loading screen:', error);
-        }
+        // No-op, loading screen removed
     }
-    
-    // Make the function globally accessible
     window.hideLoadingScreenGlobal = hideLoadingScreenGlobal;
-    
-    // Fallback: Hide loading screen after maximum wait time (10 seconds)
-    setTimeout(function() {
-        if (!loadingScreenHidden) {
-            // console.log('⏰ Fallback timeout: hiding loading screen after 10 seconds');
-            hideLoadingScreenGlobal();
-        }
-    }, 10000);
-
-    // Also hide when page fully loads as a backup
-    window.addEventListener('load', function() {
-        setTimeout(function() {
-            if (!loadingScreenHidden) {
-                // console.log('📄 Page fully loaded: hiding loading screen as backup');
-                hideLoadingScreenGlobal();
-            }
-        }, 2000);
-    });
 </script>
