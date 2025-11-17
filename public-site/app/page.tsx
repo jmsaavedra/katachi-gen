@@ -60,7 +60,8 @@ export default function Home() {
     // const randomWallet = topWallets[Math.floor(Math.random() * topWallets.length)];
 
     // Fixed wallet for Explore button
-    const explorerWallet = '0x9f6ae0370d74f0e591c64cec4a8ae0d627817014';
+    //const explorerWallet = '0x136bbfe37988f82f8585ed155615b75371489d45';
+    const explorerWallet = '0xee49f82e58a1c2b306720d0c68047cbf70c11fb5';
     setTestAddress(explorerWallet);
     setShowGenerator(true);
   };
