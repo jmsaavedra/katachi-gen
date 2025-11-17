@@ -23,10 +23,10 @@ async function generatePatternCore(data, options = {}) {
         throw new Error('Wallet address or stack user address is required');
     }
 
-    // Always use flower pattern for background version
+    // Always use crane pattern for background version
     if (!data.patternType || data.patternType === "") {
-        data.patternType = 'Flower';
-        console.log('🌸 Using flower pattern (background version)');
+        data.patternType = 'Crane';
+        console.log('🦢 Using crane pattern (background version)');
     } else {
         console.log('📋 Using provided pattern type:', data.patternType);
     }
@@ -157,12 +157,16 @@ async function generatePatternCore(data, options = {}) {
                 htmlTxId = r2Url;
                 console.log('✅ HTML uploaded to R2:', r2Url);
 
-                // Clean up temp file since we have R2 URL
-                try {
-                    fs.unlinkSync(htmlPath);
-                    console.log('🧹 Cleaned up temp file (using R2 URL)');
-                } catch (cleanupError) {
-                    console.warn('Could not clean up temporary HTML file:', cleanupError.message);
+                // Clean up temp file since we have R2 URL (skip in dev mode for debugging)
+                if (!TESTING_MODE) {
+                    try {
+                        fs.unlinkSync(htmlPath);
+                        console.log('🧹 Cleaned up temp file (using R2 URL)');
+                    } catch (cleanupError) {
+                        console.warn('Could not clean up temporary HTML file:', cleanupError.message);
+                    }
+                } else {
+                    console.log('📁 Temp file kept for debugging:', htmlPath);
                 }
             } else {
                 // Fallback to local if R2 fails
