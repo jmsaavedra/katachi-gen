@@ -9,15 +9,26 @@ const { port, TESTING_MODE } = require('./config');
 
 // Import handlers
 const { handleMetadataUpload } = require('./handlers/metadata');
-const { handlePatternGeneration } = require('./handlers/pattern');
+const { handlePatternGeneration, generatePatternCore } = require('./handlers/pattern');
 const { handleTestTemplate, handleTestAPI } = require('./handlers/testTemplate');
 
 // Import utilities
 const { loadArweaveWallet, getWalletAddress, getWalletBalance } = require('./utils/wallet');
 const { serveStaticFile, serveTempFile, cleanupTempFiles } = require('./utils/fileServer');
 
-// Import queue system (may be null if Redis not available)
-const { generationQueue } = require('./queue/generationQueue');
+// Import in-memory queue system (no Redis dependency)
+const {
+    createJob,
+    getJob,
+    updateProgress,
+    startJob,
+    completeJob,
+    failJob,
+    getQueueStats
+} = require('./queue/inMemoryQueue');
+
+// Track server start time for uptime calculation
+const serverStartTime = Date.now();
 
 // Create HTTP server
 const server = http.createServer(async (req, res) => {
@@ -66,43 +77,56 @@ const server = http.createServer(async (req, res) => {
                 // Route POST requests based on URL path
                 if (urlPath === '/upload-metadata') {
                     await handleMetadataUpload(req, res, data);
-                } else if ((urlPath === '/' || urlPath === '') && generationQueue) {
-                    // NEW: Queue-based generation (default if queue available)
+                } else if (urlPath === '/' || urlPath === '') {
+                    // Queue-based generation using in-memory queue
                     const jobId = uuidv4();
 
-                    console.log(`🎯 Queuing generation job: ${jobId}`);
+                    console.log(`🎯 Creating generation job: ${jobId}`);
 
                     try {
-                        // Add job to queue
-                        const job = await generationQueue.add({
-                            jobId,
-                            ...data
-                        }, {
-                            jobId, // Use custom jobId for easier tracking
-                        });
+                        // Create job in memory
+                        createJob(jobId, data);
 
-                        console.log(`✅ Job ${jobId} added to queue`);
+                        console.log(`✅ Job ${jobId} created in queue`);
 
+                        // Return immediately with job ID
                         res.setHeader('Content-Type', 'application/json');
                         res.writeHead(202); // Accepted
                         res.end(JSON.stringify({
                             success: true,
-                            jobId: job.id,
+                            jobId: jobId,
                             status: 'queued',
                             message: 'Job queued for processing',
-                            statusUrl: `/job/${job.id}`,
+                            statusUrl: `/job/${jobId}`,
                         }));
+
+                        // Process job asynchronously (non-blocking)
+                        setImmediate(async () => {
+                            try {
+                                startJob(jobId);
+                                updateProgress(jobId, 5, 'Starting pattern generation...');
+
+                                const result = await generatePatternCore(data, {
+                                    onProgress: async (percent, message) => {
+                                        updateProgress(jobId, percent, message);
+                                    }
+                                });
+
+                                completeJob(jobId, result);
+
+                            } catch (error) {
+                                console.error(`❌ Job ${jobId} failed:`, error.message);
+                                failJob(jobId, error);
+                            }
+                        });
+
                     } catch (queueError) {
-                        console.error('❌ Failed to add job to queue:', queueError);
+                        console.error('❌ Failed to create job:', queueError);
 
                         // Fallback to direct processing
                         console.warn('⚠️  Falling back to direct processing');
                         await handlePatternGeneration(req, res, data);
                     }
-                } else if ((urlPath === '/' || urlPath === '') && !generationQueue) {
-                    // Fallback: Direct processing if queue not available
-                    console.warn('⚠️  Queue not available - processing directly');
-                    await handlePatternGeneration(req, res, data);
                 } else if (urlPath === '/direct') {
                     // NEW: Direct processing endpoint (for testing/debugging)
                     console.log('🔧 Direct processing requested');
@@ -128,67 +152,102 @@ const server = http.createServer(async (req, res) => {
     } 
     // Handle GET requests
     else if (method === 'GET') {
-        // NEW: Job status endpoint
+        // Job status endpoint (in-memory queue)
         if (urlPath.startsWith('/job/')) {
             const pathParts = urlPath.split('/');
             const jobId = pathParts[2];
             const includeDetails = urlPath.includes('/details');
 
-            if (!generationQueue) {
+            const job = getJob(jobId);
+
+            if (!job) {
                 res.setHeader('Content-Type', 'application/json');
-                res.writeHead(503);
+                res.writeHead(404);
                 res.end(JSON.stringify({
-                    error: 'Queue not available',
-                    message: 'Queue system is not enabled on this server'
+                    error: 'Job not found',
+                    jobId: jobId
                 }));
                 return;
             }
 
-            try {
-                const job = await generationQueue.getJob(jobId);
+            // Get recent logs (last 10 entries)
+            const recentLogs = job.logs.slice(-10);
 
-                if (!job) {
-                    res.setHeader('Content-Type', 'application/json');
-                    res.writeHead(404);
-                    res.end(JSON.stringify({
-                        error: 'Job not found',
-                        jobId: jobId
-                    }));
-                    return;
-                }
+            const response = {
+                jobId: job.id,
+                status: job.status,
+                progress: job.progress,
+                data: includeDetails ? job.data : undefined,
+                result: job.status === 'completed' ? job.result : undefined,
+                failedReason: job.status === 'failed' ? job.error : undefined,
+                logs: recentLogs,
+                timestamp: job.createdAt,
+            };
 
-                const state = await job.getState();
-                const progress = job._progress || 0;
+            res.setHeader('Content-Type', 'application/json');
+            res.writeHead(200);
+            res.end(JSON.stringify(response));
+        }
+        // Queue stats endpoint
+        else if (urlPath === '/queue-stats') {
+            const stats = getQueueStats();
+            res.setHeader('Content-Type', 'application/json');
+            res.writeHead(200);
+            res.end(JSON.stringify(stats));
+        }
+        // Health/Status page endpoint
+        else if (urlPath === '/status') {
+            const uptimeMs = Date.now() - serverStartTime;
+            const uptimeSeconds = Math.floor(uptimeMs / 1000);
+            const uptimeMinutes = Math.floor(uptimeSeconds / 60);
+            const uptimeHours = Math.floor(uptimeMinutes / 60);
+            const uptimeDays = Math.floor(uptimeHours / 24);
 
-                // Always get recent logs for progress tracking (last 10 entries)
-                const jobLogs = await generationQueue.getJobLogs(jobId);
-                const recentLogs = jobLogs?.logs ? jobLogs.logs.slice(-10) : [];
+            const uptimeString = uptimeDays > 0
+                ? `${uptimeDays}d ${uptimeHours % 24}h ${uptimeMinutes % 60}m ${uptimeSeconds % 60}s`
+                : uptimeHours > 0
+                ? `${uptimeHours}h ${uptimeMinutes % 60}m ${uptimeSeconds % 60}s`
+                : uptimeMinutes > 0
+                ? `${uptimeMinutes}m ${uptimeSeconds % 60}s`
+                : `${uptimeSeconds}s`;
 
-                const response = {
-                    jobId: job.id,
-                    status: state,
-                    progress,
-                    attemptsMade: job.attemptsMade,
-                    data: includeDetails ? job.data : undefined,
-                    result: state === 'completed' ? job.returnvalue : undefined,
-                    failedReason: state === 'failed' ? job.failedReason : undefined,
-                    logs: recentLogs, // Always include recent logs for progress messages
-                    timestamp: job.timestamp,
-                };
+            const queueStats = getQueueStats();
+            const memUsage = process.memoryUsage();
 
-                res.setHeader('Content-Type', 'application/json');
-                res.writeHead(200);
-                res.end(JSON.stringify(response));
+            const statusData = {
+                status: 'healthy',
+                server: {
+                    name: 'Katachi Generator',
+                    version: '2.0.0',
+                    environment: process.env.NODE_ENV || process.env.RAILWAY_ENVIRONMENT || 'development',
+                    testingMode: TESTING_MODE
+                },
+                uptime: {
+                    started: new Date(serverStartTime).toISOString(),
+                    duration: uptimeString,
+                    milliseconds: uptimeMs
+                },
+                queue: {
+                    ...queueStats,
+                    note: 'In-memory queue (no Redis)'
+                },
+                memory: {
+                    heapUsed: `${(memUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`,
+                    heapTotal: `${(memUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`,
+                    rss: `${(memUsage.rss / 1024 / 1024).toFixed(2)} MB`,
+                    external: `${(memUsage.external / 1024 / 1024).toFixed(2)} MB`
+                },
+                system: {
+                    nodeVersion: process.version,
+                    platform: process.platform,
+                    pid: process.pid
+                },
+                timestamp: new Date().toISOString()
+            };
 
-            } catch (error) {
-                console.error('Error fetching job status:', error);
-                res.setHeader('Content-Type', 'application/json');
-                res.writeHead(500);
-                res.end(JSON.stringify({
-                    error: 'Failed to fetch job status',
-                    message: error.message
-                }));
-            }
+            res.setHeader('Content-Type', 'application/json');
+            res.writeHead(200);
+            res.end(JSON.stringify(statusData, null, 2));
         }
         // Test routes for modular template system
         else if (urlPath === '/test-template') {
