@@ -23,12 +23,10 @@ async function generatePatternCore(data, options = {}) {
         throw new Error('Wallet address or stack user address is required');
     }
 
-    // Select random origami pattern if not specified
+    // Always use flower pattern for background version
     if (!data.patternType || data.patternType === "") {
-        const randomIndex = Math.floor(Math.random() * origamiPatterns.length);
-        const selectedPattern = origamiPatterns[randomIndex];
-        data.patternType = selectedPattern.patternType;
-        console.log('🎲 Selected random origami pattern:', selectedPattern.patternType, 'from', selectedPattern.name);
+        data.patternType = 'Flower';
+        console.log('🌸 Using flower pattern (background version)');
     } else {
         console.log('📋 Using provided pattern type:', data.patternType);
     }
@@ -39,6 +37,33 @@ async function generatePatternCore(data, options = {}) {
         console.log('🎨 Pre-processing images for self-contained HTML...');
         const processedData = await processImagesAsBase64(data, { onProgress });
         console.log('🎨 Image processing completed, proceeding with generation...');
+
+        // Filter out failed images before template generation
+        // Failed images have their error property set and URL is still the original broken URL
+        if (processedData.images) {
+            const originalCount = processedData.images.length;
+            processedData.images = processedData.images.filter(img => {
+                // Keep images that have base64 data URIs (successfully processed)
+                if (img.url && img.url.startsWith('data:')) {
+                    return true;
+                }
+                // Filter out images with errors or non-data URLs
+                if (img.error) {
+                    console.log(`🚫 Filtering out failed image: ${img.name || 'Unknown'} - ${img.error}`);
+                    return false;
+                }
+                // Also filter out any images that still have external URLs (not embedded)
+                if (img.url && !img.url.startsWith('data:')) {
+                    console.log(`🚫 Filtering out non-embedded image: ${img.name || 'Unknown'}`);
+                    return false;
+                }
+                return true;
+            });
+            const filteredCount = originalCount - processedData.images.length;
+            if (filteredCount > 0) {
+                console.log(`📋 Filtered out ${filteredCount} failed/non-embedded images, ${processedData.images.length} images remaining`);
+            }
+        }
 
         // Progress: Start pattern generation at 82% (images are done)
         await onProgress(82, 'Generating origami pattern...');
@@ -111,22 +136,43 @@ async function generatePatternCore(data, options = {}) {
             console.log('📁 Physical location:', htmlPath);
 
         } else if (!shouldUseArweave) {
-            // Local development mode: Keep everything local, no uploads
-            console.log('🔧 LOCAL DEVELOPMENT MODE: Keeping files local, skipping uploads');
+            // Local development mode: Upload to R2 only, skip Arweave
+            console.log('🔧 LOCAL DEVELOPMENT MODE: Uploading to R2 only, skipping Arweave');
 
-            // Use local URLs for everything
+            // Progress: Uploading
+            await onProgress(97, 'Uploading to R2 storage...');
+
+            // Upload to R2 for fast access
+            const r2Url = await uploadToR2(htmlPath, htmlFilename);
+
+            // Use local URLs for thumbnail (no Arweave upload)
             thumbnailUrl = `http://localhost:${port}/thumbnails/${thumbnailFilename}`;
-            htmlUrl = `http://localhost:${port}/temp/html/${htmlFilename}`;
-            previewHtmlUrl = htmlUrl;
 
-            // Set transaction IDs to match the actual URLs for metadata consistency
+            // Set transaction IDs - use R2 URL for HTML if available
             thumbnailTxId = thumbnailUrl;
-            htmlTxId = htmlUrl;
+
+            if (r2Url) {
+                htmlUrl = r2Url;
+                previewHtmlUrl = r2Url;
+                htmlTxId = r2Url;
+                console.log('✅ HTML uploaded to R2:', r2Url);
+
+                // Clean up temp file since we have R2 URL
+                try {
+                    fs.unlinkSync(htmlPath);
+                    console.log('🧹 Cleaned up temp file (using R2 URL)');
+                } catch (cleanupError) {
+                    console.warn('Could not clean up temporary HTML file:', cleanupError.message);
+                }
+            } else {
+                // Fallback to local if R2 fails
+                htmlUrl = `http://localhost:${port}/temp/html/${htmlFilename}`;
+                previewHtmlUrl = htmlUrl;
+                htmlTxId = htmlUrl;
+                console.log('⚠️ R2 upload failed, using local URL:', htmlUrl);
+            }
 
             console.log('⏭️  Skipping Arweave upload due to local development mode');
-            console.log('⏭️  Skipping temp file cleanup due to local development mode');
-            console.log('✅ HTML file kept at:', htmlPath);
-            console.log('🔗 Access it at:', htmlUrl);
 
         } else {
             // Production mode OR minting enabled: Upload to R2 + Arweave

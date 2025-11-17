@@ -305,14 +305,29 @@ async function downloadImageAsBase64(imageUrl, imageNumber = null, maxRetries = 
     // If all retries failed and we have a thumbnail URL, try it as final fallback
     if (thumbnailUrl && thumbnailUrl !== imageUrl) {
         console.log(`${prefix}🔄 Falling back to thumbnail URL...`);
-        try {
-            const result = await downloadWithStrategy(thumbnailUrl, { timeout: 15000 }, prefix, smartCompression);
-            if (result) {
-                console.log(`${prefix}✅ Success using thumbnail fallback`);
-                return result;
+
+        // Try thumbnail with multiple timeout strategies
+        const thumbnailStrategies = [
+            { timeout: 20000, name: 'thumbnail (20s timeout)' },
+            { timeout: 30000, name: 'thumbnail (30s timeout, retry)' }
+        ];
+
+        for (let i = 0; i < thumbnailStrategies.length; i++) {
+            const strategy = thumbnailStrategies[i];
+            if (i > 0) {
+                console.log(`${prefix}⏳ Waiting 2000ms before thumbnail retry...`);
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                console.log(`${prefix}🔄 Thumbnail retry ${i}: ${strategy.name}`);
             }
-        } catch (error) {
-            console.error(`${prefix}❌ Thumbnail fallback also failed: ${error.message}`);
+            try {
+                const result = await downloadWithStrategy(thumbnailUrl, { timeout: strategy.timeout }, prefix, smartCompression);
+                if (result) {
+                    console.log(`${prefix}✅ Success using thumbnail fallback`);
+                    return result;
+                }
+            } catch (error) {
+                console.error(`${prefix}❌ ${strategy.name} failed: ${error.message}`);
+            }
         }
     }
 
@@ -426,21 +441,47 @@ async function processImagesAsBase64(data, options = {}) {
 
                         // If image exceeds threshold AND it's a Cloudinary image URL (not video), inject transformation parameters
                         if (needsCloudinaryResize && imageUrlToDownload.includes('res.cloudinary.com') && !isVideoUrl) {
-                            // Inject Cloudinary transformations: w_750,c_limit,q_90
-                            // This will resize to 750px max dimension, only if larger, at 90% quality
-                            const originalUrl = imageUrlToDownload;
-                            imageUrlToDownload = imageUrlToDownload.replace('/upload/', '/upload/w_750,c_limit,q_90/');
+                            // Check if URL already has transformations that might conflict
+                            // Alchemy URLs often have paths like /convert-png/ or /thumbnailv2/ that cause 400 errors
+                            const hasExistingTransformations = imageUrlToDownload.match(/\/upload\/(convert-|thumbnailv2|w_|h_|c_|q_|f_)/);
 
-                            console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
-                            console.log(`   ⚠️  Original size ${formatFileSize(originalSizeBytes)} exceeds ${SIZE_THRESHOLD_KB} KB threshold`);
-                            console.log(`   ☁️  Using Cloudinary transformations: w_750,c_limit,q_90`);
-                            console.log(`   📐 Original URL: ${originalUrl}`);
-                            console.log(`   📐 Transformed URL: ${imageUrlToDownload}`);
-                            imageSource = 'cloudinary-optimized';
+                            if (hasExistingTransformations) {
+                                // URL already has Cloudinary transformations (convert-png, etc.) - use as-is without adding more
+                                // These are optimized versions from Alchemy, so we trust them
+                                console.log(`\nImage #${i + 1}: ✅ Selected: Cloudinary URL with existing transforms (${hasExistingTransformations[1]})`);
+                                console.log(`   ⚠️  Original size ${formatFileSize(originalSizeBytes)} exceeds ${SIZE_THRESHOLD_KB} KB threshold`);
+                                console.log(`   📦 Using Cloudinary convert-png URL (will compress locally after download)`);
+                                // Keep imageUrlToDownload as-is, local compression will handle size reduction
+                            } else {
+                                // Inject Cloudinary transformations: w_750,c_limit,q_90
+                                // This will resize to 750px max dimension, only if larger, at 90% quality
+                                const originalUrl = imageUrlToDownload;
+                                imageUrlToDownload = imageUrlToDownload.replace('/upload/', '/upload/w_750,c_limit,q_90/');
+
+                                console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
+                                console.log(`   ⚠️  Original size ${formatFileSize(originalSizeBytes)} exceeds ${SIZE_THRESHOLD_KB} KB threshold`);
+                                console.log(`   ☁️  Using Cloudinary transformations: w_750,c_limit,q_90`);
+                                console.log(`   📐 Original URL: ${originalUrl}`);
+                                console.log(`   📐 Transformed URL: ${imageUrlToDownload}`);
+                                imageSource = 'cloudinary-optimized';
+                            }
                         } else if (needsCloudinaryResize) {
-                            console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
-                            console.log(`   ⚠️  Original size ${formatFileSize(originalSizeBytes)} exceeds ${SIZE_THRESHOLD_KB} KB threshold`);
-                            console.log(`   ⚠️  Not a Cloudinary URL - will download full size (consider local compression)`);
+                            // Non-Cloudinary URL that exceeds threshold - check if too large to download
+                            const LARGE_FILE_THRESHOLD_MB = 8;
+                            const LARGE_FILE_THRESHOLD_BYTES = LARGE_FILE_THRESHOLD_MB * 1024 * 1024;
+
+                            if (originalSizeBytes > LARGE_FILE_THRESHOLD_BYTES && image.thumbnailUrl) {
+                                // File is over 8MB - use thumbnail instead of downloading huge file
+                                console.log(`\nImage #${i + 1}: ⚠️  Non-Cloudinary URL exceeds ${LARGE_FILE_THRESHOLD_MB}MB, using thumbnail`);
+                                console.log(`   ⚠️  Original size ${formatFileSize(originalSizeBytes)} exceeds ${LARGE_FILE_THRESHOLD_MB}MB threshold`);
+                                console.log(`   📦 Switching to thumbnail URL to avoid downloading very large file`);
+                                imageUrlToDownload = image.thumbnailUrl;
+                                imageSource = 'mcp-thumbnail-size-limit';
+                            } else {
+                                console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
+                                console.log(`   ⚠️  Original size ${formatFileSize(originalSizeBytes)} exceeds ${SIZE_THRESHOLD_KB} KB threshold`);
+                                console.log(`   📦 Not a Cloudinary URL - will download and compress locally`);
+                            }
                         } else if (originalSizeBytes > 0) {
                             console.log(`\nImage #${i + 1}: ✅ Selected: preferredImageUrl (MCP-configured)`);
                             console.log(`   ✅ Original size ${formatFileSize(originalSizeBytes)} is under ${SIZE_THRESHOLD_KB} KB threshold, no optimization needed`);
@@ -467,7 +508,22 @@ async function processImagesAsBase64(data, options = {}) {
 
                     // Pass thumbnailUrl as fallback (will be used if main URL fails after 3 retries)
                     const fallbackThumbnailUrl = image.thumbnailUrl && image.thumbnailUrl !== imageUrlToDownload ? image.thumbnailUrl : null;
-                    const downloadResult = await downloadImageAsBase64(imageUrlToDownload, i + 1, 3, false, fallbackThumbnailUrl);
+
+                    // Also track original URL if we applied Cloudinary transformations (for fallback if transformation fails)
+                    const originalUrlBeforeTransform = image.usedCloudinaryOptimization ? image.preferredImageUrl : null;
+
+                    let downloadResult;
+                    try {
+                        downloadResult = await downloadImageAsBase64(imageUrlToDownload, i + 1, 3, false, fallbackThumbnailUrl);
+                    } catch (downloadError) {
+                        // If we applied Cloudinary transformations and got a 400/error, try original URL
+                        if (originalUrlBeforeTransform && downloadError.message.includes('400')) {
+                            console.log(`${`Image #${i + 1}: `}⚠️  Cloudinary transformation failed, trying original URL...`);
+                            downloadResult = await downloadImageAsBase64(originalUrlBeforeTransform, i + 1, 3, false, fallbackThumbnailUrl);
+                        } else {
+                            throw downloadError;
+                        }
+                    }
                     const base64String = downloadResult.buffer.toString('base64');
 
                     // Determine MIME type from URL or default to PNG
