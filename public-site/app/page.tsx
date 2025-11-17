@@ -25,6 +25,20 @@ export default function Home() {
     backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)]
   );
 
+  // Capture wheel events to enable page scrolling while iframe handles mouse movements
+  useEffect(() => {
+    const handleWheel = (e: WheelEvent) => {
+      // Only handle if not scrolling within an interactive element
+      const target = e.target as HTMLElement;
+      if (!target.closest('.pointer-events-auto')) {
+        window.scrollBy(0, e.deltaY);
+      }
+    };
+
+    window.addEventListener('wheel', handleWheel, { passive: true });
+    return () => window.removeEventListener('wheel', handleWheel);
+  }, []);
+
   // Update header state when generator visibility or wallet connection changes
   useEffect(() => {
     setShowWalletInHeader(showGenerator || isConnected);
