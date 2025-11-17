@@ -16,28 +16,17 @@ export default function Home() {
   const [testAddress, setTestAddress] = useState('');
   const [shouldAutoRedirect, setShouldAutoRedirect] = useState(false);
 
-  // Background origami options - randomly select one on page load
+  // Background origami options - randomly select one on client mount to avoid hydration mismatch
   const backgroundOptions = [
     'https://storage.katachi-gen.com/kg_flower-0xeE49f82e58A1C2B306720D0c68047CBf70C11FB5-1763264870408.html',
     'https://storage.katachi-gen.com/kg_pinwheel-0xeE49f82e58A1C2B306720D0c68047CBf70C11FB5-1763263958900.html',
   ];
-  const [backgroundUrl] = useState(() =>
-    backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)]
-  );
+  const [backgroundUrl, setBackgroundUrl] = useState(backgroundOptions[0]); // Default to first option for SSR
 
-  // Capture wheel events to enable page scrolling while iframe handles mouse movements
+  // Randomize background URL on client mount only
   useEffect(() => {
-    const handleWheel = (e: WheelEvent) => {
-      // Only handle if not scrolling within an interactive element
-      const target = e.target as HTMLElement;
-      if (!target.closest('.pointer-events-auto')) {
-        window.scrollBy(0, e.deltaY);
-      }
-    };
-
-    window.addEventListener('wheel', handleWheel, { passive: true });
-    return () => window.removeEventListener('wheel', handleWheel);
-  }, []);
+    setBackgroundUrl(backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Update header state when generator visibility or wallet connection changes
   useEffect(() => {
@@ -88,7 +77,7 @@ export default function Home() {
 
   return (
     <>
-      {/* Background iframe - interactive/draggable */}
+      {/* Background iframe - responds to mouse movement */}
       <iframe
         src={backgroundUrl}
         className="fixed inset-0 w-full h-full border-0"
@@ -96,7 +85,7 @@ export default function Home() {
         title="Background animation"
       />
 
-      {/* Dark overlay to reduce brightness by 50% - clicks pass through to iframe */}
+      {/* Dark overlay - pointer-events-none allows mouse to pass through to iframe */}
       <div className="fixed inset-0 bg-black/50 pointer-events-none" style={{ zIndex: 1 }} />
 
       <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 pointer-events-none" style={{ zIndex: 2 }}>
