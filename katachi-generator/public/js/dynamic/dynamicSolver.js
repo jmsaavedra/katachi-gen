@@ -195,6 +195,8 @@ function initDynamicSolver(globals){
         if (globals.gpuMath.readyToRead()) {
             var numPixels = nodes.length*vectorLength;
             var height = Math.ceil(numPixels/(textureDim*vectorLength));
+            // Ensure height doesn't exceed framebuffer dimensions
+            height = Math.min(height, textureDim);
             var pixels = new Uint8Array(height*textureDim*4*vectorLength);
             globals.gpuMath.readPixels(0, 0, textureDim * vectorLength, height, pixels);
             var parsedPixels = new Float32Array(pixels.buffer);

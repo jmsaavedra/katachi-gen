@@ -155,7 +155,7 @@ async function generateThumbnail(data, htmlFilePath = null) {
                                 // Try WebGL pixel reading for textured content
                                 const gl = canvas.getContext('webgl') || canvas.getContext('webgl2');
                                 if (gl) {
-                                    const pixels = new Uint8Array(16); // Check 4x4 area
+                                    const pixels = new Uint8Array(64); // Check 4x4 area (16 pixels * 4 RGBA bytes = 64)
                                     gl.readPixels(canvas.width/2-2, canvas.height/2-2, 4, 4, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
                                     let colorVariation = 0;
                                     for (let i = 0; i < pixels.length; i += 4) {
