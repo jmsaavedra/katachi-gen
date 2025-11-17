@@ -136,24 +136,28 @@ export default function Home() {
             Katachi Gen <br />
             <span className="opacity-70 text-3xl sm:text-5xl font-bold font-[family-name:var(--font-montserrat)]">カタチ・ゲン</span>
           </h1>
-          
+
+          {/* Brief Description */}
+          <p className="text-white text-2xl md:text-3xl max-w-2xl mx-auto leading-relaxed font-semibold">
+            Generative 3D Origami artifacts of your collection on Shape, co-curated by you and AI.
+          </p>
+
           {/* Japanese Etymology - Compact */}
           <div className="max-w-md mx-auto relative">
             <div
               className="absolute inset-0 bg-black/50 blur-3xl -m-8"
               style={{ zIndex: -1 }}
             />
-            <p className="text-white text-lg md:text-xl leading-relaxed relative">
-              <strong className="text-white">Katachi</strong> <span className="text-white/70">(</span>カタチ<span className="text-white/70">)</span> = Shape/Form<br/>
-              <strong className="text-white">Gen</strong> <span className="text-white/70">(</span>ゲン<span className="text-white/70">)</span> = To Appear/Manifest<br/>
-              カタチ・ゲン = <strong className="text-white">Shape Revealed</strong>
-            </p>
+            <div className="text-white/60 text-lg md:text-xl leading-relaxed relative">
+              <div className="border-t border-white/30 pb-3 mb-3">
+              </div>
+              <p>
+                <strong className="text-white/80">Katachi</strong> <span className="text-white/50">(</span>カタチ<span className="text-white/50">)</span> = Shape/Form<br/>
+                <strong className="text-white/80">Gen</strong> <span className="text-white/50">(</span>ゲン<span className="text-white/50">)</span> = To Appear/Manifest<br/>
+                カタチ・ゲン = <strong className="animate-gradient-text text-xl md:text-2xl">Shape Revealed</strong>
+              </p>
+            </div>
           </div>
-
-          {/* Brief Description */}
-          <p className="text-white text-2xl md:text-3xl max-w-2xl mx-auto leading-relaxed font-semibold">
-            Generative 3D Origami artifacts of your collection on Shape, co-curated by you and AI.
-          </p>
         </div>
 
         {/* Two Column CTAs */}
