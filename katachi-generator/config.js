@@ -11,7 +11,8 @@ const ENABLE_MINTING = process.env.ENABLE_MINTING === 'true';
 
 // Image processing configuration
 const IMAGE_COMPRESSION_THRESHOLD = 200 * 1024; // Only compress images over 200KB
-const IMAGE_COMPRESSION_QUALITY = parseInt(process.env.IMAGE_COMPRESSION_QUALITY) || 85;
+const IMAGE_COMPRESSION_QUALITY = parseInt(process.env.IMAGE_COMPRESSION_QUALITY) || 70;
+const IMAGE_MAX_DIMENSION = parseInt(process.env.IMAGE_MAX_DIMENSION) || 750; // Max width/height for embedded images
 
 // Thumbnail configuration
 const THUMB_WIDTH = 1024;
@@ -106,6 +107,7 @@ module.exports = {
     ENABLE_MINTING,
     IMAGE_COMPRESSION_THRESHOLD,
     IMAGE_COMPRESSION_QUALITY,
+    IMAGE_MAX_DIMENSION,
     THUMB_WIDTH,
     THUMB_HEIGHT,
     arweaveWalletPath,
