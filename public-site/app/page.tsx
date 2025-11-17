@@ -5,7 +5,7 @@ import { useAccount } from 'wagmi';
 import { KatachiGenerator } from '@/components/katachi-generator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Search } from 'lucide-react';
+import { Sparkles, Origami } from 'lucide-react';
 import { useHeader } from '@/contexts/header-context';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
@@ -18,10 +18,8 @@ export default function Home() {
 
   // Background origami options - randomly select one on page load
   const backgroundOptions = [
-    'https://storage.katachi-gen.com/kg_airplane-0xc68c7771ec6a6e5d67d62aa9c6f22df69865e401-1763200871229.html',
-    'https://storage.katachi-gen.com/kg_flower-0xee49f82e58a1c2b306720d0c68047cbf70c11fb5-1760544958242.html',
-    'https://storage.katachi-gen.com/kg_crane-0x51360d99966724b2603182cc367ab9621d96eed2-1761334905087.html',
-    'https://storage.katachi-gen.com/kg_hypar-0x51360d99966724b2603182cc367ab9621d96eed2-1763200851581.html',
+    'https://storage.katachi-gen.com/kg_flower-0xeE49f82e58A1C2B306720D0c68047CBf70C11FB5-1763264870408.html',
+    'https://storage.katachi-gen.com/kg_pinwheel-0xeE49f82e58A1C2B306720D0c68047CBf70C11FB5-1763263958900.html',
   ];
   const [backgroundUrl] = useState(() =>
     backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)]
@@ -49,19 +47,15 @@ export default function Home() {
   };
 
   const handleExploreClick = () => {
-    // const topWallets = [
-    //   '0x136bbfe37988f82f8585ed155615b75371489d45',
-    //   '0x53bebd20781aaa3a831f45b3c6889010a706ff9f',
-    //   '0x72fe3c398c9a030b9b2be1fe1ff07701167571d4',
-    //   '0xee49f82e58a1c2b306720d0c68047cbf70c11fb5',
-    //   '0x51360d99966724b2603182cc367ab9621d96eed2',
-    //   '0xc68c7771ec6a6e5d67d62aa9c6f22df69865e401'
-    // ];
-    // const randomWallet = topWallets[Math.floor(Math.random() * topWallets.length)];
+    const topWallets = [
+      '0x9f6ae0370d74f0e591c64cec4a8ae0d627817014',
+      '0xeE49f82e58A1C2B306720D0c68047CBf70C11FB5',
+      '0x136bbfe37988f82f8585ed155615b75371489d45',
+      '0xd20ce27f650598c2d790714b4f6a7222b8ddce22'
+    ];
+    const randomWallet = topWallets[Math.floor(Math.random() * topWallets.length)];
 
-    // Fixed wallet for Explore button
-    const explorerWallet = '0xeE49f82e58A1C2B306720D0c68047CBf70C11FB5';
-    setTestAddress(explorerWallet);
+    setTestAddress(randomWallet);
     setShowGenerator(true);
   };
   
@@ -125,7 +119,7 @@ export default function Home() {
           <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50 bg-transparent backdrop-blur-md">
             <CardContent className="p-8 space-y-4">
               <div className="flex justify-center">
-                <Sparkles className="h-16 w-16 text-primary" />
+                <Origami className="h-16 w-16 text-primary" />
               </div>
               <div className="space-y-2 text-center">
                 <h2 className="text-2xl font-semibold">Reveal Your Shape</h2>
@@ -161,22 +155,22 @@ export default function Home() {
           <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 bg-transparent backdrop-blur-md">
             <CardContent className="p-8 space-y-4">
               <div className="flex justify-center">
-                <Search className="h-16 w-16 text-white/80" />
+                <Sparkles className="h-16 w-16 text-white/80" />
               </div>
               <div className="space-y-2 text-center">
                 <h2 className="text-2xl font-semibold">Explore</h2>
                 <p className="text-sm text-white/80">
-                  View example origami patterns from top collectors
+                  Share your sentiment and curate a collection of Shape artworks. No wallet needed!
                 </p>
               </div>
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 variant="outline"
                 className="w-full gap-2"
                 onClick={handleExploreClick}
               >
-                <Search className="h-4 w-4" />
-                Explore Examples
+                <Sparkles className="h-4 w-4" />
+                Try it now
               </Button>
             </CardContent>
           </Card>
