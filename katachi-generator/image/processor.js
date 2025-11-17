@@ -8,7 +8,8 @@ const {
     THUMB_WIDTH,
     THUMB_HEIGHT,
     IMAGE_COMPRESSION_THRESHOLD,
-    IMAGE_COMPRESSION_QUALITY
+    IMAGE_COMPRESSION_QUALITY,
+    IMAGE_MAX_DIMENSION
 } = require('../config');
 
 /**
@@ -165,17 +166,14 @@ function downloadWithStrategy(imageUrl, options, prefix = '', smartCompression =
                             smartCompression: true
                         });
                     }
-                    // Standard compression: Only compress images over 150KB, preserving original dimensions
+                    // Standard compression: Only compress images over 150KB, resize to max dimension
                     else if (buffer.length > IMAGE_COMPRESSION_THRESHOLD) {
-                        console.log(`${prefix}🗜️ Image is ${buffer.length} bytes (>${IMAGE_COMPRESSION_THRESHOLD}), compressing with quality ${IMAGE_COMPRESSION_QUALITY} (preserving dimensions)`);
-
-                        // Get original image metadata to preserve dimensions
-                        const metadata = await sharp(buffer).metadata();
+                        console.log(`${prefix}🗜️ Image is ${buffer.length} bytes (>${IMAGE_COMPRESSION_THRESHOLD}), compressing with quality ${IMAGE_COMPRESSION_QUALITY} (max ${IMAGE_MAX_DIMENSION}px)`);
 
                         const compressionResult = await compressImage(buffer, {
                             quality: IMAGE_COMPRESSION_QUALITY,
-                            maxWidth: metadata.width,  // Preserve original width
-                            maxHeight: metadata.height  // Preserve original height
+                            maxWidth: IMAGE_MAX_DIMENSION,  // Resize to max dimension
+                            maxHeight: IMAGE_MAX_DIMENSION  // Resize to max dimension
                         });
 
                         resolve({
