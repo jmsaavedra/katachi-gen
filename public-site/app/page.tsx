@@ -85,10 +85,10 @@ export default function Home() {
       {/* Dark overlay to reduce brightness by 50% - clicks pass through to iframe */}
       <div className="fixed inset-0 bg-black/50 pointer-events-none" style={{ zIndex: 1 }} />
 
-      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12" style={{ zIndex: 2 }}>
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 pointer-events-none" style={{ zIndex: 2 }}>
         <div className="w-full max-w-4xl space-y-12">
         {/* Hero Section */}
-        <div className="space-y-6 text-center">
+        <div className="space-y-6 text-center pointer-events-none">
           <h1 className="text-5xl font-bold tracking-tight sm:text-7xl font-[family-name:var(--font-montserrat)]">
             Katachi Gen <br />
             <span className="opacity-70 text-3xl sm:text-5xl font-bold font-[family-name:var(--font-montserrat)]">カタチ・ゲン</span>
@@ -116,7 +116,7 @@ export default function Home() {
         {/* Two Column CTAs */}
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Primary CTA - Reveal Your Shape */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50 bg-transparent backdrop-blur-md">
+          <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50 bg-transparent backdrop-blur-md pointer-events-auto">
             <CardContent className="p-8 space-y-4">
               <div className="flex justify-center">
                 <Origami className="h-16 w-16 text-primary" />
@@ -130,7 +130,7 @@ export default function Home() {
               {!isConnected ? (
                 <ConnectButton.Custom>
                   {({ openConnectModal }) => (
-                    <Button 
+                    <Button
                       size="lg"
                       className="w-full gap-2 animate-gradient-button"
                       onClick={() => handleConnectClick(openConnectModal)}
@@ -140,8 +140,8 @@ export default function Home() {
                   )}
                 </ConnectButton.Custom>
               ) : (
-                <Button 
-                  size="lg" 
+                <Button
+                  size="lg"
                   className="w-full gap-2 animate-gradient-button"
                   onClick={() => setShowGenerator(true)}
                 >
@@ -152,7 +152,7 @@ export default function Home() {
           </Card>
 
           {/* Secondary CTA - Explore */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 bg-transparent backdrop-blur-md">
+          <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 bg-transparent backdrop-blur-md pointer-events-auto">
             <CardContent className="p-8 space-y-4">
               <div className="flex justify-center">
                 <Sparkles className="h-16 w-16 text-white/80" />
