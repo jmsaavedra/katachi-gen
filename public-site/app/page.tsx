@@ -18,8 +18,10 @@ export default function Home() {
 
   // Background origami options - randomly select one on client mount to avoid hydration mismatch
   const backgroundOptions = [
-    'https://storage.katachi-gen.com/kg_flower-0xeE49f82e58A1C2B306720D0c68047CBf70C11FB5-1763264870408.html',
-    'https://storage.katachi-gen.com/kg_pinwheel-0xeE49f82e58A1C2B306720D0c68047CBf70C11FB5-1763263958900.html',
+    '/origami-backgrounds/kg_flower-0xee49f82e58a1c2b306720d0c68047cbf70c11fb5-1763408223949.html',
+    '/origami-backgrounds/kg_flower-0xee49f82e58a1c2b306720d0c68047cbf70c11fb5-1763408385041.html',
+    '/origami-backgrounds/kg_crane-0xee49f82e58a1c2b306720d0c68047cbf70c11fb5-1763408641201.html',
+    '/origami-backgrounds/kg_crane-0xee49f82e58a1c2b306720d0c68047cbf70c11fb5-1763410156190.html',
   ];
   const [backgroundUrl, setBackgroundUrl] = useState(backgroundOptions[0]); // Default to first option for SSR
 
@@ -28,6 +30,42 @@ export default function Home() {
     setBackgroundUrl(backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)]);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Listen for scroll messages from iframe and forward mouse position to iframe
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'scroll') {
+        // Forward scroll from iframe to parent page
+        window.scrollBy({
+          left: event.data.deltaX,
+          top: event.data.deltaY,
+          behavior: 'instant',
+        });
+      }
+    };
+
+    const handleMouseMove = (event: MouseEvent) => {
+      // Forward mouse position to iframe
+      const iframe = document.querySelector('iframe');
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage(
+          {
+            type: 'mousemove',
+            clientX: event.clientX,
+            clientY: event.clientY,
+          },
+          '*'
+        );
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    window.addEventListener('mousemove', handleMouseMove);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+      window.removeEventListener('mousemove', handleMouseMove);
+    };
+  }, []);
 
   // Update header state when generator visibility or wallet connection changes
   useEffect(() => {
