@@ -88,7 +88,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
     setMousePosition({ x: e.clientX, y: e.clientY });
   };
 
-  // Typewriter effect
+  // Typewriter effect with pauses between sentences
   useEffect(() => {
     if (!showInterpretation || !curationInterpretation || hasStartedTyping.current) {
       return;
@@ -102,16 +102,43 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
 
     // Store the text in a ref to avoid closure issues
     const textToType = curationInterpretation;
-    
+
     const typeNextCharacter = () => {
       if (currentIndexRef.current < textToType.length) {
+        const currentChar = textToType[currentIndexRef.current];
+        const nextChar = textToType[currentIndexRef.current + 1];
+
         currentIndexRef.current++;
-        setDisplayedText(textToType.slice(0, currentIndexRef.current));
+        // Convert \n to <div> with margin for proper spacing
+        const displayText = textToType.slice(0, currentIndexRef.current)
+          .split('\n')
+          .map((line, i, arr) => i < arr.length - 1 ? `<div style="margin-bottom: 0.75em;">${line}</div>` : line)
+          .join('');
+        setDisplayedText(displayText);
         console.log('Typing progress:', currentIndexRef.current, '/', textToType.length);
-        
-        // Random delay between 30-80ms to simulate thinking (faster)
-        const randomDelay = 30 + Math.random() * 50;
-        setTimeout(typeNextCharacter, randomDelay);
+        if (currentChar === '\n') {
+          console.log('Found newline at position', currentIndexRef.current);
+        }
+
+        // Check if we just completed a sentence (period, exclamation, or question mark followed by space or newline)
+        // Also check for double newline which indicates paragraph break
+        const isEndOfSentence = (currentChar === '.' || currentChar === '!' || currentChar === '?') &&
+                               (nextChar === ' ' || nextChar === '\n' || !nextChar);
+        const isDoubleNewline = currentChar === '\n' && nextChar === '\n';
+
+        let delay;
+        if (isDoubleNewline) {
+          // Pause for paragraph breaks (1 second)
+          delay = 1000;
+        } else if (isEndOfSentence) {
+          // Pause for 1 second at end of sentences
+          delay = 1000;
+        } else {
+          // Random delay between 30-80ms to simulate typing (faster)
+          delay = 30 + Math.random() * 50;
+        }
+
+        setTimeout(typeNextCharacter, delay);
       } else {
         console.log('Typewriter effect completed');
         setIsTyping(false);
@@ -129,10 +156,10 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
         }, 1000);
       }
     };
-    
+
     // Start typing
     typeNextCharacter();
-    
+
     return () => {
       console.log('Cleaning up typewriter effect');
     };
@@ -232,7 +259,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
         <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
           <Heart className="h-6 w-6 md:h-7 md:w-7 text-red-500 animate-pulse" />
           <span className="bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 bg-clip-text text-transparent">
-            Step 1: Sentiment Filter
+            Step 1: Sentiment Curation
           </span>
         </CardTitle>
         {showSubtitle && (
@@ -351,16 +378,19 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
           <div className="space-y-8">
             {/* Interpretation - Typewriter effect */}
             {showInterpretation && (
-              <div 
+              <div
                 className="text-center animate-in fade-in duration-500 flex items-center justify-center"
                 style={{
                   minHeight: formHeight && !expandPanel ? `${formHeight}px` : 'auto'
                 }}
               >
-                <p className="text-2xl md:text-3xl font-bold leading-relaxed animate-pulse px-8">
-                  {displayedText}
-                  {isTyping && <span className="animate-pulse">|</span>}
-                </p>
+                <p
+                  className="text-xl md:text-2xl font-bold animate-pulse px-8"
+                  style={{ lineHeight: '1.25' }}
+                  dangerouslySetInnerHTML={{
+                    __html: displayedText + (isTyping ? '<span class="animate-pulse">|</span>' : '')
+                  }}
+                />
               </div>
             )}
             

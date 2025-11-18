@@ -537,7 +537,7 @@ export default async function interpretCollectionSentiment({
     }
     
     // Generate interpretation
-    const interpretation = generateInterpretation(sentiment, themes, selectedNfts.length);
+    const interpretation = generateInterpretation(sentiment, themes, selectedNfts);
     
     // Map selected NFTs to output format
     const mappedNfts = selectedNfts.map((item) => {
@@ -651,25 +651,57 @@ export default async function interpretCollectionSentiment({
   }
 }
 
-function generateInterpretation(sentiment: string, themes: string[], nftCount: number): string {
-  // Format themes with proper grammar: "joy and community" or "joy, pride, and creativity"
+function generateInterpretation(
+  sentiment: string,
+  themes: string[],
+  selectedNfts: Array<{
+    nft: OwnedNft;
+    score: number;
+    reason: string;
+    matchDetails: {
+      textMatches: string[];
+      themeMatches: string[];
+      visualMatches: string[];
+      collectionInfo: string;
+    };
+  }>
+): string {
+  // Format themes with proper grammar and blue coloring: "joy and community" or "joy, pride, and creativity"
   let themeText = '';
   if (themes.length > 0) {
+    // Wrap each theme in a colored span
+    const coloredThemes = themes.map(theme => `<span style="color: #3b82f6;">${theme}</span>`);
+
     if (themes.length === 1) {
-      themeText = `I detected themes of ${themes[0]} in your reflection. `;
+      themeText = `themes of ${coloredThemes[0]}`;
     } else if (themes.length === 2) {
-      themeText = `I detected themes of ${themes[0]} and ${themes[1]} in your reflection. `;
+      themeText = `themes of ${coloredThemes[0]} and ${coloredThemes[1]}`;
     } else {
-      const lastTheme = themes[themes.length - 1];
-      const otherThemes = themes.slice(0, -1).join(', ');
-      themeText = `I detected themes of ${otherThemes}, and ${lastTheme} in your reflection. `;
+      const lastTheme = coloredThemes[coloredThemes.length - 1];
+      const otherThemes = coloredThemes.slice(0, -1).join(', ');
+      themeText = `themes of ${otherThemes}, and ${lastTheme}`;
     }
   }
 
+  // Get top 3 NFT titles (italicized)
+  let topWorksText = '';
+  const top3 = selectedNfts.slice(0, Math.min(3, selectedNfts.length));
+  if (top3.length > 0) {
+    const titles = top3.map(item => `<em>${item.nft.name || 'Untitled'}</em>`);
+    if (titles.length === 1) {
+      topWorksText = `The top work that resonates with your sentiment is ${titles[0]}. `;
+    } else if (titles.length === 2) {
+      topWorksText = `The top works that resonate with your sentiment are ${titles[0]} and ${titles[1]}. `;
+    } else {
+      topWorksText = `The top 3 works that resonate with your sentiment are ${titles[0]}, ${titles[1]}, and ${titles[2]}. `;
+    }
+  }
+
+  // Art curator tone variations
   const interpretations = [
-    `Your collection reflects ${sentiment}. ${themeText}These ${nftCount} pieces resonate with your expressed feelings.`,
-    `Based on your words "${sentiment.slice(0, 50)}...", ${themeText}I've selected ${nftCount} NFTs that echo your sentiment.`,
-    `Your feeling about collecting - "${sentiment.slice(0, 30)}..." - guides this curation. ${themeText}`,
+    `I've evaluated your sentiment about collecting on-chain artwork.\nI detected ${themeText}, which speak to the emotional resonance of your collecting journey.\n${topWorksText}Based on this, below are the artworks I've curated from your collection, which will be applied to your unique Katachi Gen Origami design.`,
+    `I've evaluated your sentiment about collecting on-chain artwork.\nYour reflection reveals ${themeText}, reflecting a thoughtful engagement with digital art.\n${topWorksText}Based on this, below are the artworks I've curated from your collection, which will be applied to your unique Katachi Gen Origami design.`,
+    `I've evaluated your sentiment about collecting on-chain artwork.\nThe ${themeText} that emerge from your words suggest a meaningful connection to these works.\n${topWorksText}Based on this, below are the artworks I've curated from your collection, which will be applied to your unique Katachi Gen Origami design.`,
   ];
 
   return interpretations[Math.floor(Math.random() * interpretations.length)];

@@ -163,7 +163,7 @@ export default function Home() {
         {/* Two Column CTAs */}
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Primary CTA - Reveal Your Shape */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-[3px] border-white md:border-[3px] hover:border-white bg-transparent backdrop-blur-md pointer-events-auto cursor-pointer">
+          <Card className="group hover:shadow-lg transition-all duration-300 border-[3px] border-white md:border-[3px] hover:border-blue-600 bg-transparent backdrop-blur-md pointer-events-auto cursor-pointer">
             <CardContent
               className="p-6 md:p-8 pb-5 md:pb-6 flex flex-col"
               onClick={() => {
@@ -190,7 +190,7 @@ export default function Home() {
                   {({ openConnectModal }) => (
                     <Button
                       size="lg"
-                      className="w-full gap-2 animate-gradient-button transition-colors"
+                      className="w-full gap-2 animate-gradient-button transition-colors cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleConnectClick(openConnectModal);
@@ -205,7 +205,7 @@ export default function Home() {
               ) : (
                 <Button
                   size="lg"
-                  className="w-full gap-2 animate-gradient-button"
+                  className="w-full gap-2 animate-gradient-button cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowGenerator(true);
@@ -219,7 +219,7 @@ export default function Home() {
 
           {/* Secondary CTA - Explore */}
           <Card
-            className="group hover:shadow-lg transition-all duration-300 border-[3px] border-white md:border-[3px] hover:border-white bg-transparent backdrop-blur-md pointer-events-auto cursor-pointer"
+            className="group hover:shadow-lg transition-all duration-300 border-[3px] border-white md:border-[3px] hover:border-blue-600 bg-transparent backdrop-blur-md pointer-events-auto cursor-pointer"
             onClick={handleExploreClick}
           >
             <CardContent className="p-6 md:p-8 pb-5 md:pb-6 flex flex-col">
@@ -235,7 +235,7 @@ export default function Home() {
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full gap-2 hover:!bg-blue-600 hover:!text-white hover:!border-blue-600 transition-colors"
+                className="w-full gap-2 group-hover:!bg-blue-600 group-hover:!text-white group-hover:!border-blue-600 hover:!bg-blue-600 hover:!text-white hover:!border-blue-600 transition-colors cursor-pointer"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleExploreClick();

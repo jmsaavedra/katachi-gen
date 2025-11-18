@@ -8,6 +8,7 @@ const { saveThumbnail } = require('../image/processor');
 const { uploadToR2 } = require('../storage/r2');
 const { uploadFileToArweave } = require('../storage/arweave');
 const { generateNFTTemplate } = require('../utils/templateGenerator');
+const { selectPattern } = require('../utils/patternSelector');
 
 /**
  * Core pattern generation logic with progress tracking
@@ -23,10 +24,11 @@ async function generatePatternCore(data, options = {}) {
         throw new Error('Wallet address or stack user address is required');
     }
 
-    // Always use flower pattern for background version
+    // Select pattern using deterministic algorithm if not explicitly provided
     if (!data.patternType || data.patternType === "") {
-        data.patternType = 'Flower';
-        console.log('🌸 Using flower pattern (background version)');
+        const selectedPattern = selectPattern(data.walletAddress, data.seed2);
+        data.patternType = selectedPattern.type;
+        console.log(`🎲 Randomly selected pattern: ${data.patternType} (using wallet + seed2)`);
     } else {
         console.log('📋 Using provided pattern type:', data.patternType);
     }
