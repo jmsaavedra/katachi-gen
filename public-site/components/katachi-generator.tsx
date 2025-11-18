@@ -994,8 +994,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         />
       )}
       
-      <div className="w-full max-w-6xl mx-auto space-y-8">
-        <div className="space-y-4">
+      <div className="w-full max-w-6xl mx-auto space-y-6 md:space-y-8">
+        <div className="space-y-3 md:space-y-4 pt-4 md:pt-0">
           <div className="flex gap-2 flex-wrap">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border text-xs">
               <span>📊</span>
@@ -1024,9 +1024,9 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
 
       {/* Your Shape Journey - Full Width */}
       <Card>
-        <CardHeader className="pt-1 pb-0">
+        <CardHeader className="pt-4 pb-3 md:pt-6 md:pb-4">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-1.5 text-sm">
+            <CardTitle className="flex items-center gap-1.5 text-sm md:text-base">
               <Package className="h-4 w-4" />
               Your Shape Journey
             </CardTitle>
@@ -1035,7 +1035,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="pt-0 pb-2">
+        <CardContent className="pt-2 pb-4 md:pt-3 md:pb-5">
           {isLoading ? (
             <>
               <Skeleton className="h-4 w-full" />
@@ -1045,30 +1045,30 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
           ) : error ? (
             <p className="text-destructive">Failed to load NFTs</p>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="flex flex-col items-center py-1.5 px-2 bg-muted/30 rounded-lg">
-                <span className="font-mono font-semibold text-sm">{nfts?.totalCount || 0}</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+              <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
+                <span className="font-mono font-semibold text-sm md:text-base">{nfts?.totalCount || 0}</span>
                 <span className="text-muted-foreground text-xs">Total NFTs</span>
               </div>
-              <div className="flex flex-col items-center py-1.5 px-2 bg-muted/30 rounded-lg">
-                <span className="font-mono font-semibold text-sm">
+              <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
+                <span className="font-mono font-semibold text-sm md:text-base">
                   {nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0}
                 </span>
                 <span className="text-muted-foreground text-xs">Unique Collections</span>
               </div>
-              <div className="flex flex-col items-center py-1.5 px-2 bg-muted/30 rounded-lg">
-                <span className="font-mono font-semibold text-sm">
+              <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
+                <span className="font-mono font-semibold text-sm md:text-base">
                   {nfts?.totalCount ? (nfts.totalCount > 10 ? 'High' : nfts.totalCount > 5 ? 'Medium' : 'Basic') : 'Basic'}
                 </span>
                 <span className="text-muted-foreground text-xs">Pattern Complexity</span>
               </div>
-              <div className="flex flex-col items-center py-1.5 px-2 bg-muted/30 rounded-lg">
+              <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
                 {isLoadingMedals ? (
                   <Skeleton className="h-4 w-8" />
                 ) : medalsError ? (
-                  <span className="font-mono font-semibold text-sm text-destructive">Error</span>
+                  <span className="font-mono font-semibold text-sm md:text-base text-destructive">Error</span>
                 ) : (
-                  <span className="font-mono font-semibold text-sm">{stackMedals?.totalMedals || 0}</span>
+                  <span className="font-mono font-semibold text-sm md:text-base">{stackMedals?.totalMedals || 0}</span>
                 )}
                 <span className="text-muted-foreground text-xs">Stack Medals</span>
               </div>
