@@ -119,7 +119,7 @@ export default function Home() {
       {/* Background iframe - responds to mouse movement but ignores scroll */}
       <iframe
         src={backgroundUrl}
-        className="fixed inset-0 w-full h-full border-0"
+        className="fixed inset-0 w-full h-full border-0 md:pointer-events-auto pointer-events-none"
         style={{ zIndex: 0 }}
         title="Background animation"
         scrolling="no"
@@ -149,7 +149,7 @@ export default function Home() {
               style={{ zIndex: -1 }}
             />
             <div className="text-white/60 text-lg md:text-xl leading-relaxed relative">
-              <div className="border-t border-white/30 pb-3 mb-3">
+              <div className="border-t border-white/30 pb-3 mb-3 w-[70%] mx-auto">
               </div>
               <p>
                 <strong className="text-white/80">Katachi</strong> <span className="text-white/50">(</span>カタチ<span className="text-white/50">)</span> = Shape/Form<br/>

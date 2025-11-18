@@ -27,13 +27,13 @@ export function HeaderWrapper() {
     <header className="fixed top-[72px] left-0 right-0 z-40">
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         <button onClick={handleLogoClick} className="flex items-center gap-2 bg-transparent border-none cursor-pointer">
-          <span className="text-xl font-bold font-[family-name:var(--font-montserrat)]">Katachi Gen</span>
+          <span className="hidden sm:inline text-xl font-bold font-[family-name:var(--font-montserrat)]">Katachi Gen</span>
           <span className="text-xl opacity-70 font-bold font-[family-name:var(--font-montserrat)]">カタチ・ゲン</span>
         </button>
         <div className="flex items-center gap-4">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" className="px-6 py-3 rounded-md text-lg font-bold">
+              <Button variant="ghost" className="px-0 py-3 rounded-md text-lg font-bold">
                 How It Works
               </Button>
             </DialogTrigger>
