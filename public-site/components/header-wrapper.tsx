@@ -24,15 +24,24 @@ export function HeaderWrapper() {
   };
 
   return (
-    <header className={`fixed left-0 right-0 z-40 ${isInMintView ? 'top-0' : 'top-[40px] md:top-[40px]'} bg-black/60 backdrop-blur-md md:bg-transparent md:backdrop-blur-none ${isInMintView ? 'md:bg-black/60 md:backdrop-blur-md' : ''}`}>
-      <div className="container mx-auto grid grid-cols-3 h-16 items-center px-4">
-        <div className="flex items-center gap-3">
-          <button onClick={handleLogoClick} className="hidden md:flex items-center gap-2 bg-transparent border-none cursor-pointer">
-            <span className="text-xl font-bold font-[family-name:var(--font-montserrat)]">Katachi Gen</span>
-          </button>
+    <header
+      className={`fixed left-0 right-0 z-40 ${
+        isInMintView ? 'top-0' : 'top-[40px] md:top-[40px]'
+      } bg-black/60 backdrop-blur-md ${
+        isInMintView ? 'md:bg-black/60 md:backdrop-blur-md' : 'md:bg-transparent md:backdrop-blur-none'
+      }`}
+    >
+      <div className="container mx-auto grid grid-cols-3 items-center px-4 h-16 md:flex md:justify-between">
+        {/* Mobile: left slot for Connect */}
+        <div className="flex items-center gap-2 md:hidden">
+          {showWalletInHeader && <WalletConnect />}
+        </div>
+        {/* Desktop: left slot with logo */}
+        <div className="hidden md:flex items-center gap-3">
+          <div className="hidden">
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="secondary" size="sm" className="px-3 py-2 h-auto text-sm font-semibold">
+              <Button variant="ghost" className="hidden md:inline-flex px-4 py-3 rounded-md text-lg font-bold">
                 How It Works
               </Button>
             </DialogTrigger>
@@ -292,8 +301,14 @@ export function HeaderWrapper() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
+          <button onClick={handleLogoClick} className="hidden md:flex items-center gap-2 bg-transparent border-none cursor-pointer">
+            <span className="text-xl font-bold font-[family-name:var(--font-montserrat)]">Katachi Gen</span>
+            <span className="text-xl opacity-70 font-bold font-[family-name:var(--font-montserrat)]">カタチ・ゲン</span>
+          </button>
         </div>
-        <div className="flex justify-center">
+        {/* Mobile: centered Japanese label */}
+        <div className="flex justify-center md:hidden">
           <button
             onClick={handleLogoClick}
             className="text-base font-semibold tracking-wide opacity-80 hover:opacity-100 transition-opacity"
@@ -302,7 +317,35 @@ export function HeaderWrapper() {
             カタチ・ゲン
           </button>
         </div>
-        <div className="flex justify-end">
+        {/* Mobile: right slot for How It Works */}
+        <div className="flex justify-end md:hidden">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="secondary" size="sm" className="px-3 py-2 h-auto text-sm font-semibold">
+                How It Works
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-[95vw] md:max-w-[1200px] max-h-[90vh] overflow-y-auto w-full pt-10">
+              <DialogHeader className="text-center max-w-2xl mx-auto">
+                <DialogTitle className="text-4xl font-light">
+                  About Katachi Gen
+                </DialogTitle>
+                <DialogDescription className="text-xl pt-4">
+                  カタチ・ゲン - Shape Revealed
+                </DialogDescription>
+              </DialogHeader>
+            </DialogContent>
+          </Dialog>
+        </div>
+        {/* Desktop: right slot for How It Works + Connect */}
+        <div className="hidden md:flex justify-end items-center gap-3">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" className="px-4 py-3 rounded-md text-lg font-bold">
+                How It Works
+              </Button>
+            </DialogTrigger>
+          </Dialog>
           {showWalletInHeader && <WalletConnect />}
         </div>
       </div>
