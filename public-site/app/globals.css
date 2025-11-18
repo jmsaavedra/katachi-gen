@@ -102,6 +102,7 @@ html, body {
   }
 }
 
+
 .animate-gradient-button:hover:not(:disabled)::before {
   opacity: 0;
 }
