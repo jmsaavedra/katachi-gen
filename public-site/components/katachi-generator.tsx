@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
+import { FoldLoadingOverlay } from '@/components/fold-loading-overlay';
 import { useState, useEffect } from 'react';
 import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Eye, RefreshCw, BookUser } from 'lucide-react';
 import Image from 'next/image';
@@ -937,12 +938,11 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
     <>
       {/* Loading Overlay */}
       {isInitialLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-lg font-medium">Shapeの旅を読み込んでいます...</p>
-          </div>
-        </div>
+        <FoldLoadingOverlay
+          className="fixed inset-0 z-50"
+          text=""
+          subtext="Collecting your Shape journey — folding data, token metadata, and AI curator."
+        />
       )}
       
       {/* Wrong Network Modal */}
@@ -995,8 +995,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
       )}
       
       <div className="w-full max-w-6xl mx-auto space-y-8 md:space-y-10 px-4 sm:px-6">
-        <div className="space-y-4 md:space-y-4 pt-2 md:pt-0">
-          <div className="flex gap-2 gap-y-2 flex-nowrap overflow-x-auto">
+        <div className="space-y-4 md:space-y-4 -mt-2 md:mt-0">
+          <div className="flex gap-2 gap-y-2 flex-nowrap overflow-x-auto justify-center md:justify-start">
             <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border text-[11px] whitespace-nowrap">
               <span>📊</span>
               <span className="text-muted-foreground">Reading</span>
@@ -1023,8 +1023,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         </div>
 
       {/* Your Shape Journey - Full Width */}
-      <Card className="mt-1 md:mt-3 shadow-md">
-        <CardHeader className="pt-2 pb-3 md:pt-4 md:pb-4 space-y-2">
+      <Card className="mt-0 md:mt-1 shadow-md">
+        <CardHeader className="pt-1 pb-2 md:pt-2 md:pb-3 space-y-1">
           <div className="flex items-center gap-2 justify-start">
             <CardTitle className="flex items-center gap-2 text-xl md:text-2xl font-semibold">
               <BookUser className="h-6 w-6 md:h-7 md:w-7" />
@@ -1035,7 +1035,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
             Analysis of your on-chain participation
           </CardDescription>
         </CardHeader>
-        <CardContent className="pt-2 pb-4 md:pt-3 md:pb-5">
+        <CardContent className="pt-1 pb-4 md:pt-2 md:pb-5">
           {isLoading ? (
             <>
               <Skeleton className="h-4 w-full" />
@@ -1047,31 +1047,31 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
-                <span className="font-mono font-semibold text-sm md:text-base">{nfts?.totalCount || 0}</span>
-                <span className="text-muted-foreground text-sm">Total NFTs</span>
-              </div>
-              <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
-                <span className="font-mono font-semibold text-sm md:text-base">
-                  {nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0}
-                </span>
-                <span className="text-muted-foreground text-sm">Unique Collections</span>
-              </div>
-              <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
-                <span className="font-mono font-semibold text-sm md:text-base">
-                  {nfts?.totalCount ? (nfts.totalCount > 10 ? 'High' : nfts.totalCount > 5 ? 'Medium' : 'Basic') : 'Basic'}
-                </span>
-                <span className="text-muted-foreground text-sm">Pattern Complexity</span>
-              </div>
-              <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
-                {isLoadingMedals ? (
-                  <Skeleton className="h-4 w-8" />
-                ) : medalsError ? (
-                  <span className="font-mono font-semibold text-sm md:text-base text-destructive">Error</span>
-                ) : (
-                  <span className="font-mono font-semibold text-sm md:text-base">{stackMedals?.totalMedals || 0}</span>
-                )}
-                <span className="text-muted-foreground text-sm">Stack Medals</span>
-              </div>
+                  <span className="font-mono font-semibold text-base md:text-lg">{nfts?.totalCount || 0}</span>
+                  <span className="text-muted-foreground text-sm">Total NFTs</span>
+                </div>
+                <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
+                  <span className="font-mono font-semibold text-base md:text-lg">
+                    {nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0}
+                  </span>
+                  <span className="text-muted-foreground text-sm">Unique Collections</span>
+                </div>
+                <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
+                  <span className="font-mono font-semibold text-base md:text-lg">
+                    {nfts?.totalCount ? (nfts.totalCount > 10 ? 'High' : nfts.totalCount > 5 ? 'Medium' : 'Basic') : 'Basic'}
+                  </span>
+                  <span className="text-muted-foreground text-sm">Pattern Complexity</span>
+                </div>
+                <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
+                  {isLoadingMedals ? (
+                    <Skeleton className="h-4 w-8" />
+                  ) : medalsError ? (
+                    <span className="font-mono font-semibold text-base md:text-lg text-destructive">Error</span>
+                  ) : (
+                    <span className="font-mono font-semibold text-base md:text-lg">{stackMedals?.totalMedals || 0}</span>
+                  )}
+                  <span className="text-muted-foreground text-sm">Stack Medals</span>
+                </div>
             </div>
           )}
         </CardContent>
