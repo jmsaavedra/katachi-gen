@@ -240,7 +240,12 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
             className="text-base transition-opacity duration-[2000ms]"
             style={{ opacity: fadeOutSubtitle ? 0 : 1 }}
           >
-            Share your feelings about collecting on Shape. Feel free to write as little or as much as you&apos;d like! <br /> Our AI will interpret your response and curate up to 8 pieces from your collection based on sentiment heuristics.
+            <span className="block md:inline">
+              Share your feelings about collecting on Shape. Feel free to write as little or as much as you&apos;d like!
+            </span>
+            <span className="block md:inline mt-2 md:mt-0">
+              Our AI will interpret your response and curate up to 8 pieces from your collection based on sentiment heuristics.
+            </span>
           </CardDescription>
         )}
       </CardHeader>

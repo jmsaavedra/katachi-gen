@@ -14,7 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Skeleton } from '@/components/ui/skeleton';
 import { Progress } from '@/components/ui/progress';
 import { useState, useEffect } from 'react';
-import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Eye, RefreshCw } from 'lucide-react';
+import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLink, Eye, RefreshCw, BookUser } from 'lucide-react';
 import Image from 'next/image';
 import { CollectionReflection } from '@/components/collection-reflection';
 import { EligibilityModal } from '@/components/eligibility-modal';
@@ -994,46 +994,46 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
         />
       )}
       
-      <div className="w-full max-w-6xl mx-auto space-y-6 md:space-y-8">
-        <div className="space-y-3 md:space-y-4 pt-4 md:pt-0">
-          <div className="flex gap-2 flex-wrap">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border text-xs">
+      <div className="w-full max-w-6xl mx-auto space-y-8 md:space-y-10 px-4 sm:px-6">
+        <div className="space-y-4 md:space-y-4 pt-2 md:pt-0">
+          <div className="flex gap-2 gap-y-2 flex-nowrap overflow-x-auto">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border text-[11px] whitespace-nowrap">
               <span>📊</span>
-              <span className="text-muted-foreground">Reading from</span>
+              <span className="text-muted-foreground">Reading</span>
               <span className="font-medium">{chainConfig.read.name}</span>
             </div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-muted/50 border border-border text-xs">
+            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-muted/50 border border-border text-[11px] whitespace-nowrap">
               <span>🎯</span>
-              <span className="text-muted-foreground">Minting to</span>
+              <span className="text-muted-foreground">Minting</span>
               <span className="font-medium">{chainConfig.mint.name}</span>
             </div>
             {config.mintChainId === 360 && !config.allowMainnetMinting && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-100 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700 text-xs text-orange-600 dark:text-orange-400">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-900/20 border border-orange-300 dark:border-orange-700 text-[11px] text-orange-600 dark:text-orange-400 whitespace-nowrap">
                 <span>⚠️</span>
                 <span className="font-medium">Mainnet minting disabled for safety</span>
               </div>
             )}
           </div>
-          <div className="text-center">
-            <h2 className="text-3xl font-bold font-[family-name:var(--font-montserrat)]">Mint a Katachi Gen</h2>
-            <p className="text-muted-foreground">
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl md:text-3xl font-bold font-[family-name:var(--font-montserrat)]">Mint a Katachi Gen</h2>
+            <p className="text-sm md:text-base text-muted-foreground max-w-xl mx-auto">
               Your unique origami pattern based on your Shape journey
             </p>
           </div>
         </div>
 
       {/* Your Shape Journey - Full Width */}
-      <Card>
-        <CardHeader className="pt-4 pb-3 md:pt-6 md:pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-1.5 text-sm md:text-base">
-              <Package className="h-4 w-4" />
+      <Card className="mt-1 md:mt-3 shadow-md">
+        <CardHeader className="pt-2 pb-3 md:pt-4 md:pb-4 space-y-2">
+          <div className="flex items-center gap-2 justify-start">
+            <CardTitle className="flex items-center gap-2 text-xl md:text-2xl font-semibold">
+              <BookUser className="h-6 w-6 md:h-7 md:w-7" />
               Your Shape Journey
             </CardTitle>
-            <CardDescription className="text-xs">
-              Analysis of your on-chain participation
-            </CardDescription>
           </div>
+          <CardDescription className="text-base text-left">
+            Analysis of your on-chain participation
+          </CardDescription>
         </CardHeader>
         <CardContent className="pt-2 pb-4 md:pt-3 md:pb-5">
           {isLoading ? (
@@ -1048,19 +1048,19 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
               <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
                 <span className="font-mono font-semibold text-sm md:text-base">{nfts?.totalCount || 0}</span>
-                <span className="text-muted-foreground text-xs">Total NFTs</span>
+                <span className="text-muted-foreground text-sm">Total NFTs</span>
               </div>
               <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
                 <span className="font-mono font-semibold text-sm md:text-base">
                   {nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0}
                 </span>
-                <span className="text-muted-foreground text-xs">Unique Collections</span>
+                <span className="text-muted-foreground text-sm">Unique Collections</span>
               </div>
               <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
                 <span className="font-mono font-semibold text-sm md:text-base">
                   {nfts?.totalCount ? (nfts.totalCount > 10 ? 'High' : nfts.totalCount > 5 ? 'Medium' : 'Basic') : 'Basic'}
                 </span>
-                <span className="text-muted-foreground text-xs">Pattern Complexity</span>
+                <span className="text-muted-foreground text-sm">Pattern Complexity</span>
               </div>
               <div className="flex flex-col items-center py-2.5 px-2 md:py-3 bg-muted/30 rounded-lg">
                 {isLoadingMedals ? (
@@ -1070,7 +1070,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
                 ) : (
                   <span className="font-mono font-semibold text-sm md:text-base">{stackMedals?.totalMedals || 0}</span>
                 )}
-                <span className="text-muted-foreground text-xs">Stack Medals</span>
+                <span className="text-muted-foreground text-sm">Stack Medals</span>
               </div>
             </div>
           )}

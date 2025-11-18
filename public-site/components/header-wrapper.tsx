@@ -25,15 +25,14 @@ export function HeaderWrapper() {
 
   return (
     <header className={`fixed left-0 right-0 z-40 ${isInMintView ? 'top-0' : 'top-[40px] md:top-[40px]'} bg-black/60 backdrop-blur-md md:bg-transparent md:backdrop-blur-none ${isInMintView ? 'md:bg-black/60 md:backdrop-blur-md' : ''}`}>
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <button onClick={handleLogoClick} className="flex items-center gap-2 bg-transparent border-none cursor-pointer">
-          <span className="hidden sm:inline text-xl font-bold font-[family-name:var(--font-montserrat)]">Katachi Gen</span>
-          <span className="text-xl opacity-70 font-bold font-[family-name:var(--font-montserrat)]">カタチ・ゲン</span>
-        </button>
-        <div className="flex items-center gap-4">
+      <div className="container mx-auto grid grid-cols-3 h-16 items-center px-4">
+        <div className="flex items-center gap-3">
+          <button onClick={handleLogoClick} className="hidden md:flex items-center gap-2 bg-transparent border-none cursor-pointer">
+            <span className="text-xl font-bold font-[family-name:var(--font-montserrat)]">Katachi Gen</span>
+          </button>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" className="px-4 py-3 rounded-md text-lg font-bold">
+              <Button variant="secondary" size="sm" className="px-3 py-2 h-auto text-sm font-semibold">
                 How It Works
               </Button>
             </DialogTrigger>
@@ -49,7 +48,7 @@ export function HeaderWrapper() {
 
               <div className="space-y-6 text-center">
                 <p className="text-lg leading-relaxed max-w-3xl mx-auto">
-                  <em>Katachi Gen</em> <span className="italic">("Kah-TAH-chee Gehn")</span> transforms your on-chain participation into a unique 3D origami pattern through AI sentiment analysis and algorithmic artwork curation.
+                  <em>Katachi Gen</em> <span className="italic">(&quot;Kah-TAH-chee Gehn&quot;)</span> transforms your on-chain participation into a unique 3D origami pattern through AI sentiment analysis and algorithmic artwork curation.
                 </p>
                 <p className="text-lg leading-relaxed max-w-3xl mx-auto">
                   Each pattern reflects your personal collecting journey on{' '}
@@ -293,6 +292,17 @@ export function HeaderWrapper() {
               </div>
             </DialogContent>
           </Dialog>
+        </div>
+        <div className="flex justify-center">
+          <button
+            onClick={handleLogoClick}
+            className="text-base font-semibold tracking-wide opacity-80 hover:opacity-100 transition-opacity"
+            aria-label="Back to landing"
+          >
+            カタチ・ゲン
+          </button>
+        </div>
+        <div className="flex justify-end">
           {showWalletInHeader && <WalletConnect />}
         </div>
       </div>
