@@ -1,5 +1,6 @@
 import { Providers } from '@/components/providers';
 import { HeaderWrapper } from '@/components/header-wrapper';
+import { AnnouncementBar } from '@/components/announcement-bar';
 import { HeaderProvider } from '@/contexts/header-context';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono, Montserrat } from 'next/font/google';
@@ -170,38 +171,14 @@ export default function RootLayout({
           <HeaderProvider>
             <div className="flex min-h-screen flex-col">
               {/* Announcement Header */}
-              {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && (
-                <div className="fixed top-0 left-0 right-0 z-50 bg-blue-600/90 backdrop-blur-sm text-white text-center text-sm font-medium py-2 flex flex-col items-center justify-center gap-1">
-                  <div>
-                    🥇{' '}
-                    <Link
-                      href="https://x.com/Shape_L2/status/1962942181271834826"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline hover:opacity-80"
-                    >
-                      1<sup>st</sup> Place
-                    </Link>
-                    ,{' '}
-                    <Link
-                      href="https://shape.network/shapecraft"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline hover:opacity-80"
-                    >
-                      SHAPECRAFT<sup className="text-sm">2</sup>
-                    </Link>
-                    {' '}⚫️{' '}Mainnet soon 🚀
-                  </div>
-                </div>
-              )}
+              {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && <AnnouncementBar />}
               <HeaderWrapper />
-              <main className="flex-1 pt-[152px]">{children}</main>
+              <main className="flex-1 pt-[104px]">{children}</main>
               <footer className="border-t py-6 relative bg-black" style={{ zIndex: 10 }}>
               <div className="container mx-auto px-4">
                 <div className="text-center text-sm text-white/80 space-y-2">
                   <div>
-                    Made with 🤍 by{' '}
+                    Made with &nbsp;🖤&nbsp; by{' '}
                     <Link
                       href="https://x.com/quietloops"
                       target="_blank"

@@ -3,6 +3,12 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Prevent horizontal scroll on mobile */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -97,7 +103,13 @@
 }
 
 .animate-gradient-button:hover:not(:disabled)::before {
-  animation-duration: 4s;
+  opacity: 0;
+}
+
+.animate-gradient-button:hover:not(:disabled) {
+  background: rgb(37, 99, 235) !important;
+  color: white !important;
+  border-color: rgb(37, 99, 235) !important;
 }
 
 /* Pulsating blue border animation */

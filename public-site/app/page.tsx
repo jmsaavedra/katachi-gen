@@ -5,7 +5,7 @@ import { useAccount } from 'wagmi';
 import { KatachiGenerator } from '@/components/katachi-generator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Sparkles, Origami } from 'lucide-react';
+import { Sparkles, Origami, Wallet } from 'lucide-react';
 import { useHeader } from '@/contexts/header-context';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 
@@ -128,10 +128,10 @@ export default function Home() {
       {/* Dark overlay - pointer-events-none allows mouse to pass through to iframe */}
       <div className="fixed inset-0 bg-black/50 pointer-events-none" style={{ zIndex: 1 }} />
 
-      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 pointer-events-none" style={{ zIndex: 2 }}>
-        <div className="w-full max-w-4xl space-y-12">
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 md:py-12 pointer-events-none" style={{ zIndex: 2 }}>
+        <div className="w-full max-w-4xl space-y-8 md:space-y-12">
         {/* Hero Section */}
-        <div className="space-y-6 text-center pointer-events-none">
+        <div className="space-y-4 md:space-y-6 text-center pointer-events-none">
           <h1 className="text-5xl font-bold tracking-tight sm:text-7xl font-[family-name:var(--font-montserrat)]">
             Katachi Gen <br />
             <span className="opacity-70 text-3xl sm:text-5xl font-bold font-[family-name:var(--font-montserrat)]">カタチ・ゲン</span>
@@ -139,7 +139,7 @@ export default function Home() {
 
           {/* Brief Description */}
           <p className="text-white text-2xl md:text-3xl max-w-2xl mx-auto leading-relaxed font-semibold">
-            Generative 3D Origami artifacts of your collection on Shape, co-curated by you and AI.
+            Generative 3D Origami artifacts of your collection on ShapeL2, co-curated by you and AI.
           </p>
 
           {/* Japanese Etymology - Compact */}
@@ -149,7 +149,7 @@ export default function Home() {
               style={{ zIndex: -1 }}
             />
             <div className="text-white/60 text-lg md:text-xl leading-relaxed relative">
-              <div className="border-t border-white/30 pb-3 mb-3 w-[70%] mx-auto">
+              <div className="border-t border-white/30 pb-2 mb-2 md:pb-3 md:mb-3 w-[70%] mx-auto">
               </div>
               <p>
                 <strong className="text-white/80">Katachi</strong> <span className="text-white/50">(</span>カタチ<span className="text-white/50">)</span> = Shape/Form<br/>
@@ -163,12 +163,23 @@ export default function Home() {
         {/* Two Column CTAs */}
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Primary CTA - Reveal Your Shape */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/50 bg-transparent backdrop-blur-md pointer-events-auto">
-            <CardContent className="p-8 space-y-4">
+          <Card className="group hover:shadow-lg transition-all duration-300 border-[3px] border-white md:border-[3px] hover:border-white bg-transparent backdrop-blur-md pointer-events-auto cursor-pointer">
+            <CardContent
+              className="p-6 md:p-8 pb-5 md:pb-6 flex flex-col"
+              onClick={() => {
+                if (!isConnected) {
+                  // Trigger the connect button click
+                  const connectBtn = document.querySelector('[data-reveal-connect-btn]') as HTMLButtonElement;
+                  connectBtn?.click();
+                } else {
+                  setShowGenerator(true);
+                }
+              }}
+            >
               <div className="flex justify-center">
                 <Origami className="h-16 w-16 text-primary" />
               </div>
-              <div className="space-y-2 text-center">
+              <div className="space-y-2 text-center mt-3 md:mt-4 mb-4 md:mb-6">
                 <h2 className="text-2xl font-semibold">Reveal Your Shape</h2>
                 <p className="text-sm text-white/80">
                   Connect your wallet to generate your unique origami pattern
@@ -179,9 +190,14 @@ export default function Home() {
                   {({ openConnectModal }) => (
                     <Button
                       size="lg"
-                      className="w-full gap-2 animate-gradient-button"
-                      onClick={() => handleConnectClick(openConnectModal)}
+                      className="w-full gap-2 animate-gradient-button transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleConnectClick(openConnectModal);
+                      }}
+                      data-reveal-connect-btn
                     >
+                      <Wallet className="h-5 w-5" />
                       Connect Wallet
                     </Button>
                   )}
@@ -190,7 +206,10 @@ export default function Home() {
                 <Button
                   size="lg"
                   className="w-full gap-2 animate-gradient-button"
-                  onClick={() => setShowGenerator(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowGenerator(true);
+                  }}
                 >
                   Generate Now
                 </Button>
@@ -199,12 +218,15 @@ export default function Home() {
           </Card>
 
           {/* Secondary CTA - Explore */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-2 hover:border-primary/30 bg-transparent backdrop-blur-md pointer-events-auto">
-            <CardContent className="p-8 space-y-4">
+          <Card
+            className="group hover:shadow-lg transition-all duration-300 border-[3px] border-white md:border-[3px] hover:border-white bg-transparent backdrop-blur-md pointer-events-auto cursor-pointer"
+            onClick={handleExploreClick}
+          >
+            <CardContent className="p-6 md:p-8 pb-5 md:pb-6 flex flex-col">
               <div className="flex justify-center">
                 <Sparkles className="h-16 w-16 text-white/80" />
               </div>
-              <div className="space-y-2 text-center">
+              <div className="space-y-2 text-center mt-3 md:mt-4 mb-4 md:mb-6">
                 <h2 className="text-2xl font-semibold">Explore</h2>
                 <p className="text-sm text-white/80">
                   Share your sentiment and curate a collection of Shape artworks. No wallet needed!
@@ -213,11 +235,14 @@ export default function Home() {
               <Button
                 size="lg"
                 variant="outline"
-                className="w-full gap-2"
-                onClick={handleExploreClick}
+                className="w-full gap-2 hover:!bg-blue-600 hover:!text-white hover:!border-blue-600 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleExploreClick();
+                }}
               >
                 <Sparkles className="h-4 w-4" />
-                Try it now
+                Try it out
               </Button>
             </CardContent>
           </Card>
