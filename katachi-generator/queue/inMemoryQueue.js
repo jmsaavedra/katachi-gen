@@ -62,7 +62,7 @@ function updateProgress(jobId, percent, message) {
   if (job) {
     job.progress = percent;
     const timestamp = new Date().toISOString();
-    job.logs.push(`[${timestamp}] [${percent}%] ${message}`);
+    job.logs.push(`[${timestamp}] ${message}`);
     console.log(`   📊 Job ${jobId}: ${percent}% - ${message}`);
   }
 }
