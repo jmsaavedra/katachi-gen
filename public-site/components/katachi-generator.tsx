@@ -18,6 +18,7 @@ import { Loader2, Sparkles, Package, Hash, ChevronLeft, ChevronRight, ExternalLi
 import Image from 'next/image';
 import { CollectionReflection } from '@/components/collection-reflection';
 import { EligibilityModal } from '@/components/eligibility-modal';
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { toast } from 'sonner';
 import { formatFileSize } from '@/utils/formatFileSize';
 
@@ -419,7 +420,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
           const latestLog = status.logs?.[status.logs.length - 1];
           if (latestLog && typeof latestLog === 'string') {
             // Use the actual message from the backend (e.g., "Processing image 3/8...")
-            setGenerationStatus(latestLog.replace(/^\[.*?\]\s*/, '')); // Remove "[XX%]" prefix if present
+            // Remove timestamp prefix [2025-...]
+            setGenerationStatus(latestLog.replace(/^\[.*?\]\s*/, ''))
           } else if (status.message) {
             // Fallback to status.message if available
             setGenerationStatus(status.message);
@@ -1120,7 +1122,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
                       />
                       <div className="flex justify-between items-center">
                         <p className="text-base text-muted-foreground">{generationStatus}</p>
-                        <span className="text-sm font-medium text-muted-foreground">{Math.round(generationProgress)}%</span>
+                        <span className="text-base text-muted-foreground">{Math.round(generationProgress)}%</span>
                       </div>
                     </div>
                     <p className="text-xs text-center text-muted-foreground">
@@ -1406,38 +1408,53 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
 
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-4">
-                  <Button 
-                    className={`flex-1 gap-2 py-8 text-lg ${generatedPattern && !isMinting && mintState !== 'success' && !(overrideAddress && !connectedAddress) ? 'animate-gradient-button' : ''}`}
-                    onClick={handleMintNFT}
-                    disabled={isMinting || mintState === 'success' || (overrideAddress && !connectedAddress)}
-                  >
-                    {isMinting ? (
-                      <>
-                        <Loader2 className="h-5 w-5 animate-spin" />
-                        {mintState === 'preparing' ? 'Preparing...' : 
-                         mintState === 'pending' ? 'Confirm in Wallet' :
-                         mintState === 'confirming' ? 'Minting...' : 'Minting'}
-                      </>
-                    ) : mintState === 'success' ? (
-                      <>
-                        <Sparkles className="h-5 w-5" />
-                        Minted!
-                      </>
-                    ) : overrideAddress && !connectedAddress ? (
-                      <span className="flex flex-col items-center gap-1">
-                        <span className="flex items-center gap-2">
-                          <Eye className="h-4 w-4 md:h-5 md:w-5" />
-                          <span className="text-sm md:text-lg">Explore Mode</span>
-                        </span>
-                        <span className="text-xs md:text-sm">Connect Wallet to Mint</span>
-                      </span>
-                    ) : (
-                      <>
-                        <Sparkles className="h-5 w-5" />
-                        MINT for .0025 ETH
-                      </>
-                    )}
-                  </Button>
+                  {overrideAddress && !connectedAddress ? (
+                    <ConnectButton.Custom>
+                      {({ openConnectModal }) => (
+                        <Button
+                          variant="secondary"
+                          className="flex-1 gap-2 py-10 text-lg flex items-center justify-center"
+                          onClick={openConnectModal}
+                          disabled={isMinting || mintState === 'success'}
+                        >
+                          <span className="flex flex-col items-center justify-center gap-1">
+                            <span className="flex items-center gap-2">
+                              <Eye className="h-4 w-4 md:h-5 md:w-5" />
+                              <span className="text-sm md:text-lg">Explore Mode</span>
+                            </span>
+                            <span className="text-xs md:text-sm">
+                              <span className="font-bold underline">Connect Wallet</span> to Mint
+                            </span>
+                          </span>
+                        </Button>
+                      )}
+                    </ConnectButton.Custom>
+                  ) : (
+                    <Button
+                      className={`flex-1 gap-2 py-8 text-lg ${generatedPattern && !isMinting && mintState !== 'success' ? 'animate-gradient-button' : ''}`}
+                      onClick={handleMintNFT}
+                      disabled={isMinting || mintState === 'success'}
+                    >
+                      {isMinting ? (
+                        <>
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          {mintState === 'preparing' ? 'Preparing...' :
+                           mintState === 'pending' ? 'Confirm in Wallet' :
+                           mintState === 'confirming' ? 'Minting...' : 'Minting'}
+                        </>
+                      ) : mintState === 'success' ? (
+                        <>
+                          <Sparkles className="h-5 w-5" />
+                          Minted!
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-5 w-5" />
+                          MINT for .0025 ETH
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
