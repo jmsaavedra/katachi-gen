@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAccount } from 'wagmi';
 import { KatachiGenerator } from '@/components/katachi-generator';
+import { FoldLoadingOverlay } from '@/components/fold-loading-overlay';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Sparkles, Origami, Wallet } from 'lucide-react';
@@ -15,6 +16,8 @@ export default function Home() {
   const [showGenerator, setShowGenerator] = useState(false);
   const [testAddress, setTestAddress] = useState('');
   const [shouldAutoRedirect, setShouldAutoRedirect] = useState(false);
+  const [isBackgroundReady, setIsBackgroundReady] = useState(false);
+  const backgroundReadyTimeout = useRef<number | null>(null);
 
   // Background origami options - randomly select one on client mount to avoid hydration mismatch
   const backgroundOptions = [
@@ -82,6 +85,14 @@ export default function Home() {
     }
   }, [isConnected, connectedAddress, shouldAutoRedirect]);
   
+  useEffect(() => {
+    return () => {
+      if (backgroundReadyTimeout.current) {
+        window.clearTimeout(backgroundReadyTimeout.current);
+      }
+    };
+  }, []);
+
   // Track when user initiates connection from this page
   const handleConnectClick = (openConnectModal: () => void) => {
     setShouldAutoRedirect(true); // Set flag to auto-redirect after connection
@@ -123,15 +134,43 @@ export default function Home() {
         style={{ zIndex: 0 }}
         title="Background animation"
         scrolling="no"
+        onLoad={() => {
+          // Allow iframe internals (three.js + assets) a moment to render before revealing content
+          if (backgroundReadyTimeout.current) {
+            window.clearTimeout(backgroundReadyTimeout.current);
+          }
+          backgroundReadyTimeout.current = window.setTimeout(() => setIsBackgroundReady(true), 2400);
+        }}
       />
 
       {/* Dark overlay - pointer-events-none allows mouse to pass through to iframe */}
       <div className="fixed inset-0 bg-black/50 pointer-events-none" style={{ zIndex: 1 }} />
 
       <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 md:py-12 pointer-events-none" style={{ zIndex: 2 }}>
-        <div className="w-full max-w-4xl space-y-8 md:space-y-12">
+        {/* Ambient loader while background iframe hydrates */}
+        <div
+          className={`absolute inset-0 flex items-center justify-center px-4 transition-opacity duration-700 ease-out ${
+            isBackgroundReady ? 'opacity-0 pointer-events-none' : 'opacity-100'
+          }`}
+        >
+          <FoldLoadingOverlay
+            text="Shapeの旅を読み込んでいます..."
+            subtext={undefined}
+            className="pointer-events-none w-full h-full"
+          />
+        </div>
+
+        <div
+          className={`w-full max-w-4xl space-y-8 md:space-y-12 transition-opacity duration-700 ease-out ${
+            isBackgroundReady ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
         {/* Hero Section */}
-        <div className="space-y-4 md:space-y-6 text-center pointer-events-none">
+        <div
+          className={`space-y-4 md:space-y-6 text-center pointer-events-none transition-opacity duration-700 ease-out ${
+            isBackgroundReady ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
           <h1 className="text-5xl font-bold tracking-tight sm:text-7xl font-[family-name:var(--font-montserrat)]">
             Katachi Gen <br />
             <span className="opacity-70 text-3xl sm:text-5xl font-bold font-[family-name:var(--font-montserrat)]">カタチ・ゲン</span>
