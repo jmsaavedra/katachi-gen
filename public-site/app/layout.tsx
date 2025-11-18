@@ -172,28 +172,27 @@ export default function RootLayout({
               {/* Announcement Header */}
               {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && (
                 <div className="fixed top-0 left-0 right-0 z-50 bg-blue-600/90 backdrop-blur-sm text-white text-center text-sm font-medium py-2 flex flex-col items-center justify-center gap-1">
-                  <div className="flex items-center gap-1">
-                    🎉{' '}
+                  <div>
+                    🥇{' '}
                     <Link
                       href="https://x.com/Shape_L2/status/1962942181271834826"
                       target="_blank"
                       rel="noreferrer"
-                      className="underline"
+                      className="underline hover:opacity-80"
                     >
-                      WINNER, 1ST PL
+                      1<sup>st</sup> Place
                     </Link>
-                    {' '}🥇{' '}
+                    ,{' '}
                     <Link
                       href="https://shape.network/shapecraft"
                       target="_blank"
                       rel="noreferrer"
-                      className="underline"
+                      className="underline hover:opacity-80"
                     >
-                      SHAPECRAFT² HACKATHON
+                      SHAPECRAFT<sup className="text-sm">2</sup>
                     </Link>
-                    {' '}📣
+                    {' '}⚫️{' '}Mainnet soon 🚀
                   </div>
-                  <div>🚀 Minting on mainnet soon 🚀</div>
                 </div>
               )}
               <HeaderWrapper />
@@ -218,21 +217,6 @@ export default function RootLayout({
                     >
                       sembo
                     </Link>
-                    .
-                  </div>
-                  <div className="text-xs">
-                    <span>
-                      Contract:{' '}
-                      <Link
-                        href="https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57?tab=contract"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-mono hover:underline"
-                      >
-                        <span className="md:hidden">0xE5CE...0f57</span>
-                        <span className="hidden md:inline">0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57</span>
-                      </Link>
-                    </span>
                   </div>
                   <div className="text-xs flex justify-center items-center space-x-4">
                     <span>
@@ -254,6 +238,20 @@ export default function RootLayout({
                       >
                         <Github className="h-3 w-3" />
                         View on GitHub
+                      </Link>
+                    </span>
+                  </div>
+                  <div className="text-xs">
+                    <span>
+                      Contract:{' '}
+                      <Link
+                        href="https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57?tab=contract"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-mono hover:underline"
+                      >
+                        <span className="md:hidden">0xE5CE...0f57</span>
+                        <span className="hidden md:inline">0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57</span>
                       </Link>
                     </span>
                   </div>
