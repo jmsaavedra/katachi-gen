@@ -84,7 +84,6 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   const currentIndexRef = useRef(0);
   const popupRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
-  const [initialInterpretation, setInitialInterpretation] = useState('');
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     setMousePosition({ x: e.clientX, y: e.clientY });
@@ -206,9 +205,6 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
       }
 
       console.log('✅ Themes extracted:', themesData.themes);
-
-      // Store initial interpretation for later
-      setInitialInterpretation(themesData.interpretation || '');
 
       // Button now shows "Curating your collection..."
       setIsLoading(false);
