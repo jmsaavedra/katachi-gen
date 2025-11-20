@@ -1,53 +1,46 @@
-# Shape MCP Server
+# Katachi Gen MCP Server
 
-Model Context Protocol (MCP) server for Shape, built with [xmcp](https://xmcp.dev). This server provides AI assistants access to Shape's onchain data: [gasback](https://docs.shape.network/gasback) distribution, collections analytics, stack users & more.
+Model Context Protocol (MCP) server for [Katachi Gen](https://katachi-gen.vercel.app), built with [xmcp](https://xmcp.dev). This server powers the AI-driven sentiment analysis and NFT curation system that transforms collectors' emotional responses into generative origami art.
 
-Deployed on Vercel with automatic build skipping for monorepo optimization and Related Projects integration.
+**Based on the [Shape MCP Server](https://github.com/shape-network/mcp-server) by [@williamhzo](https://x.com/williamhzo)**
 
-Contributions are welcome! Fork and add your own tools, feel free to submit a PR.
+## What is Katachi Gen?
 
-Check our docs about how to build AI on Shape: https://docs.shape.network/building-on-shape/ai
+Katachi Gen is an experimental on-chain art generator that:
+1. **Collects Sentiment**: Asks collectors how Shape makes them feel
+2. **Extracts Themes**: Uses AI to generate 2-5 curatorial themes from their response
+3. **Curates NFTs**: Scores and selects NFTs from their wallet that match the themes
+4. **Generates Art**: Creates a unique generative origami design based on their curated collection
+5. **Mints On-Chain**: Deploys the artwork as an SVG NFT on Shape
 
-## Features
+This MCP server handles steps 2-3: the AI-powered sentiment interpretation and NFT curation pipeline.
 
-Organized by functionality for easy extension:
+## Core Features
 
-- **Gasback Analytics** - Track creator earnings, top performers, and simulate gasback earned
-- **NFT Analysis** - Collections and ownership
-- **Stack Achievements** - Monitor user progress in Shape's [Stack](https://stack.shape.network) ecosystem
-- **Network Monitoring** - Chain health, metrics, RPC URLs, etc
-- **AI Ready** - Tools are optimized for agent chaining and automation
-- **Caching** - Optional Redis for snappier responses & less load on RPCs, no lock-in required
+### 🎨 AI Sentiment Interpretation
+- **Generative Theme Extraction**: Uses Claude 3.5 Haiku to generate contextually appropriate curatorial themes
+- **Two-Tool Architecture**: Fast theme extraction (~2-5s) followed by heavy NFT curation (~10-30s)
+- **Art Curatorial Focus**: Themes are rooted in gallery practice, artistic movements, and collector psychology
+- **Smart Scoring**: Multi-factor algorithm matches NFTs to themes based on metadata, visual characteristics, and collection diversity
+
+### 🖼️ NFT Tools
+- **9 specialized tools** for NFT analysis, curation, and minting
+- **Alchemy Integration** for comprehensive NFT metadata
+- **Blocked Contracts** filtering to exclude spam collections
+- **5-minute caching** for repeat requests
+
+### ⛓️ Shape Network Integration
+- **Gasback Analytics** - Track creator earnings and simulate rewards
+- **Stack Achievements** - Monitor user progress in Shape's ecosystem
+- **Network Monitoring** - Chain health, gas prices, RPC status
 
 ## Available Tools
 
-### Network Tools (`/tools/network/`)
+### NFT Curation Tools (`/tools/nft/`)
 
-#### `getChainStatus`
+The heart of Katachi Gen's sentiment interpretation system.
 
-Monitor Shape's network: RPC health, gas prices, block times, etc.
-
-Example prompt: "current shape status? gas prices looking mint-friendly?"
-
-### NFT Tools (`/tools/nft/`)
-
-#### `getCollectionAnalytics`
-
-Collection stats: supply, owners, sample NFTs, floors, etc.
-
-Example prompt: "what's the vibe on collection 0x567...abc? floor price and top holders?"
-
-#### `getShapeNft`
-
-List NFTs for an address, with metadata and pagination support. Returns up to 100 NFTs per page.
-
-Example prompts:
-
-- "what NFTs does 0xabcd...123 hold on shape?"
-- "get the first 50 NFTs for wallet 0xabcd...123"
-- "get the next page of NFTs using pageKey xyz..."
-
-#### `extractSentimentThemes` (NEW)
+#### `extractSentimentThemes` ⚡ (NEW)
 
 **Fast AI-powered theme extraction** (~2-5s) that analyzes collector sentiment and generates 2-5 contextually appropriate curatorial themes without requiring NFT data. This is the first step in the sentiment interpretation pipeline.
 
@@ -57,6 +50,33 @@ Example prompts:
 - **Broad & Precise**: Can be emotional, practical, aesthetic, or conceptual - always contextually appropriate
 - **Fast Response**: No NFT fetching required, returns initial interpretation immediately
 - **Fallback System**: Keyword-based theme extraction if AI fails
+
+**AI Prompt Used:**
+```
+You are an expert art curator analyzing a collector's emotional response to their NFT collecting experience.
+
+User's sentiment: "${sentiment}"
+
+Generate 2-5 curatorial themes that capture the essence of this sentiment. These themes should be:
+- Contextually appropriate to what the user actually expressed
+- Broad and generative - they can be emotional, practical, aesthetic, conceptual, or anything relevant
+- Centered around art curatorial practice (think gallery exhibitions, artistic movements, collector psychology)
+- Precise and evocative - not generic
+
+Examples of good themes:
+- For "profits and money": ["financial speculation", "investment mindset", "wealth accumulation"]
+- For "connected to community": ["social connection", "collective identity", "participatory culture"]
+- For "beautiful colors": ["chromatic exploration", "visual aesthetics", "color theory"]
+- For "early adopter": ["technological pioneering", "cultural vanguard", "risk-taking"]
+
+Instructions:
+- Generate between 2-5 themes that genuinely match the sentiment
+- Each theme should be 1-4 words (short but meaningful)
+- Avoid forcing positive interpretations if the sentiment isn't positive
+- Return ONLY a JSON array of theme strings, nothing else
+
+Response format: ["theme one", "theme two", "theme three"]
+```
 
 **Example Theme Generation:**
 - Input: *"profits and money"* → `["financial speculation", "investment mindset", "wealth accumulation"]`
@@ -78,7 +98,7 @@ Example prompts:
 
 ---
 
-#### `curateNftsByThemes` (NEW)
+#### `curateNftsByThemes` 🎯 (NEW)
 
 **Heavy NFT curation tool** (~10-30s) that takes generated themes and curates NFTs from the collector's wallet. This is the second step in the sentiment interpretation pipeline, called after `extractSentimentThemes`.
 
@@ -96,6 +116,7 @@ Example prompts:
 - `count`: Number of NFTs to curate (typically 8)
 
 **Scoring Algorithm:**
+
 Each NFT receives a composite score based on:
 
 **Text Matching (Highest Priority)**
@@ -113,6 +134,35 @@ Each NFT receives a composite score based on:
 **Visual/Mood Matching (Lower Priority)**
 - **Positive Sentiment + Bright Visuals**: +1 point
 - **Calm Sentiment + Minimal Style**: +1 point
+
+**AI Prompt Used for Final Interpretation:**
+```
+You are an expert art curator writing a personalized interpretation of a collector's NFT collection based on their sentiment.
+
+Collector's sentiment: "${sentiment}"
+
+Identified curatorial themes: ${themes.join(', ')}
+
+Top artworks selected (in order of relevance):
+${nftDetails.map((nft, i) => `${i + 1}. "${nft.title}" from ${nft.collection}`).join('\n')}
+
+Write a 2-3 sentence curatorial statement that:
+- Addresses the collector's sentiment directly and authentically (whether it's emotional, practical, critical, or anything else)
+- References the themes in a sophisticated, yet relatable, accessible and unpretentious art-world tone
+- Mentions 1-2 of the top artworks by name (use <em> tags for titles)
+- Uses HTML <span style="color: #3b82f6;"> tags to highlight the theme words when you mention them
+- Ends by noting these are the works curated for their Katachi Gen origami design
+- Avoids clichés like "journey" or "resonates" - be specific and direct
+- Matches the tone of the sentiment (e.g., if they mention money, acknowledge the financial aspect; if they're poetic, be poetic)
+
+Example for "profits and money" with themes ["financial speculation", "investment mindset"]:
+"Your collection reflects a clear <span style="color: #3b82f6;">investment mindset</span>, treating on-chain art as both cultural capital and <span style="color: #3b82f6;">financial speculation</span>. Works like <em>Ethereum Bull</em> and <em>Crypto Punk #1234</em> demonstrate strategic acquisition patterns typical of collector-investors. These pieces will form the basis of your Katachi Gen origami design."
+
+Example for "beautiful colors" with themes ["chromatic exploration", "visual aesthetics"]:
+"Your focus on <span style="color: #3b82f6;">chromatic exploration</span> reveals a collector drawn to <span style="color: #3b82f6;">visual aesthetics</span> above conceptual concerns. <em>Rainbow Gradient</em> and <em>Color Field Study</em> exemplify your preference for vibrant, color-forward compositions. These works will form the basis of your Katachi Gen origami design."
+
+Write ONLY the curatorial statement, no introduction or explanation:
+```
 
 **Output Format:**
 ```json
@@ -145,7 +195,7 @@ Each NFT receives a composite score based on:
 
 ---
 
-#### `interpretCollectionSentiment` (LEGACY)
+#### `interpretCollectionSentiment` 📦 (LEGACY)
 
 **Note:** This is the original monolithic tool that combined theme extraction and NFT curation in a single call. It remains available for backward compatibility but the new 2-tool architecture (`extractSentimentThemes` → `curateNftsByThemes`) provides better UX with progressive loading states.
 
@@ -163,6 +213,28 @@ User Input: *"Collecting makes me feel peaceful and connected to nature"*
   - Theme match "nature": +2 points
   - Description match "connected": +2 points
   - **Total: 7+ points**
+
+---
+
+#### Other NFT Tools
+
+##### `getShapeNft`
+List NFTs for an address, with metadata and pagination support. Returns up to 100 NFTs per page.
+
+##### `getCollectionAnalytics`
+Collection stats: supply, owners, sample NFTs, floor prices, etc.
+
+##### `getCuratedNfts`
+Get previously curated NFTs for a wallet (used for Katachi Gen origami generation)
+
+##### `getNftWithRaribleImages`
+Fetch NFT metadata with Rarible image CDN URLs for better image loading
+
+##### `prepareMintSvgNft`
+Prepare SVG artwork for minting as an NFT on Shape
+
+##### `setTokenUri`
+Update token URI for minted NFTs (admin function)
 
 ### Gasback Tools (`/tools/gasback/`)
 
@@ -192,26 +264,19 @@ User medals by tier, total count, etc.
 
 Example prompt: "what's 0xghi...123's stack status? gold medals?"
 
-## Quick Test (No Setup Required)
+### Network Tools (`/tools/network/`)
 
-Want to try the MCP server without local setup? Point directly to our deployed instance:
+#### `getChainStatus`
 
-```json
-{
-  "mcpServers": {
-    "shape-mcp": {
-      "url": "https://shape-mcp-server.vercel.app/mcp"
-    }
-  }
-}
-```
+Monitor Shape's network: RPC health, gas prices, block times, etc.
 
-**Note:** This deployed version is rate limited and is intended for testing/sandbox use only. For production AI applications, we recommend self-hosting your own instance following the setup instructions above.
+Example prompt: "current shape status? gas prices looking mint-friendly?"
 
 ## Prerequisites
 
+- Node.js 18+ and yarn
 - Alchemy API key for NFT queries (get one [here](https://dashboard.alchemy.com/))
-- MCP client like Cursor IDE, Claude Desktop or your AI client of choice
+- Anthropic API key for AI curation (get one [here](https://console.anthropic.com/))
 - Optional: Redis for caching (speeds up RPC-heavy tools)
 
 ## Setup
@@ -221,8 +286,11 @@ Want to try the MCP server without local setup? Point directly to our deployed i
 Copy `.env.example` to `.env` and fill in:
 
 ```bash
-ALCHEMY_API_KEY=your_key_here
+# Required
+ALCHEMY_API_KEY=your_alchemy_key_here
+ANTHROPIC_API_KEY=your_anthropic_key_here
 CHAIN_ID=360  # Mainnet; use 11011 for Sepolia
+
 # Optional caching
 REDIS_URL=redis://localhost:6379  # Local, or Upstash for prod
 ```
@@ -239,18 +307,18 @@ yarn install
 yarn dev
 ```
 
-Server is now running at http://localhost:3002/mcp
+Server is now running at `http://localhost:3002/mcp`
 
 ## 🔌 Client Integration
 
 ### MCP Settings
 
-Add to your MCP settings in Cursor for eg:
+Add to your MCP settings in Cursor or Claude Desktop:
 
 ```json
 {
   "mcpServers": {
-    "shape-mcp": {
+    "katachi-gen-mcp": {
       "url": "http://localhost:3002/mcp"
     }
   }
@@ -262,27 +330,39 @@ Add to your MCP settings in Cursor for eg:
 ```
 src/
 ├── tools/                  # Modular tools
-│   ├── gasback/
-│   ├── network/
-│   ├── nft/
-│   └── stack/
-├── abi/                    # Contract interfaces
-├── utils/                  # Helpers like cache.ts
-├── addresses.ts            # Key contracts addys
-├── clients.ts              # RPC/Alchemy/Redis
-├── config.ts               # Env-based setup
-├── middleware.ts           # Auth/logging if needed
-├── types.ts                # Shared outputs
-└── xmcp.config.ts          # xmcp server config
-blocked-contracts.txt       # List of NFT contracts to filter out
+│   ├── gasback/           # Gasback analytics & rewards
+│   ├── market/            # Market data & collection stats
+│   ├── network/           # Chain status & health
+│   ├── nft/               # NFT analysis & curation (9 tools)
+│   │   ├── extract-sentiment-themes.ts     # AI theme extraction (NEW)
+│   │   ├── curate-nfts-by-themes.ts        # NFT curation by themes (NEW)
+│   │   ├── interpret-collection-sentiment.ts  # Legacy monolithic tool
+│   │   ├── get-shape-nft.ts                # List wallet NFTs
+│   │   ├── get-collection-analytics.ts     # Collection stats
+│   │   ├── get-curated-nfts.ts             # Retrieve curated NFTs
+│   │   ├── get-nft-with-rarible-images.ts  # NFT with Rarible CDN
+│   │   ├── prepare-mint-svg-nft.ts         # SVG minting prep
+│   │   └── set-token-uri.ts                # Update token URIs
+│   └── stack/             # Stack achievements
+├── abi/                   # Contract interfaces
+├── prompts/               # Reusable AI prompts
+├── resources/             # Static resources & configs
+├── utils/                 # Helpers (cache.ts, collection-config.ts)
+├── addresses.ts           # Key contracts addys
+├── clients.ts             # RPC/Alchemy/Redis/Anthropic
+├── config.ts              # Env-based setup
+├── middleware.ts          # Auth/logging if needed
+├── types.ts               # Shared outputs
+└── xmcp.config.ts         # xmcp server config
+blocked-contracts.txt      # List of NFT contracts to filter out
 ```
 
-Categories keep things modular. Add a tool to /tools/gasback/ and xmcp auto-picks it up. No monolith mess.
+Categories keep things modular. Add a tool to `/tools/nft/` and xmcp auto-picks it up. No monolith mess.
 
 ## Adding New Tools
 
-1. Pick a category folder (e.g., /tools/gasback/)
-2. New .ts file with schema, metadata, function
+1. Pick a category folder (e.g., `/tools/nft/`)
+2. New `.ts` file with schema, metadata, function
 3. Example:
 
 ```ts
@@ -302,8 +382,8 @@ export const metadata = {
     destructiveHint: false,
     idempotentHint: true,
     requiresWallet: false,
-    category: 'gasback',
-    chainableWith: ['getShapeCreatorAnalytics'],
+    category: 'nft',
+    chainableWith: ['getShapeNft'],
   },
 };
 
@@ -319,28 +399,20 @@ export default async function myTool({ address }: InferSchema<typeof schema>) {
 
 Redis cuts RPC load for repeat calls. Set `REDIS_URL` to your instance (Vercel KV or Upstash). Skip it? Tools run direct, no sweat. See `cache.ts` for the simple get/set logic.
 
-## Deploy Your Own
-
-Fork this repo and deploy your personal MCP:
-
-1. [Fork on GitHub](https://github.com/shape-network/mcp-server/fork)
-2. Import to Vercel: [New Project](https://vercel.com/new)
-3. Set env vars: `SHAPE_RPC_URL` (your node), `ALCHEMY_API_KEY`, `CHAIN_ID` (`360` for mainnet, or `11011` for testnet), optional `REDIS_URL`
-4. Deploy—access at your-vercel-url/mcp!
-
-## RPC Setup
-
-Use your own Alchemy API key to avoid public RPC limits. Default falls back to Shape’s public node `https://mainnet.shape.network` and `https://sepolia.shape.network`.
-
 ## Resources
 
+- [Katachi Gen](https://katachi-gen.vercel.app)
 - [Shape Docs](https://docs.shape.network/)
+- [Shape MCP Server (Original)](https://github.com/shape-network/mcp-server) by [@williamhzo](https://x.com/williamhzo)
 - [xmcp Framework](https://xmcp.dev/docs)
 - [Alchemy Docs](https://docs.alchemy.com/)
+- [Anthropic Claude API](https://docs.anthropic.com/)
 
-## Support
+## Credits
 
-Contact [@williamhzo](https://x.com/williamhzo) or hop into [Shape Discord](https://discord.com/invite/shape-l2).
+Built on top of the excellent [Shape MCP Server](https://github.com/shape-network/mcp-server) by [@williamhzo](https://x.com/williamhzo).
+
+Extended with AI sentiment interpretation tools for Katachi Gen by [@jmsaavedra](https://github.com/jmsaavedra).
 
 ---
 

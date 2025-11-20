@@ -317,7 +317,7 @@ ${nftDetails.map((nft, i) => `${i + 1}. "${nft.title}" from ${nft.collection}`).
 
 Write a 2-3 sentence curatorial statement that:
 - Addresses the collector's sentiment directly and authentically
-- References the themes in a sophisticated, art-world tone
+- References the themes in a sophisticated, yet relatable, accessible and unpretentious art-world tone
 - Mentions 1-2 of the top artworks by name (use <em> tags for titles)
 - Uses HTML <span style="color: #3b82f6;"> tags to highlight theme words
 - Ends by noting these works will form their Katachi Gen origami design

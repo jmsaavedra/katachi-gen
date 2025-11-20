@@ -176,7 +176,7 @@ Identified curatorial themes: ${themes.join(', ')}
 
 Write a 2-3 sentence curatorial statement that:
 - Addresses the collector's sentiment directly and authentically (whether it's emotional, practical, critical, or anything else)
-- References the themes in a sophisticated, art-world tone
+- References the themes in a sophisticated, yet relatable, accessible and unpretentious art-world tone
 - Uses HTML <span style="color: #3b82f6;"> tags to highlight the theme words when you mention them
 - Ends with a note that you're now curating specific works from their collection
 - Avoids clichés like "journey" or "resonates" - be specific and direct
