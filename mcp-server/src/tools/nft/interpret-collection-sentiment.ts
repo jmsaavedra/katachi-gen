@@ -79,20 +79,6 @@ export const metadata = {
   },
 };
 
-// Keywords and themes for sentiment analysis
-const EMOTIONAL_THEMES = {
-  joy: ['happy', 'excited', 'joyful', 'delighted', 'thrilled', 'elated', 'cheerful', 'bright', 'fun', 'playful'],
-  pride: ['proud', 'accomplished', 'achievement', 'success', 'confident', 'strong', 'powerful', 'winner'],
-  community: ['together', 'community', 'friends', 'family', 'connected', 'belong', 'unity', 'collective', 'group'],
-  creativity: ['creative', 'artistic', 'inspired', 'innovative', 'unique', 'original', 'imaginative', 'expressive'],
-  peace: ['calm', 'peaceful', 'serene', 'tranquil', 'relaxed', 'zen', 'meditative', 'quiet', 'still'],
-  nostalgia: ['memory', 'remember', 'nostalgic', 'past', 'childhood', 'vintage', 'classic', 'timeless', 'old'],
-  adventure: ['adventure', 'explore', 'discover', 'journey', 'quest', 'travel', 'new', 'exciting', 'bold'],
-  wealth: ['rich', 'wealthy', 'valuable', 'precious', 'treasure', 'gold', 'diamond', 'luxury', 'premium'],
-  nature: ['nature', 'earth', 'forest', 'ocean', 'mountain', 'sky', 'flower', 'animal', 'natural', 'organic'],
-  technology: ['tech', 'digital', 'cyber', 'future', 'ai', 'robot', 'code', 'pixel', 'virtual', 'meta'],
-};
-
 // Visual characteristics that might match emotions
 const VISUAL_CHARACTERISTICS = {
   bright: ['yellow', 'orange', 'pink', 'neon', 'light', 'bright', 'vivid', 'glow'],
@@ -180,25 +166,33 @@ async function analyzeVisualContent(imageUrl: string | null, sentiment: string):
 
 async function extractThemes(sentiment: string): Promise<string[]> {
   try {
-    const availableThemes = Object.keys(EMOTIONAL_THEMES).join(', ');
-
-    const prompt = `Analyze the following user sentiment about NFT collecting and select between 2-5 emotional themes that best match their feelings.
+    const prompt = `You are an expert art curator analyzing a collector's emotional response to their NFT collecting experience.
 
 User's sentiment: "${sentiment}"
 
-Available themes: ${availableThemes}
+Generate 2-5 curatorial themes that capture the essence of this sentiment. These themes should be:
+- Contextually appropriate to what the user actually expressed
+- Broad and generative - they can be emotional, practical, aesthetic, conceptual, or anything relevant
+- Centered around art curatorial practice (think gallery exhibitions, artistic movements, collector psychology)
+- Precise and evocative - not generic
+
+Examples of good themes:
+- For "profits and money": ["financial speculation", "investment mindset", "wealth accumulation"]
+- For "connected to community": ["social connection", "collective identity", "participatory culture"]
+- For "beautiful colors": ["chromatic exploration", "visual aesthetics", "color theory"]
+- For "early adopter": ["technological pioneering", "cultural vanguard", "risk-taking"]
 
 Instructions:
-- Select a MINIMUM of 2 themes and a MAXIMUM of 5 themes
-- Choose themes that genuinely resonate with the user's words
-- Prioritize the most relevant themes
-- Return ONLY a JSON array of theme names, nothing else
+- Generate between 2-5 themes that genuinely match the sentiment
+- Each theme should be 1-4 words (short but meaningful)
+- Avoid forcing positive interpretations if the sentiment isn't positive
+- Return ONLY a JSON array of theme strings, nothing else
 
-Example response format: ["joy", "community", "creativity"]`;
+Response format: ["theme one", "theme two", "theme three"]`;
 
     const response = await anthropic.messages.create({
       model: 'claude-3-5-haiku-20241022',
-      max_tokens: 100,
+      max_tokens: 150,
       messages: [{
         role: 'user',
         content: prompt
@@ -221,14 +215,14 @@ Example response format: ["joy", "community", "creativity"]`;
       return fallbackExtractThemes(sentiment);
     }
 
-    // Validate that all themes are valid
-    const validThemes = themes.filter(theme => theme in EMOTIONAL_THEMES);
+    // Validate that themes are strings
+    const validThemes = themes.filter(theme => typeof theme === 'string' && theme.length > 0);
     if (validThemes.length < 2) {
       console.warn(`Only ${validThemes.length} valid themes returned. Using fallback.`);
       return fallbackExtractThemes(sentiment);
     }
 
-    console.log(`✨ AI-selected themes: ${validThemes.join(', ')}`);
+    console.log(`✨ AI-generated curatorial themes: ${validThemes.join(', ')}`);
     return validThemes;
 
   } catch (error) {
@@ -238,14 +232,29 @@ Example response format: ["joy", "community", "creativity"]`;
 }
 
 // Fallback keyword-based theme extraction (ensures 2-5 themes)
+// This simpler approach extracts key concepts directly from the user's sentiment
 function fallbackExtractThemes(sentiment: string): string[] {
   const lowerSentiment = sentiment.toLowerCase();
   const themes: string[] = [];
 
-  // Find all matching themes
-  for (const [theme, keywords] of Object.entries(EMOTIONAL_THEMES)) {
+  // Map of curatorial concepts with broader keyword matching
+  const conceptMappings: Record<string, string[]> = {
+    'financial speculation': ['money', 'profit', 'wealth', 'invest', 'value', 'price', 'financial', 'rich'],
+    'emotional connection': ['feel', 'love', 'passion', 'heart', 'emotion', 'meaningful'],
+    'community building': ['community', 'together', 'friends', 'people', 'collective', 'social'],
+    'aesthetic appreciation': ['beautiful', 'art', 'design', 'visual', 'aesthetic', 'color', 'style'],
+    'technological innovation': ['tech', 'new', 'future', 'innovation', 'digital', 'crypto', 'blockchain'],
+    'early adoption': ['early', 'first', 'pioneer', 'new', 'adopt', 'ground floor'],
+    'creative expression': ['creative', 'express', 'unique', 'original', 'artistic', 'imagination'],
+    'cultural participation': ['culture', 'movement', 'participate', 'part of', 'belong'],
+    'nostalgia': ['remember', 'nostalg', 'memory', 'past', 'childhood', 'vintage'],
+    'discovery': ['discover', 'explore', 'find', 'search', 'hunt', 'new'],
+  };
+
+  // Check for concept matches
+  for (const [concept, keywords] of Object.entries(conceptMappings)) {
     if (keywords.some(keyword => lowerSentiment.includes(keyword))) {
-      themes.push(theme);
+      themes.push(concept);
     }
   }
 
@@ -259,27 +268,26 @@ function fallbackExtractThemes(sentiment: string): string[] {
     return themes.slice(0, 5);
   }
 
-  // If we have 0-1 themes, add defaults to reach 2 minimum
-  if (themes.length === 0) {
-    if (lowerSentiment.includes('love') || lowerSentiment.includes('like')) {
-      themes.push('joy');
-    }
-    if (lowerSentiment.includes('collect') || lowerSentiment.includes('own')) {
-      themes.push('pride');
+  // If we have 0-1 themes, extract key nouns/concepts from the sentiment itself
+  if (themes.length < 2) {
+    // Extract meaningful words (4+ chars) as themes
+    const words = lowerSentiment.split(/\s+/)
+      .filter(word => word.length >= 4)
+      .filter(word => !['this', 'that', 'with', 'from', 'have', 'been', 'make', 'made'].includes(word))
+      .slice(0, 3);
+
+    if (words.length > 0) {
+      themes.push(...words);
     }
   }
 
-  // Still need more themes to reach minimum of 2
-  const defaultThemes = ['joy', 'community', 'creativity', 'pride'];
-  for (const defaultTheme of defaultThemes) {
-    if (!themes.includes(defaultTheme)) {
-      themes.push(defaultTheme);
-      if (themes.length >= 2) break;
-    }
+  // Absolute fallback: use generic curatorial themes
+  if (themes.length < 2) {
+    themes.push('collecting practice', 'personal curation');
   }
 
   // Ensure we return at least 2 themes, max 5
-  return themes.slice(0, 5);
+  return themes.slice(0, Math.max(2, Math.min(5, themes.length)));
 }
 
 async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Promise<{ 
@@ -338,22 +346,32 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
     }
   }
   
-  // Theme matching
+  // Theme matching - match theme words directly with NFT content
   for (const theme of themes) {
-    const themeKeywords = EMOTIONAL_THEMES[theme as keyof typeof EMOTIONAL_THEMES] || [];
+    const lowerTheme = theme.toLowerCase();
+    // Split multi-word themes into individual words for matching
+    const themeWords = lowerTheme.split(/\s+/).filter(word => word.length > 3);
+
     let themeMatched = false;
-    for (const keyword of themeKeywords) {
-      if (nftName.includes(keyword)) {
+    for (const word of themeWords) {
+      if (nftName.includes(word)) {
         score += 2;
-        reasons.push(`${theme} theme: "${keyword}" in name`);
-        themeMatches.push(`${theme}: "${keyword}" in name`);
+        reasons.push(`${theme} theme: "${word}" in name`);
+        themeMatches.push(`${theme}: "${word}" in name`);
         themeMatched = true;
         break;
       }
-      if (nftDescription.includes(keyword)) {
+      if (nftDescription.includes(word)) {
         score += 1;
-        reasons.push(`${theme} theme: "${keyword}" matches sentiment`);
-        themeMatches.push(`${theme}: "${keyword}" in description`);
+        reasons.push(`${theme} theme: "${word}" in description`);
+        themeMatches.push(`${theme}: "${word}" in description`);
+        themeMatched = true;
+        break;
+      }
+      if (collectionName.includes(word)) {
+        score += 0.5;
+        reasons.push(`${theme} theme: "${word}" in collection`);
+        themeMatches.push(`${theme}: "${word}" in collection`);
         themeMatched = true;
         break;
       }
@@ -405,53 +423,74 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
 }
 
 
-export default async function interpretCollectionSentiment({ 
-  address, 
-  sentiment, 
-  count 
+export default async function interpretCollectionSentiment({
+  address,
+  sentiment,
+  count
 }: InferSchema<typeof schema>) {
+  console.log(`\n🎨 ========== INTERPRET COLLECTION SENTIMENT START ==========`);
+  console.log(`📍 Address: ${address}`);
+  console.log(`💭 Sentiment: "${sentiment}"`);
+  console.log(`🔢 Count: ${count}`);
+
   const cacheKey = `mcp:interpretSentiment:${config.chainId}:${address.toLowerCase()}:${Buffer.from(sentiment).toString('base64').slice(0, 20)}:${count}`;
   const cached = await getCached(cacheKey);
 
   if (cached) {
+    console.log(`✅ Cache hit! Returning cached result.`);
+    console.log(`========== INTERPRET COLLECTION SENTIMENT END (cached) ==========\n`);
     return JSON.parse(cached);
   }
 
+  console.log(`❌ Cache miss. Processing fresh request...`);
+
   try {
     // Fetch all NFTs for the wallet (we'll need to paginate if needed)
+    console.log(`\n📦 Fetching NFTs from Alchemy...`);
+    const nftFetchStart = Date.now();
     let allNfts: OwnedNft[] = [];
     let pageKey: string | undefined = undefined;
+    let pageCount = 0;
 
     do {
+      pageCount++;
       const nftsResponse: Awaited<ReturnType<typeof alchemy.nft.getNftsForOwner>> = await alchemy.nft.getNftsForOwner(address, {
         pageSize: 100,
         pageKey: pageKey,
         omitMetadata: false,
       });
-      
+
       allNfts = allNfts.concat(nftsResponse.ownedNfts);
       pageKey = nftsResponse.pageKey;
-      
-      console.log(`📄 Fetched ${nftsResponse.ownedNfts.length} NFTs (total: ${allNfts.length})`);
-      
+
+      console.log(`📄 Page ${pageCount}: Fetched ${nftsResponse.ownedNfts.length} NFTs (total: ${allNfts.length})`);
+
       // Limit to 2000 NFTs for performance
       if (allNfts.length >= 2000) break;
     } while (pageKey);
+
+    console.log(`✅ NFT fetch completed in ${Date.now() - nftFetchStart}ms - Total NFTs: ${allNfts.length}`);
     
     if (allNfts.length === 0) {
       throw new Error('No NFTs found for this address');
     }
     
     // Extract themes from sentiment using AI
+    console.log('🤖 Starting AI theme extraction...');
+    const themeStartTime = Date.now();
     const themes = await extractThemes(sentiment);
-    
+    console.log(`✅ Theme extraction completed in ${Date.now() - themeStartTime}ms`);
+
     // Score each NFT based on sentiment matching (now async)
+    console.log(`📊 Scoring ${allNfts.length} NFTs...`);
+    const scoreStartTime = Date.now();
     const scoredNfts = await Promise.all(
       allNfts.map(async (nft) => ({
         nft,
         ...(await scoreNFT(nft, sentiment, themes))
       }))
     );
+    console.log(`✅ NFT scoring completed in ${Date.now() - scoreStartTime}ms`);
     
     // Sort by score and take top N, ensuring max 1 NFT per collection
     scoredNfts.sort((a, b) => b.score - a.score);
@@ -537,8 +576,11 @@ export default async function interpretCollectionSentiment({
     }
     
     // Generate interpretation
-    const interpretation = generateInterpretation(sentiment, themes, selectedNfts);
-    
+    console.log('🤖 Starting AI curatorial interpretation...');
+    const interpStartTime = Date.now();
+    const interpretation = await generateInterpretation(sentiment, themes, selectedNfts);
+    console.log(`✅ Interpretation completed in ${Date.now() - interpStartTime}ms`);
+
     // Map selected NFTs to output format
     const mappedNfts = selectedNfts.map((item) => {
       const contractAddress = item.nft.contract.address;
@@ -651,7 +693,7 @@ export default async function interpretCollectionSentiment({
   }
 }
 
-function generateInterpretation(
+async function generateInterpretation(
   sentiment: string,
   themes: string[],
   selectedNfts: Array<{
@@ -665,11 +707,81 @@ function generateInterpretation(
       collectionInfo: string;
     };
   }>
+): Promise<string> {
+  try {
+    // Prepare top 3 NFT details for the curator to reference
+    const top3 = selectedNfts.slice(0, Math.min(3, selectedNfts.length));
+    const nftDetails = top3.map(item => ({
+      title: item.nft.name || 'Untitled',
+      collection: item.nft.contract.name || 'Unknown Collection',
+      reason: item.reason
+    }));
+
+    const prompt = `You are an expert art curator writing a personalized interpretation of a collector's NFT collection based on their sentiment.
+
+Collector's sentiment: "${sentiment}"
+
+Identified curatorial themes: ${themes.join(', ')}
+
+Top artworks selected (in order of relevance):
+${nftDetails.map((nft, i) => `${i + 1}. "${nft.title}" from ${nft.collection}`).join('\n')}
+
+Write a 2-3 sentence curatorial statement that:
+- Addresses the collector's sentiment directly and authentically (whether it's emotional, practical, critical, or anything else)
+- References the themes in a sophisticated, art-world tone
+- Mentions 1-2 of the top artworks by name (use <em> tags for titles)
+- Uses HTML <span style="color: #3b82f6;"> tags to highlight the theme words when you mention them
+- Ends by noting these are the works curated for their Katachi Gen origami design
+- Avoids clichés like "journey" or "resonates" - be specific and direct
+- Matches the tone of the sentiment (e.g., if they mention money, acknowledge the financial aspect; if they're poetic, be poetic)
+
+Example for "profits and money" with themes ["financial speculation", "investment mindset"]:
+"Your collection reflects a clear <span style="color: #3b82f6;">investment mindset</span>, treating on-chain art as both cultural capital and <span style="color: #3b82f6;">financial speculation</span>. Works like <em>Ethereum Bull</em> and <em>Crypto Punk #1234</em> demonstrate strategic acquisition patterns typical of collector-investors. These pieces will form the basis of your Katachi Gen origami design."
+
+Example for "beautiful colors" with themes ["chromatic exploration", "visual aesthetics"]:
+"Your focus on <span style="color: #3b82f6;">chromatic exploration</span> reveals a collector drawn to <span style="color: #3b82f6;">visual aesthetics</span> above conceptual concerns. <em>Rainbow Gradient</em> and <em>Color Field Study</em> exemplify your preference for vibrant, color-forward compositions. These works will form the basis of your Katachi Gen origami design."
+
+Write ONLY the curatorial statement, no introduction or explanation:`;
+
+    const response = await anthropic.messages.create({
+      model: 'claude-3-5-haiku-20241022',
+      max_tokens: 300,
+      messages: [{
+        role: 'user',
+        content: prompt
+      }]
+    });
+
+    // Extract the text content from Claude's response
+    const textContent = response.content.find(block => block.type === 'text');
+    if (!textContent || textContent.type !== 'text') {
+      throw new Error('No text response from Claude');
+    }
+
+    const interpretation = textContent.text.trim();
+    console.log(`✨ AI-generated curatorial interpretation: ${interpretation.slice(0, 100)}...`);
+    return interpretation;
+
+  } catch (error) {
+    console.error('Error generating interpretation with AI:', error);
+
+    // Fallback to a simpler template-based approach
+    return generateFallbackInterpretation(themes, selectedNfts);
+  }
+}
+
+// Fallback interpretation generator (simpler template-based)
+function generateFallbackInterpretation(
+  themes: string[],
+  selectedNfts: Array<{
+    nft: OwnedNft;
+    score: number;
+    reason: string;
+  }>
 ): string {
-  // Format themes with proper grammar and blue coloring: "joy and community" or "joy, pride, and creativity"
+  // Format themes with proper grammar and blue coloring
   let themeText = '';
   if (themes.length > 0) {
-    // Wrap each theme in a colored span
     const coloredThemes = themes.map(theme => `<span style="color: #3b82f6;">${theme}</span>`);
 
     if (themes.length === 1) {
@@ -684,25 +796,17 @@ function generateInterpretation(
   }
 
   // Get top 3 NFT titles (italicized)
-  let topWorksText = '';
   const top3 = selectedNfts.slice(0, Math.min(3, selectedNfts.length));
-  if (top3.length > 0) {
-    const titles = top3.map(item => `<em>${item.nft.name || 'Untitled'}</em>`);
-    if (titles.length === 1) {
-      topWorksText = `The top work that resonates with your sentiment is ${titles[0]}. `;
-    } else if (titles.length === 2) {
-      topWorksText = `The top works that resonate with your sentiment are ${titles[0]} and ${titles[1]}. `;
-    } else {
-      topWorksText = `The top 3 works that resonate with your sentiment are ${titles[0]}, ${titles[1]}, and ${titles[2]}. `;
-    }
+  const titles = top3.map(item => `<em>${item.nft.name || 'Untitled'}</em>`);
+
+  let topWorksText = '';
+  if (titles.length === 1) {
+    topWorksText = `The work ${titles[0]} exemplifies this direction. `;
+  } else if (titles.length === 2) {
+    topWorksText = `Works like ${titles[0]} and ${titles[1]} exemplify this direction. `;
+  } else if (titles.length >= 3) {
+    topWorksText = `Works like ${titles[0]}, ${titles[1]}, and ${titles[2]} exemplify this direction. `;
   }
 
-  // Art curator tone variations
-  const interpretations = [
-    `I've evaluated your sentiment about collecting on-chain artwork.\nI detected ${themeText}, which speak to the emotional resonance of your collecting journey.\n${topWorksText}Based on this, below are the artworks I've curated from your collection, which will be applied to your unique Katachi Gen Origami design.`,
-    `I've evaluated your sentiment about collecting on-chain artwork.\nYour reflection reveals ${themeText}, reflecting a thoughtful engagement with digital art.\n${topWorksText}Based on this, below are the artworks I've curated from your collection, which will be applied to your unique Katachi Gen Origami design.`,
-    `I've evaluated your sentiment about collecting on-chain artwork.\nThe ${themeText} that emerge from your words suggest a meaningful connection to these works.\n${topWorksText}Based on this, below are the artworks I've curated from your collection, which will be applied to your unique Katachi Gen Origami design.`,
-  ];
-
-  return interpretations[Math.floor(Math.random() * interpretations.length)];
+  return `I've analyzed your collection through the lens of ${themeText}. ${topWorksText}These curated works will form the basis of your Katachi Gen origami design.`;
 }
