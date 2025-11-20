@@ -33,13 +33,14 @@ export function HowItWorksModal({
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-[95vw] md:max-w-[1200px] max-h-[90vh] overflow-y-auto w-full pt-10">
+      <DialogContent className="max-w-[95vw] md:max-w-[1200px] max-h-[90vh] overflow-y-auto w-full pt-10 scrollbar-hide">
         <DialogHeader className="text-center sm:text-center max-w-2xl mx-auto">
           <DialogTitle className="text-4xl font-bold font-[family-name:var(--font-montserrat)]">
-            About Katachi Gen
+            Katachi Gen
           </DialogTitle>
-          <DialogDescription className="text-xl pt-1 font-bold font-[family-name:var(--font-montserrat)] opacity-70">
-            カタチ・ゲン - Shape Revealed
+          <DialogDescription className="text-xl pt-1 font-bold font-[family-name:var(--font-montserrat)] opacity-70 space-y-1">
+            <div>カタチ・ゲン</div>
+            <div>Generative Origami</div>
           </DialogDescription>
         </DialogHeader>
 
@@ -47,7 +48,7 @@ export function HowItWorksModal({
           <p className="text-lg leading-relaxed max-w-3xl mx-auto">
             <em>Katachi Gen</em> <span className="italic">(&quot;Kah-TAH-chee Gehn&quot;)</span> transforms your on-chain participation into a unique 3D origami pattern through AI sentiment analysis and algorithmic artwork curation.
           </p>
-          <p className="text-lg leading-relaxed max-w-3xl mx-auto">
+          <p className="text-lg leading-relaxed max-w-3xl mx-auto text-muted-foreground">
             Each pattern reflects your personal collecting journey on{' '}
             <a
               href="https://shape.network"
@@ -57,10 +58,7 @@ export function HowItWorksModal({
             >
               Shape
             </a>
-            , creating a one-of-a-kind digital origami, which can be downloaded, printed, and folded into an origami form.
-          </p>
-          <p className="text-lg leading-relaxed max-w-3xl mx-auto">
-            A digital and physical artifact representing a snapshot of your on-chain identity.
+            , creating a one-of-a-kind digital origami, which can be downloaded, printed, and folded into an origami form. A digital and physical artifact representing a snapshot of your on-chain identity.
           </p>
 
           <div className="max-w-2xl mx-auto">
@@ -113,11 +111,11 @@ export function HowItWorksModal({
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4 text-center text-lg">
                 <div className="space-y-2">
-                  <p className="font-medium">Katachi <span className="text-gray-500">(</span> 形 <span className="text-gray-500">or</span> カタチ <span className="text-gray-500">)</span></p>
+                  <p className="font-medium">Katachi <span className="text-muted-foreground">(</span> 形 <span className="text-muted-foreground">or</span> カタチ <span className="text-muted-foreground">)</span></p>
                   <p className="text-muted-foreground">Shape/Form in Japanese</p>
                 </div>
                 <div className="space-y-2">
-                  <p className="font-medium">Gen <span className="text-gray-500">(</span> 現 <span className="text-gray-500">or</span> ゲン <span className="text-gray-500">)</span></p>
+                  <p className="font-medium">Gen <span className="text-muted-foreground">(</span> 現 <span className="text-muted-foreground">or</span> ゲン <span className="text-muted-foreground">)</span></p>
                   <p className="text-muted-foreground">To Appear/Manifest</p>
                 </div>
               </div>
@@ -239,7 +237,7 @@ export function HowItWorksModal({
 
           <div className="space-y-4 pt-4 pb-6 max-w-2xl mx-auto">
             <h3 className="text-2xl font-semibold font-[family-name:var(--font-montserrat)]">Team</h3>
-            <div className="flex flex-col md:flex-row gap-4 md:gap-42 justify-center items-center">
+            <div className="flex flex-col md:flex-row gap-4 md:gap-42 items-start md:justify-center md:items-center">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
                   <Image
@@ -250,7 +248,7 @@ export function HowItWorksModal({
                     className="object-cover"
                   />
                 </div>
-                <div>
+                <div className="text-left">
                   <p className="font-medium text-lg">Joe Saavedra</p>
                   <a
                     href="https://x.com/quietloops"
@@ -272,7 +270,7 @@ export function HowItWorksModal({
                     className="object-cover"
                   />
                 </div>
-                <div>
+                <div className="text-left">
                   <p className="font-medium text-lg">sembo</p>
                   <a
                     href="https://x.com/1000b"
