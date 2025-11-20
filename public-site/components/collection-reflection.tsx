@@ -426,7 +426,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                 }}
               >
                 <p
-                  className="text-xl md:text-2xl font-bold animate-pulse px-8"
+                  className="text-xl md:text-2xl font-bold animate-pulse"
                   style={{ lineHeight: '1.25' }}
                   dangerouslySetInnerHTML={{
                     __html: displayedText + (isTyping ? '<span class="animate-pulse">|</span>' : '')

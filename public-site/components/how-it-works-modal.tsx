@@ -34,11 +34,11 @@ export function HowItWorksModal({
         )}
       </DialogTrigger>
       <DialogContent className="max-w-[95vw] md:max-w-[1200px] max-h-[90vh] overflow-y-auto w-full pt-10">
-        <DialogHeader className="text-center max-w-2xl mx-auto">
-          <DialogTitle className="text-4xl font-light">
+        <DialogHeader className="text-center sm:text-center max-w-2xl mx-auto">
+          <DialogTitle className="text-4xl font-bold font-[family-name:var(--font-montserrat)]">
             About Katachi Gen
           </DialogTitle>
-          <DialogDescription className="text-xl pt-4">
+          <DialogDescription className="text-xl pt-1 font-bold font-[family-name:var(--font-montserrat)] opacity-70">
             カタチ・ゲン - Shape Revealed
           </DialogDescription>
         </DialogHeader>
@@ -89,7 +89,7 @@ export function HowItWorksModal({
           </div>
 
           <div className="space-y-4 pt-4 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-semibold">How It Works: Shape to Shape</h3>
+            <h3 className="text-2xl font-semibold font-[family-name:var(--font-montserrat)]">How It Works: Shape to Shape</h3>
             <div className="space-y-3 text-lg text-muted-foreground text-left">
               <ol className="list-decimal list-outside space-y-3 ml-8">
                 <li>
@@ -109,7 +109,7 @@ export function HowItWorksModal({
           </div>
 
           <div className="space-y-4 pt-4 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-semibold">Etymology & Philosophy</h3>
+            <h3 className="text-2xl font-semibold font-[family-name:var(--font-montserrat)]">Etymology & Philosophy</h3>
             <div className="space-y-4">
               <div className="grid md:grid-cols-2 gap-4 text-center text-lg">
                 <div className="space-y-2">
@@ -124,7 +124,7 @@ export function HowItWorksModal({
               <p className="italic text-lg text-center text-muted-foreground">
                 カタチ・ゲン: &ldquo;Shape Revealed&rdquo; or &ldquo;Shape Manifest&rdquo;, evoking the transformation from flat pattern to dimensional object.
               </p>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg text-muted-foreground text-left">
                 This project interprets data from ShapeL2, generating physical shapes featuring art from the blockchain. We embrace the playful nature of what Katachi Gen artifacts represent, drawing inspiration from traditional origami forms like the Origami Kabuto, commonly folded by Japanese youth.
               </p>
 
@@ -150,7 +150,7 @@ export function HowItWorksModal({
           </div>
 
           <div className="space-y-4 pt-4 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-semibold">Technical Foundation</h3>
+            <h3 className="text-2xl font-semibold font-[family-name:var(--font-montserrat)]">Technical Foundation</h3>
             <p className="text-lg text-muted-foreground">
               Built with and inspired by computational origami research and tools.
             </p>
@@ -222,7 +222,7 @@ export function HowItWorksModal({
           </div>
 
           <div className="space-y-4 pt-4 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-semibold">Eligibility</h3>
+            <h3 className="text-2xl font-semibold font-[family-name:var(--font-montserrat)]">Eligibility</h3>
             <p className="text-lg text-muted-foreground">
               All wallets with a{' '}
               <a
@@ -238,7 +238,7 @@ export function HowItWorksModal({
           </div>
 
           <div className="space-y-4 pt-4 pb-6 max-w-2xl mx-auto">
-            <h3 className="text-2xl font-semibold">Team</h3>
+            <h3 className="text-2xl font-semibold font-[family-name:var(--font-montserrat)]">Team</h3>
             <div className="flex flex-col md:flex-row gap-4 md:gap-42 justify-center items-center">
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 rounded-full overflow-hidden bg-muted">
