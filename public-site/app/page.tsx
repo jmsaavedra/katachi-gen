@@ -14,10 +14,12 @@ export default function Home() {
   const { isConnected, address: connectedAddress } = useAccount();
   const { setShowWalletInHeader, setIsInMintView } = useHeader();
   const [showGenerator, setShowGenerator] = useState(false);
+  const [isMintReady, setIsMintReady] = useState(false);
   const [testAddress, setTestAddress] = useState('');
   const [shouldAutoRedirect, setShouldAutoRedirect] = useState(false);
   const [isBackgroundReady, setIsBackgroundReady] = useState(false);
   const backgroundReadyTimeout = useRef<number | null>(null);
+  const fallbackTimeout = useRef<number | null>(null);
 
   // Background origami options - randomly select one on client mount to avoid hydration mismatch
   const backgroundOptions = [
@@ -31,6 +33,22 @@ export default function Home() {
   // Randomize background URL on client mount only
   useEffect(() => {
     setBackgroundUrl(backgroundOptions[Math.floor(Math.random() * backgroundOptions.length)]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fallback timeout to ensure loading overlay always closes (even if iframe fails to load)
+  useEffect(() => {
+    fallbackTimeout.current = window.setTimeout(() => {
+      if (!isBackgroundReady) {
+        console.log('Background iframe failed to load within 5s, closing loading overlay');
+        setIsBackgroundReady(true);
+      }
+    }, 5000); // 5 second absolute maximum
+
+    return () => {
+      if (fallbackTimeout.current) {
+        window.clearTimeout(fallbackTimeout.current);
+      }
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Listen for scroll messages from iframe and forward mouse position to iframe
@@ -72,14 +90,15 @@ export default function Home() {
 
   // Update header state when generator visibility or wallet connection changes
   useEffect(() => {
-    setShowWalletInHeader(showGenerator || isConnected);
-    setIsInMintView(showGenerator);
-  }, [showGenerator, isConnected, setShowWalletInHeader, setIsInMintView]);
+    setShowWalletInHeader(isConnected || (showGenerator && isMintReady));
+    setIsInMintView(showGenerator && isMintReady);
+  }, [showGenerator, isConnected, setShowWalletInHeader, setIsInMintView, isMintReady]);
 
   // Auto-redirect only when user connects wallet from this page
   useEffect(() => {
     if (isConnected && connectedAddress && shouldAutoRedirect) {
       setTestAddress(''); // Clear test address when wallet connects
+      setIsMintReady(false);
       setShowGenerator(true);
       setShouldAutoRedirect(false); // Reset the flag
     }
@@ -89,6 +108,9 @@ export default function Home() {
     return () => {
       if (backgroundReadyTimeout.current) {
         window.clearTimeout(backgroundReadyTimeout.current);
+      }
+      if (fallbackTimeout.current) {
+        window.clearTimeout(fallbackTimeout.current);
       }
     };
   }, []);
@@ -109,6 +131,7 @@ export default function Home() {
     const randomWallet = topWallets[Math.floor(Math.random() * topWallets.length)];
 
     setTestAddress(randomWallet);
+    setIsMintReady(false);
     setShowGenerator(true);
   };
   
@@ -120,7 +143,11 @@ export default function Home() {
     return (
       <KatachiGenerator 
         overrideAddress={addressForGenerator as `0x${string}` | undefined} 
-        onGoHome={() => setShowGenerator(false)}
+        onReady={() => setIsMintReady(true)}
+        onGoHome={() => {
+          setIsMintReady(false);
+          setShowGenerator(false);
+        }}
       />
     );
   }
@@ -167,7 +194,7 @@ export default function Home() {
         >
         {/* Hero Section */}
         <div
-          className={`space-y-4 md:space-y-6 text-center pointer-events-none transition-opacity duration-700 ease-out ${
+          className={`w-full space-y-4 md:space-y-6 text-center pointer-events-none transition-opacity duration-700 ease-out ${
             isBackgroundReady ? 'opacity-100' : 'opacity-0'
           }`}
         >
@@ -211,6 +238,7 @@ export default function Home() {
                   const connectBtn = document.querySelector('[data-reveal-connect-btn]') as HTMLButtonElement;
                   connectBtn?.click();
                 } else {
+                  setIsMintReady(false);
                   setShowGenerator(true);
                 }
               }}
@@ -247,6 +275,7 @@ export default function Home() {
                   className="w-full gap-2 animate-gradient-button cursor-pointer"
                   onClick={(e) => {
                     e.stopPropagation();
+                    setIsMintReady(false);
                     setShowGenerator(true);
                   }}
                 >

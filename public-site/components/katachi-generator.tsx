@@ -26,6 +26,7 @@ import { formatFileSize } from '@/utils/formatFileSize';
 interface KatachiGeneratorProps {
   overrideAddress?: Address;
   onGoHome?: () => void;
+  onReady?: () => void;
 }
 
 interface NftWithImages {
@@ -46,7 +47,7 @@ interface NftWithImages {
   };
 }
 
-export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGeneratorProps = {}) {
+export function KatachiGenerator({ overrideAddress, onGoHome, onReady }: KatachiGeneratorProps = {}) {
   const { address: connectedAddress, isConnected } = useAccount();
   const chainId = useChainId();
   const { switchChain } = useSwitchChain();
@@ -79,6 +80,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
   const [urlResolved, setUrlResolved] = useState(false);
   const [previewDelay, setPreviewDelay] = useState(false);
   const [previewCountdown, setPreviewCountdown] = useState(0);
+  const [hasSignaledReady, setHasSignaledReady] = useState(false);
   const [sentimentData, setSentimentData] = useState<{
     sentiment: string;
     filteredNfts: Array<{
@@ -933,6 +935,13 @@ export function KatachiGenerator({ overrideAddress, onGoHome }: KatachiGenerator
 
   // Show loading overlay while initial data is loading
   const isInitialLoading = isLoading || isLoadingMedals;
+
+  useEffect(() => {
+    if (!isInitialLoading && !hasSignaledReady) {
+      onReady?.();
+      setHasSignaledReady(true);
+    }
+  }, [isInitialLoading, hasSignaledReady, onReady]);
 
   return (
     <>
