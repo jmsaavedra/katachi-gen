@@ -65,6 +65,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   const [sentiment, setSentiment] = useState(getRandomDevSentiment());
   const [count, setCount] = useState('8');
   const [isLoading, setIsLoading] = useState(false);
+  const [isCurating, setIsCurating] = useState(false); // New state for Tool 2
   const [curationComplete, setCurationComplete] = useState(false);
   const [error, setError] = useState('');
   const [isCurated, setIsCurated] = useState(false);
@@ -83,6 +84,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   const currentIndexRef = useRef(0);
   const popupRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLDivElement>(null);
+  const [initialInterpretation, setInitialInterpretation] = useState('');
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     setMousePosition({ x: e.clientX, y: e.clientY });
@@ -181,48 +183,67 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
     setError('');
 
     try {
-      // Call the MCP server endpoint
-      const response = await fetch('/api/interpret-sentiment', {
+      // STEP 1: Extract themes and get initial interpretation (fast, ~2-5s)
+      console.log('🎨 Step 1: Extracting themes...');
+      const themesResponse = await fetch('/api/extract-themes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sentiment: sentiment.trim(),
+        }),
+      });
+
+      if (!themesResponse.ok) {
+        throw new Error(`Failed to extract themes: ${themesResponse.statusText}`);
+      }
+
+      const themesData = await themesResponse.json();
+
+      if (themesData.error) {
+        throw new Error(themesData.message || 'Failed to extract themes');
+      }
+
+      console.log('✅ Themes extracted:', themesData.themes);
+
+      // Store initial interpretation for later
+      setInitialInterpretation(themesData.interpretation || '');
+
+      // Button now shows "Curating your collection..."
+      setIsLoading(false);
+      setIsCurating(true);
+
+      // STEP 2: Curate NFTs (heavy, ~10-30s)
+      console.log('🔍 Step 2: Curating NFTs...');
+      const curateResponse = await fetch('/api/curate-nfts', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           address: walletAddress,
+          themes: themesData.themes,
           sentiment: sentiment.trim(),
           count: parseInt(count),
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to interpret sentiment: ${response.statusText}`);
+      if (!curateResponse.ok) {
+        throw new Error(`Failed to curate NFTs: ${curateResponse.statusText}`);
       }
 
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(data.message || 'Failed to interpret collection');
+      const curateData = await curateResponse.json();
+
+      if (curateData.error) {
+        throw new Error(curateData.message || 'Failed to curate NFTs');
       }
 
-      
-      // Notify parent that sentiment has been processed
-      if (onSentimentSubmitted) {
-        onSentimentSubmitted(sentiment.trim(), data.selectedNfts || []);
-      }
-      
-      // Notify parent that curation is complete
-      if (onCurationCompleted) {
-        onCurationCompleted(data.interpretation || '', data.themes || [], data.selectedNfts || [], sentiment.trim());
-      }
-      
-      // Mark as curated to stop animation
+      console.log('✅ NFTs curated:', curateData.selectedNfts?.length || 0);
+
+      // Both tools complete - now show UI transition
+      setIsCurating(false);
       setIsCurated(true);
-
-      // Set curation complete state (keeps button disabled but changes text)
-      setCurationComplete(true);
-      setIsLoading(false);
-
-      // Reset typing state for new interpretation
       hasStartedTyping.current = false;
 
       // Capture current form height before fade out
@@ -233,10 +254,28 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
       // Start fade out animation for subtitle and form
       setFadeOutSubtitle(true);
 
+      // Notify parent with final curated data
+      if (onCurationCompleted) {
+        onCurationCompleted(
+          curateData.interpretation || themesData.interpretation,
+          curateData.themes || themesData.themes,
+          curateData.selectedNfts || [],
+          sentiment.trim()
+        );
+      }
+
+      // Notify parent that sentiment has been processed
+      if (onSentimentSubmitted) {
+        onSentimentSubmitted(sentiment.trim(), curateData.selectedNfts || []);
+      }
+
+      // Set curation complete state
+      setCurationComplete(true);
+
       // After 2s fade out, hide form completely and show interpretation
       setTimeout(() => {
         setShowSubtitle(false);
-        setHideForm(true); // Completely hide form after fade out
+        setHideForm(true);
         setShowInterpretation(true);
       }, 2000);
 
@@ -245,6 +284,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
       console.error('Error interpreting sentiment:', err);
       setError(err instanceof Error ? err.message : 'Failed to interpret your collection sentiment');
       setIsLoading(false);
+      setIsCurating(false);
     }
   };
 
@@ -345,13 +385,18 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
 
               <Button
                 onClick={handleSubmit}
-                disabled={isLoading || curationComplete || !sentiment.trim()}
-                className={`gap-3 text-lg px-8 py-6 ${!isLoading && !curationComplete && sentiment.trim() && !error ? 'animate-gradient-button' : ''}`}
+                disabled={isLoading || isCurating || curationComplete || !sentiment.trim()}
+                className={`gap-3 text-lg px-8 py-6 ${!isLoading && !isCurating && !curationComplete && sentiment.trim() && !error ? 'animate-gradient-button' : ''}`}
               >
                 {curationComplete ? (
                   <>
                     <Sparkles className="h-5 w-5" />
                     Curation Complete.
+                  </>
+                ) : isCurating ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Curating your collection...
                   </>
                 ) : isLoading ? (
                   <>

@@ -2,37 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withRelatedProject } from '@vercel/related-projects';
 
 // Automatically resolves to the correct MCP server URL based on environment
-// - Production: https://katachi-gen-mcp-server.vercel.app/mcp
-// - Preview: Automatically matches preview branch URL
-// - Development: http://localhost:3002/mcp (from env var)
 const MCP_SERVER_URL = withRelatedProject({
   projectName: 'katachi-gen-mcp-server',
   defaultHost: process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp',
 }) + '/mcp';
 
 const MAX_RETRIES = 2;
-const RETRY_DELAY_MS = 2000; // 2 seconds
+const RETRY_DELAY_MS = 2000;
 
-// Define the expected structure of the payload
 interface MCPPayload {
   jsonrpc: string;
   method: string;
   params: {
     name: string;
     arguments: {
-      address: string;
       sentiment: string;
-      count: number;
     };
   };
   id: number;
 }
 
-// Helper function to make MCP request with retries for cold starts
+// Helper function to make MCP request with retries
 async function fetchMCPWithRetry(payload: MCPPayload, retries = MAX_RETRIES): Promise<Response> {
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
-      console.log(`[Attempt ${attempt}/${retries}] Calling MCP server...`);
+      console.log(`[Attempt ${attempt}/${retries}] Calling MCP server (extract-themes)...`);
 
       const response = await fetch(MCP_SERVER_URL, {
         method: 'POST',
@@ -41,27 +35,23 @@ async function fetchMCPWithRetry(payload: MCPPayload, retries = MAX_RETRIES): Pr
           'Accept': 'application/json',
         },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(60000), // 60 second timeout (increased for dual AI calls)
+        signal: AbortSignal.timeout(15000), // 15 second timeout (fast operation)
       });
 
-      // If successful, return immediately
       if (response.ok) {
         console.log(`✅ MCP server responded successfully on attempt ${attempt}`);
         return response;
       }
 
-      // If it's a server error and we have retries left, try again
       if (response.status >= 500 && attempt < retries) {
         console.warn(`⚠️ MCP server error (${response.status}), retrying in ${RETRY_DELAY_MS}ms...`);
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
         continue;
       }
 
-      // Otherwise return the response (will be handled by error logic)
       return response;
 
-    } catch (error: unknown) {  // Changed from implicit 'any' to 'unknown'
-      // Handle timeout or network errors
+    } catch (error: unknown) {
       if (attempt < retries) {
         console.warn(`⚠️ Request failed: ${error instanceof Error ? error.message : 'Unknown error'}. Retrying in ${RETRY_DELAY_MS}ms...`);
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
@@ -75,33 +65,29 @@ async function fetchMCPWithRetry(payload: MCPPayload, retries = MAX_RETRIES): Pr
 }
 
 export async function POST(request: NextRequest) {
-  // Parse request body once at the beginning
-  const { address, sentiment, count } = await request.json();
+  const { sentiment } = await request.json();
 
   try {
-    if (!address || !sentiment || !count) {
+    if (!sentiment) {
       return NextResponse.json(
-        { error: true, message: 'Missing required parameters' },
+        { error: true, message: 'Missing sentiment parameter' },
         { status: 400 }
       );
     }
 
-    // Make request to MCP server with retry logic
     const payload: MCPPayload = {
       jsonrpc: '2.0',
       method: 'tools/call',
       params: {
-        name: 'interpretCollectionSentiment',
+        name: 'extractSentimentThemes',
         arguments: {
-          address,
-          sentiment,
-          count
+          sentiment
         }
       },
       id: Date.now()
     };
 
-    console.log('Calling MCP server with payload:', payload);
+    console.log('Calling MCP server (extract-themes) with payload:', payload);
 
     const response = await fetchMCPWithRetry(payload);
 
@@ -114,7 +100,6 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json();
 
-    // Handle MCP response format
     if (data.error) {
       return NextResponse.json(
         { error: true, message: data.error.message },
@@ -127,35 +112,25 @@ export async function POST(request: NextRequest) {
     if (data.result && data.result.content && data.result.content[0] && data.result.content[0].text) {
       try {
         result = JSON.parse(data.result.content[0].text);
-        console.log('Parsed MCP result:', JSON.stringify(result, null, 2));
+        console.log('Parsed MCP result (extract-themes):', JSON.stringify(result, null, 2));
       } catch (e) {
         console.error('Could not parse MCP response as JSON:', e);
-        console.error('Raw text was:', data.result.content[0].text);
         throw new Error('Invalid JSON response from MCP server');
       }
     }
     return NextResponse.json(result);
-  } catch (error: unknown) {  // Changed from implicit 'any' to 'unknown'
-    console.error('Error in interpret-sentiment API:', error);
-    console.log('Falling back to basic interpretation due to MCP server error');
+  } catch (error: unknown) {
+    console.error('Error in extract-themes API:', error);
 
-    // Fallback: return a basic response when MCP server is down
-    // Note: We already parsed the body at the beginning, so we can use those variables
+    // Fallback with generic themes
     const fallbackResponse = {
       error: false,
-      images: [
-        { url: 'https://exonemo.com/test/katachi-gen/images/flower.webp' },
-        { url: 'https://exonemo.com/test/katachi-gen/images/karborn.webp' }
-      ],
-      walletAddress: address,
-      sentiment: sentiment,
-      seed2: Math.floor(Math.random() * 1000000) + '_' + Date.now(),
-      patternType: '',
-      totalNfts: count,
-      uniqueCollections: 2,
-      message: 'MCP server unavailable - using fallback pattern'
+      sentiment,
+      themes: ['collecting practice', 'personal curation'],
+      interpretation: 'I\'m analyzing your collection to understand your collecting practice. These themes will guide the curation of works from your collection.',
+      timestamp: new Date().toISOString()
     };
-    
+
     console.log('Using fallback response:', fallbackResponse);
     return NextResponse.json(fallbackResponse);
   }
