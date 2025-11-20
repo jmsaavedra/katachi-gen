@@ -47,101 +47,122 @@ Example prompts:
 - "get the first 50 NFTs for wallet 0xabcd...123"
 - "get the next page of NFTs using pageKey xyz..."
 
-#### `interpretCollectionSentiment`
+#### `extractSentimentThemes` (NEW)
 
-AI-powered NFT curation that matches collector sentiment to their owned NFTs. Users express their emotional connection to collecting, and the system returns 5-15 NFTs that best match their feelings through advanced scoring algorithms.
+**Fast AI-powered theme extraction** (~2-5s) that analyzes collector sentiment and generates 2-5 contextually appropriate curatorial themes without requiring NFT data. This is the first step in the sentiment interpretation pipeline.
 
-Example prompts:
-- "I feel connected to nature when I collect - show me 10 NFTs that match this sentiment"
-- "Collecting makes me feel creative and inspired - find 5 pieces from my collection"
+**Key Features:**
+- **Generative Themes**: Uses Claude 3.5 Haiku to generate unique themes based on user input
+- **Art Curatorial Focus**: Themes are centered around art curatorial practice (gallery exhibitions, artistic movements, collector psychology)
+- **Broad & Precise**: Can be emotional, practical, aesthetic, or conceptual - always contextually appropriate
+- **Fast Response**: No NFT fetching required, returns initial interpretation immediately
+- **Fallback System**: Keyword-based theme extraction if AI fails
 
-**How the Sentiment Interpretation Algorithm Works:**
+**Example Theme Generation:**
+- Input: *"profits and money"* → `["financial speculation", "investment mindset", "wealth accumulation"]`
+- Input: *"connected to community"* → `["social connection", "collective identity", "participatory culture"]`
+- Input: *"beautiful colors"* → `["chromatic exploration", "visual aesthetics", "color theory"]`
+- Input: *"early adopter"* → `["technological pioneering", "cultural vanguard", "risk-taking"]`
 
-The system uses a multi-layered scoring approach to match user sentiment with NFT metadata:
+**Output Format:**
+```json
+{
+  "sentiment": "user's original input",
+  "themes": ["theme one", "theme two", "theme three"],
+  "interpretation": "AI-generated curatorial statement with <span> styled themes",
+  "timestamp": "ISO 8601 timestamp"
+}
+```
 
-**1. Emotional Theme Detection (Lines 72-83)**
-- Recognizes 10 core emotional categories with keyword triggers:
-  - **Joy**: happy, excited, joyful, delighted, thrilled, elated, cheerful, bright, fun, playful
-  - **Pride**: proud, accomplished, achievement, success, confident, strong, powerful, winner
-  - **Community**: together, community, friends, family, connected, belong, unity, collective, group
-  - **Creativity**: creative, artistic, inspired, innovative, unique, original, imaginative, expressive
-  - **Peace**: calm, peaceful, serene, tranquil, relaxed, zen, meditative, quiet, still
-  - **Nostalgia**: memory, remember, nostalgic, past, childhood, vintage, classic, timeless, old
-  - **Adventure**: adventure, explore, discover, journey, quest, travel, new, exciting, bold
-  - **Wealth**: rich, wealthy, valuable, precious, treasure, gold, diamond, luxury, premium
-  - **Nature**: nature, earth, forest, ocean, mountain, sky, flower, animal, natural, organic
-  - **Technology**: tech, digital, cyber, future, ai, robot, code, pixel, virtual, meta
+**Caching:** 5-minute TTL for fast repeated requests
 
-**2. Visual Characteristic Mapping (Lines 86-108)**
-- Maps emotional tones to visual styles and 11 color categories
-- **Bright**: yellow, orange, pink, neon, light, bright, vivid, glow
-- **Dark**: black, dark, shadow, night, gothic, noir, mysterious
-- **Color Detection**: Comprehensive keyword mapping for red, blue, green, yellow, purple, orange, pink, white, black, gray, brown
+---
 
-**3. NFT Scoring Algorithm (Lines 187-300)**
+#### `curateNftsByThemes` (NEW)
 
-Each NFT receives a composite score based on multiple factors:
+**Heavy NFT curation tool** (~10-30s) that takes generated themes and curates NFTs from the collector's wallet. This is the second step in the sentiment interpretation pipeline, called after `extractSentimentThemes`.
+
+**Key Features:**
+- **Single NFT Fetch**: Fetches entire collection from Alchemy once (up to 2000 NFTs for performance)
+- **Theme-Based Scoring**: Scores NFTs against AI-generated themes from step 1
+- **Final Interpretation**: Generates curatorial statement that references specific NFT names
+- **Collection Diversity**: Maximum 1 NFT per collection to ensure variety
+- **Comprehensive Match Details**: Returns detailed reasoning for each selected NFT
+
+**Input Parameters:**
+- `address`: Wallet address to analyze
+- `themes`: Array of themes from `extractSentimentThemes`
+- `sentiment`: Original user sentiment text
+- `count`: Number of NFTs to curate (typically 8)
+
+**Scoring Algorithm:**
+Each NFT receives a composite score based on:
 
 **Text Matching (Highest Priority)**
-- Direct word matches between user sentiment and NFT metadata
-- **NFT Name Match**: +3 points per word (e.g., "happy" in user input matches "Happy Cat #123")
+- **NFT Name Match**: +3 points per word
 - **NFT Description Match**: +2 points per word
 - **Collection Name Match**: +1 point per word
-- Only processes words longer than 3 characters to avoid noise
+- Only processes words longer than 3 characters
 
 **Theme Matching (Medium Priority)**
-- Detected themes are cross-referenced with NFT metadata
-- **Name Theme Match**: +2 points (e.g., "nature" theme matches "Forest Spirit" NFT)
+- Splits multi-word themes into individual words for matching
+- **Name Theme Match**: +2 points (e.g., "financial" theme matches "Finance Punk" NFT)
 - **Description Theme Match**: +1 point
-- Tracks specific keyword matches for detailed explanations
+- **Collection Theme Match**: +0.5 points
 
 **Visual/Mood Matching (Lower Priority)**
-- **Positive Sentiment + Bright Visuals**: +1 point (happy/excited + bright/colorful NFT names)
-- **Calm Sentiment + Minimal Style**: +1 point (peaceful + minimal/simple NFT characteristics)
+- **Positive Sentiment + Bright Visuals**: +1 point
+- **Calm Sentiment + Minimal Style**: +1 point
 
-**Color Analysis (Experimental)**
-- Extracts color mentions from sentiment text
-- Attempts to match with NFT image URLs/filenames (heuristic-based)
-- **Color Match**: +1-2 points plus detailed reasoning
-- **Note**: Currently limited to URL/filename analysis, not actual image pixel analysis
+**Output Format:**
+```json
+{
+  "themes": ["theme one", "theme two"],
+  "interpretation": "Final curatorial statement with <em> NFT titles and <span> styled themes",
+  "requestedCount": 8,
+  "selectedNfts": [
+    {
+      "tokenId": "123",
+      "contractAddress": "0x...",
+      "name": "NFT Name",
+      "imageUrl": "https://...",
+      "matchScore": 8.5,
+      "reason": "Human-readable match explanation",
+      "matchDetails": {
+        "textMatches": ["word matches"],
+        "themeMatches": ["theme connections"],
+        "visualMatches": ["aesthetic analysis"],
+        "collectionInfo": "Collection Name"
+      }
+    }
+  ]
+}
+```
 
-**Collection Diversity Bonus**
-- **Multiple Ownership**: +0.5 points if user owns multiple NFTs from same collection
-- **Randomization Factor**: +0-0.5 random points to ensure variety when scores are similar
+**Blocked Contracts:** Filters out NFTs from contract addresses listed in `blocked-contracts.txt`
 
-**4. Selection Process**
-1. **Score All NFTs**: Every owned NFT (up to 500 for performance) gets scored against sentiment
-2. **Sort by Score**: Highest scoring NFTs bubble to the top
-3. **Unique Collections**: Maximum 1 NFT per collection address to ensure diversity
-4. **Return Top N**: User-specified count (5, 10, or 15 NFTs)
+**Caching:** 5-minute TTL keyed by address + themes + sentiment + count
 
-**5. Match Details Output**
-Each selected NFT includes comprehensive match analysis:
-- **Overall Match Score**: Numerical score (0-10+ scale)
-- **Reason**: Human-readable explanation of why it matched
-- **Detailed Breakdown**:
-  - 📝 **Text Matches**: Specific word matches in name/description/collection
-  - 🎭 **Theme Matches**: Emotional theme connections with keywords
-  - 🎨 **Visual Matches**: Color and mood-based aesthetic analysis
-  - **Collection Info**: Context about the NFT's collection
+---
+
+#### `interpretCollectionSentiment` (LEGACY)
+
+**Note:** This is the original monolithic tool that combined theme extraction and NFT curation in a single call. It remains available for backward compatibility but the new 2-tool architecture (`extractSentimentThemes` → `curateNftsByThemes`) provides better UX with progressive loading states.
+
+AI-powered NFT curation that matches collector sentiment to their owned NFTs. Users express their emotional connection to collecting, and the system returns curated NFTs through advanced scoring algorithms.
 
 **Current Limitations:**
 - Visual analysis is text-based (URL/filename parsing) rather than actual image pixel analysis
 - Cannot detect objects in artwork (e.g., "apple" mentioned but can't see actual apples in images)
 - Color detection relies on metadata/filenames rather than true color analysis
 
-**Blocked Contracts:**
-The sentiment interpretation tool filters out NFTs from specific contract addresses listed in `blocked-contracts.txt`. This ensures that undesirable or spam collections don't appear in curated results. To add or remove blocked contracts, edit the `blocked-contracts.txt` file with one contract address per line. Lines starting with `#` are treated as comments.
-
 **Example Scoring:**
 User Input: *"Collecting makes me feel peaceful and connected to nature"*
 - NFT "Zen Garden #42" with green trees in description:
   - Text match "peaceful": +3 points
-  - Theme match "nature": +2 points  
+  - Theme match "nature": +2 points
   - Description match "connected": +2 points
   - **Total: 7+ points**
-
-The system provides transparent, explainable AI curation that goes far beyond simple keyword matching to understand emotional context and aesthetic preferences.
 
 ### Gasback Tools (`/tools/gasback/`)
 
