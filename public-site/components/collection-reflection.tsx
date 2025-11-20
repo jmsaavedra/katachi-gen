@@ -339,7 +339,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
               </label>
               <div className="flex justify-center">
                 <Textarea
-                  placeholder='e.g., "I love feeling connected to such a creative community." or "i like turtles."'
+                  placeholder="ex: Collecting art is my way of participating in culture as it's being written. Collecting on Shape creates a provable legacy, one that supports artists and grows our creative community."
                   value={sentiment}
                   onChange={(e) => setSentiment(e.target.value)}
                   onKeyDown={(e) => {
