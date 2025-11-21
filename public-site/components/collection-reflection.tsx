@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Sparkles, Heart } from 'lucide-react';
+import { Loader2, Sparkles, Heart, Info } from 'lucide-react';
 import Image from 'next/image';
 import { Address } from 'viem';
 
@@ -71,6 +71,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   const [isCurated, setIsCurated] = useState(false);
   const [hoveredNft, setHoveredNft] = useState<number | null>(null);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [flippedCards, setFlippedCards] = useState<Set<number>>(new Set());
   const [showInterpretation, setShowInterpretation] = useState(false);
   const [showGrid, setShowGrid] = useState(false);
   const [displayedText, setDisplayedText] = useState('');
@@ -87,6 +88,18 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     setMousePosition({ x: e.clientX, y: e.clientY });
+  };
+
+  const toggleCardFlip = (index: number) => {
+    setFlippedCards(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
   };
 
   // Typewriter effect with pauses between sentences
@@ -426,8 +439,11 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                 }}
               >
                 <p
-                  className="text-xl md:text-2xl font-bold animate-pulse"
-                  style={{ lineHeight: '1.25' }}
+                  className="text-xl md:text-2xl font-bold"
+                  style={{
+                    lineHeight: '1.25',
+                    animation: 'subtle-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+                  }}
                   dangerouslySetInnerHTML={{
                     __html: displayedText + (isTyping ? '<span class="animate-pulse">|</span>' : '')
                   }}
@@ -450,58 +466,210 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                 )}
                 
                 {/* Curated NFTs Grid */}
-                <div 
-                  className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                <div
+                  className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4"
                   onMouseMove={handleMouseMove}
                 >
-                  {curatedNfts.map((nft, index) => (
-                    <div 
-                      key={`${nft.contractAddress}-${nft.tokenId}-${index}`} 
-                      className="group relative"
-                      onMouseEnter={() => setHoveredNft(index)}
-                      onMouseLeave={() => setHoveredNft(null)}
-                    >
-                      <a 
-                        href={`https://opensea.io/assets/shape/${nft.contractAddress}/${nft.tokenId}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block"
+                  {curatedNfts.map((nft, index) => {
+                    const isFlipped = flippedCards.has(index);
+                    return (
+                      <div
+                        key={`${nft.contractAddress}-${nft.tokenId}-${index}`}
+                        className="group relative"
+                        onMouseEnter={() => setHoveredNft(index)}
+                        onMouseLeave={() => setHoveredNft(null)}
                       >
-                        <div className="space-y-2">
-                          {/* NFT Image */}
-                          <div className="aspect-square rounded-lg overflow-hidden bg-muted relative cursor-pointer">
-                            {(nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl) ? (
-                              <Image
-                                src={nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl || ''}
-                                alt={nft.name || 'NFT'}
-                                fill
-                                className="object-cover transition-transform group-hover:scale-105"
-                                sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                unoptimized
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                <Heart className="h-8 w-8" />
+                        {/* Mobile: Tappable card with flip */}
+                        <div className="md:hidden">
+                          <div
+                            className="space-y-2"
+                            onClick={() => toggleCardFlip(index)}
+                          >
+                            {/* Flip container */}
+                            <div className="relative aspect-square rounded-lg overflow-hidden bg-muted cursor-pointer" style={{ perspective: '1000px' }}>
+                              <div
+                                className="w-full h-full transition-transform duration-500"
+                                style={{
+                                  transformStyle: 'preserve-3d',
+                                  transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'
+                                }}
+                              >
+                                {/* Front: NFT Image */}
+                                <div
+                                  className="absolute inset-0 w-full h-full"
+                                  style={{ backfaceVisibility: 'hidden' }}
+                                >
+                                  {(nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl) ? (
+                                    <Image
+                                      src={nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl || ''}
+                                      alt={nft.name || 'NFT'}
+                                      fill
+                                      className="object-cover"
+                                      sizes="50vw"
+                                      unoptimized
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                      <Heart className="h-8 w-8" />
+                                    </div>
+                                  )}
+
+                                  {/* Match Score Badge */}
+                                  <div className="absolute top-2 right-2 bg-black/80 text-white px-2 py-1 rounded text-xs font-medium">
+                                    {Math.round(nft.matchScore * 10)}%
+                                  </div>
+
+                                  {/* Tap for info indicator - only show when not flipped */}
+                                  {!isFlipped && (
+                                    <div className="absolute bottom-2 right-2 bg-black/80 text-white px-2 py-1 rounded text-xs font-medium flex items-center gap-1">
+                                      <Info className="h-3 w-3" />
+                                      <span>Tap for info</span>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Back: Metadata */}
+                                <div
+                                  className="absolute inset-0 w-full h-full bg-popover border rounded-lg p-3 overflow-y-auto"
+                                  style={{
+                                    backfaceVisibility: 'hidden',
+                                    transform: 'rotateY(180deg)'
+                                  }}
+                                >
+                                  <div className="space-y-2 text-xs">
+                                    <div>
+                                      <h4 className="font-medium text-sm mb-1">{nft.name || 'Unnamed NFT'}</h4>
+                                      <p className="text-muted-foreground">
+                                        Token #{nft.tokenId}
+                                      </p>
+                                    </div>
+
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-muted-foreground">Heuristic Score</span>
+                                      <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full font-medium">
+                                        {nft.matchScore.toFixed(2)}
+                                      </span>
+                                    </div>
+
+                                    <div className="text-muted-foreground">
+                                      <p className="truncate" title={nft.collectionName || nft.contractAddress}>
+                                        {nft.collectionName ? (
+                                          <>Collection: {nft.collectionName}</>
+                                        ) : (
+                                          <>Collection: {nft.contractAddress.slice(0, 6)}...{nft.contractAddress.slice(-4)}</>
+                                        )}
+                                      </p>
+                                    </div>
+
+                                    <div className="bg-muted/50 rounded p-2">
+                                      <p className="text-xs">{nft.reason}</p>
+                                    </div>
+
+                                    {/* Match Details */}
+                                    {nft.matchDetails && (
+                                      <div className="space-y-2 pt-2 border-t border-border/50">
+                                        {nft.matchDetails.textMatches.length > 0 && (
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                                              📝 Word matches
+                                            </span>
+                                            <span className="text-xs">{nft.matchDetails.textMatches.length}</span>
+                                          </div>
+                                        )}
+
+                                        {nft.matchDetails.themeMatches.length > 0 && (
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-blue-600 dark:text-blue-400">
+                                              🎭 Theme matches
+                                            </span>
+                                            <span className="text-xs">{nft.matchDetails.themeMatches.length}</span>
+                                          </div>
+                                        )}
+
+                                        {nft.matchDetails.visualMatches.length > 0 && (
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                                              🎨 Visual matches
+                                            </span>
+                                            <span className="text-xs">{nft.matchDetails.visualMatches.length}</span>
+                                          </div>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    <a
+                                      href={`https://opensea.io/assets/shape/${nft.contractAddress}/${nft.tokenId}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1.5 text-blue-600 dark:text-blue-400 hover:underline mt-2 text-xs"
+                                      onClick={(e) => e.stopPropagation()}
+                                    >
+                                      <Image
+                                        src="/assets/opensea-transparent.png"
+                                        alt="OpenSea"
+                                        width={16}
+                                        height={16}
+                                        className="shrink-0"
+                                      />
+                                      <span>View on OpenSea</span>
+                                    </a>
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                            
-                            {/* Match Score Badge */}
-                            <div className="absolute top-2 right-2 bg-black/80 text-white px-2 py-1 rounded text-xs font-medium">
-                              {Math.round(nft.matchScore * 10)}%
+                            </div>
+
+                            {/* Rank only */}
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Matched Rank #{index + 1}
+                              </p>
                             </div>
                           </div>
-                          
-                          {/* Title */}
-                          <div className="space-y-1">
-                            <h4 className="font-medium text-sm line-clamp-2 leading-tight">{nft.name || 'Unnamed NFT'}</h4>
-                            <p className="text-xs text-muted-foreground">
-                              Rank #{index + 1}
-                            </p>
-                          </div>
                         </div>
-                      </a>
-                    </div>
-                  ))}
+
+                        {/* Desktop: Link with hover popup */}
+                        <a
+                          href={`https://opensea.io/assets/shape/${nft.contractAddress}/${nft.tokenId}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hidden md:block"
+                        >
+                          <div className="space-y-2">
+                            {/* NFT Image */}
+                            <div className="aspect-square rounded-lg overflow-hidden bg-muted relative cursor-pointer">
+                              {(nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl) ? (
+                                <Image
+                                  src={nft.alchemyImages?.thumbnailUrl || nft.alchemyImages?.pngUrl || nft.imageUrl || ''}
+                                  alt={nft.name || 'NFT'}
+                                  fill
+                                  className="object-cover transition-transform group-hover:scale-105"
+                                  sizes="(max-width: 1024px) 33vw, 25vw"
+                                  unoptimized
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                  <Heart className="h-8 w-8" />
+                                </div>
+                              )}
+
+                              {/* Match Score Badge */}
+                              <div className="absolute top-2 right-2 bg-black/80 text-white px-2 py-1 rounded text-xs font-medium">
+                                {Math.round(nft.matchScore * 10)}%
+                              </div>
+                            </div>
+
+                            {/* Title */}
+                            <div className="space-y-1">
+                              <h4 className="font-medium text-sm line-clamp-2 leading-tight">{nft.name || 'Unnamed NFT'}</h4>
+                              <p className="text-xs text-muted-foreground">
+                                Rank #{index + 1}
+                              </p>
+                            </div>
+                          </div>
+                        </a>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -511,9 +679,9 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
       
       {/* Floating Popup */}
       {hoveredNft !== null && showGrid && (
-        <div 
+        <div
           ref={popupRef}
-          className="fixed pointer-events-none z-50"
+          className="hidden md:block fixed pointer-events-none z-50"
           style={{
             left: `${mousePosition.x + 20}px`,
             top: `${mousePosition.y + 20}px`,

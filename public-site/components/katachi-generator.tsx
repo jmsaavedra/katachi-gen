@@ -687,7 +687,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome, onReady }: Katachi
       };
       console.log('🎯 FINAL METADATA FOR MINTING:', JSON.stringify(finalMetadata, null, 2));
       
-      toast.success('Pattern generated successfully!');
+      toast.success('Katachi Gen generated successfully!');
       
     } catch (error) {
       console.error('❌ Generation failed:', error);
@@ -839,7 +839,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome, onReady }: Katachi
       };
       console.log('🎯 FINAL METADATA FOR MINTING:', JSON.stringify(finalMetadata, null, 2));
       
-      toast.success('Pattern generated successfully!');
+      toast.success('Katachi Gen generated successfully!');
     } catch (err) {
       console.error('Pattern generation error:', err);
 
@@ -1429,7 +1429,7 @@ export function KatachiGenerator({ overrideAddress, onGoHome, onReady }: Katachi
                           <span className="flex flex-col items-center justify-center gap-1">
                             <span className="flex items-center gap-2">
                               <Eye className="h-4 w-4 md:h-5 md:w-5" />
-                              <span className="text-sm md:text-lg">Explore Mode</span>
+                              <span className="text-sm md:text-lg">You&apos;re in Explore Mode</span>
                             </span>
                             <span className="text-xs md:text-sm">
                               <span className="font-bold underline">Connect Wallet</span> to Mint
