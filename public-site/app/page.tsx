@@ -229,7 +229,7 @@ export default function Home() {
         {/* Two Column CTAs */}
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Primary CTA - Reveal Your Shape */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border border-white hover:border-blue-600 bg-[rgba(0,0,0,0.35)] pointer-events-auto cursor-pointer">
+          <Card className="group hover:shadow-lg transition-all duration-300 border-[0.5px] border-[rgba(255,255,255,0.6)] hover:border-blue-600 bg-[rgba(0,0,0,0.35)] pointer-events-auto cursor-pointer">
             <CardContent
               className="p-6 md:p-8 pb-5 md:pb-6 flex flex-col"
               onClick={() => {
@@ -287,7 +287,7 @@ export default function Home() {
 
           {/* Secondary CTA - Explore */}
           <Card
-            className="group hover:shadow-lg transition-all duration-300 border border-white hover:border-blue-600 bg-[rgba(0,0,0,0.35)] pointer-events-auto cursor-pointer"
+            className="group hover:shadow-lg transition-all duration-300 border-[0.5px] border-[rgba(255,255,255,0.6)] hover:border-blue-600 bg-[rgba(0,0,0,0.35)] pointer-events-auto cursor-pointer"
             onClick={handleExploreClick}
           >
             <CardContent className="p-6 md:p-8 pb-5 md:pb-6 flex flex-col">
