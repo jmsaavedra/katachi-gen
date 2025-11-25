@@ -439,7 +439,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                 }}
               >
                 <p
-                  className="text-xl md:text-2xl font-bold"
+                  className="text-xl md:text-2xl font-bold md:px-8"
                   style={{
                     lineHeight: '1.25',
                     animation: 'subtle-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
