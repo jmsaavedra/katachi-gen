@@ -21,18 +21,8 @@ export function FoldLoadingOverlay({
         className
       )}
     >
-      <div className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-white/5 via-white/10 to-white/5 px-6 py-8 shadow-[0_35px_120px_rgba(0,0,0,0.55)]">
-        {/* Ambient textures */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(59,130,246,0.16),transparent_35%),radial-gradient(circle_at_75%_10%,rgba(255,255,255,0.12),transparent_28%),radial-gradient(circle_at_50%_90%,rgba(255,255,255,0.06),transparent_35%)]" />
-        <div
-          className="pointer-events-none absolute inset-0 opacity-25 mix-blend-screen"
-          style={{
-            backgroundImage: 'radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px)',
-            backgroundSize: '8px 8px',
-          }}
-        />
-
-        <div className="relative flex flex-col items-center gap-5 text-center">
+      <div className="relative w-full max-w-lg px-6 py-8">
+        <div className="flex flex-col items-center gap-5 text-center">
           <div className="text-2xl font-bold tracking-tight text-white font-[family-name:var(--font-montserrat)]">
             Katachi Gen
           </div>
