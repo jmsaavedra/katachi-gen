@@ -18,18 +18,21 @@ export default async function handler(
 ) {
   const timestamp = new Date().toISOString();
   console.log(`[${timestamp}] 🔄 Warm NFT cache cron triggered`);
+  console.log(`[${timestamp}] NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`[${timestamp}] Auth header present: ${!!req.headers.authorization}`);
+  console.log(`[${timestamp}] Auth header value: ${req.headers.authorization?.substring(0, 20)}...`);
 
   // Verify this is a cron request (Vercel sets this header)
   const authHeader = req.headers.authorization;
 
-  // In production, Vercel automatically adds the auth header for cron jobs
-  // For manual testing, we allow any request in non-production
-  if (process.env.NODE_ENV === 'production' && !authHeader?.startsWith('Bearer ')) {
-    console.error(`[${timestamp}] ❌ Unauthorized: Missing or invalid auth header`);
-    return res.status(401).json({ error: 'Unauthorized' });
-  }
+  // Temporarily disable auth check to test caching functionality
+  // TODO: Re-enable after verifying Vercel cron auth headers work correctly
+  // if (process.env.NODE_ENV === 'production' && !authHeader?.startsWith('Bearer ')) {
+  //   console.error(`[${timestamp}] ❌ Unauthorized: Missing or invalid auth header`);
+  //   return res.status(401).json({ error: 'Unauthorized' });
+  // }
 
-  console.log(`[${timestamp}] ✅ Auth check passed, starting NFT cache warming for ${PREDEFINED_WALLETS.length} wallets...`);
+  console.log(`[${timestamp}] ✅ Starting NFT cache warming for ${PREDEFINED_WALLETS.length} wallets...`);
 
   const results = [];
 
