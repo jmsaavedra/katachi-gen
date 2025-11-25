@@ -71,11 +71,8 @@ export default async function getPrefetchedNfts({
 
     if (cached) {
       console.log(`✓ Cache hit for ${userAddress}`);
-      const data = JSON.parse(cached);
-      return {
-        ...data,
-        cached: true,
-      };
+      // Cached data is already in the xmcp response format
+      return JSON.parse(cached);
     }
 
     console.log(`✗ Cache miss for ${userAddress}, fetching from Alchemy...`);
@@ -122,9 +119,19 @@ export default async function getPrefetchedNfts({
       cached: false,
     };
 
+    // Format response in xmcp expected format
+    const response = {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+
     // Cache for pre-defined wallets
     if (isPredefinedWallet) {
-      const cachePayload = JSON.stringify(result);
+      const cachePayload = JSON.stringify(response);
       const sizeInMB = (cachePayload.length / (1024 * 1024)).toFixed(2);
 
       await setCached(
@@ -135,9 +142,23 @@ export default async function getPrefetchedNfts({
       console.log(`✓ Cached ${allNfts.length} NFTs for ${userAddress} (${sizeInMB}MB)`);
     }
 
-    return result;
+    return response;
   } catch (error) {
     console.error('Error fetching NFTs:', error);
-    throw new Error(`Failed to fetch NFTs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    const errorOutput = {
+      error: true,
+      message: `Failed to fetch NFTs: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      userAddress,
+      timestamp: new Date().toISOString(),
+    };
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(errorOutput, null, 2),
+        },
+      ],
+    };
   }
 }

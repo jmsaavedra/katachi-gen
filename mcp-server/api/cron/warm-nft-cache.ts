@@ -103,8 +103,18 @@ export default async function handler(
         cached: false,
       };
 
+      // Format in xmcp expected format (matching get-prefetched-nfts.ts)
+      const response = {
+        content: [
+          {
+            type: 'text',
+            text: JSON.stringify(data, null, 2),
+          },
+        ],
+      };
+
       // Cache for 2 hours
-      const cachePayload = JSON.stringify(data);
+      const cachePayload = JSON.stringify(response);
       const sizeInMB = (cachePayload.length / (1024 * 1024)).toFixed(2);
 
       await setCached(cacheKey, cachePayload, 2 * 60 * 60);
