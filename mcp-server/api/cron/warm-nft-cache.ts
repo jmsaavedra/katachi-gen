@@ -12,6 +12,27 @@ const PREDEFINED_WALLETS = [
   '0xd20ce27f650598c2d790714b4f6a7222b8ddce22'
 ];
 
+/**
+ * Strip NFT metadata to only essential fields for caching
+ * Reduces payload size by ~80-90% to fit within Redis limits
+ */
+function stripNFTMetadata(nft: any) {
+  return {
+    contract: {
+      address: nft.contract?.address,
+      name: nft.contract?.name,
+    },
+    tokenId: nft.tokenId,
+    tokenType: nft.tokenType,
+    name: nft.name || nft.title,
+    image: {
+      cachedUrl: nft.image?.cachedUrl,
+      thumbnailUrl: nft.image?.thumbnailUrl,
+      originalUrl: nft.image?.originalUrl,
+    },
+  };
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -66,9 +87,12 @@ export default async function handler(
 
       const fetchTime = Date.now() - startTime;
 
+      // Strip metadata to reduce payload size for caching
+      const strippedNfts = allNfts.map(stripNFTMetadata);
+
       const data = {
         userAddress: address,
-        ownedNfts: allNfts,
+        ownedNfts: strippedNfts,
         totalCount,
         pageKey: undefined,
         validAt: {
@@ -80,16 +104,20 @@ export default async function handler(
       };
 
       // Cache for 2 hours
-      await setCached(cacheKey, JSON.stringify(data), 2 * 60 * 60);
+      const cachePayload = JSON.stringify(data);
+      const sizeInMB = (cachePayload.length / (1024 * 1024)).toFixed(2);
+
+      await setCached(cacheKey, cachePayload, 2 * 60 * 60);
 
       const result = {
         address,
         success: true,
         nftCount: allNfts.length,
-        fetchTimeMs: fetchTime
+        fetchTimeMs: fetchTime,
+        sizeInMB: parseFloat(sizeInMB)
       };
 
-      console.log(`✅ Cached ${allNfts.length} NFTs for ${address} (took ${fetchTime}ms)`);
+      console.log(`✅ Cached ${allNfts.length} NFTs for ${address} (${sizeInMB}MB, took ${fetchTime}ms)`);
       results.push(result);
 
     } catch (error) {

@@ -37,6 +37,27 @@ const PREDEFINED_WALLETS = [
   '0xd20ce27f650598c2d790714b4f6a7222b8ddce22'
 ];
 
+/**
+ * Strip NFT metadata to only essential fields for caching
+ * Reduces payload size by ~80-90% to fit within Redis limits
+ */
+function stripNFTMetadata(nft: any) {
+  return {
+    contract: {
+      address: nft.contract?.address,
+      name: nft.contract?.name,
+    },
+    tokenId: nft.tokenId,
+    tokenType: nft.tokenType,
+    name: nft.name || nft.title,
+    image: {
+      cachedUrl: nft.image?.cachedUrl,
+      thumbnailUrl: nft.image?.thumbnailUrl,
+      originalUrl: nft.image?.originalUrl,
+    },
+  };
+}
+
 export default async function getPrefetchedNfts({
   userAddress,
 }: InferSchema<typeof schema>) {
@@ -83,9 +104,14 @@ export default async function getPrefetchedNfts({
       }
     } while (pageKey);
 
+    // Strip metadata for caching to reduce payload size
+    const strippedNfts = isPredefinedWallet
+      ? allNfts.map(stripNFTMetadata)
+      : allNfts;
+
     const result = {
       userAddress,
-      ownedNfts: allNfts,
+      ownedNfts: strippedNfts,
       totalCount: totalCount,
       pageKey: undefined,
       validAt: {
@@ -98,12 +124,15 @@ export default async function getPrefetchedNfts({
 
     // Cache for pre-defined wallets
     if (isPredefinedWallet) {
+      const cachePayload = JSON.stringify(result);
+      const sizeInMB = (cachePayload.length / (1024 * 1024)).toFixed(2);
+
       await setCached(
         `mcp:prefetchedNfts:${normalizedAddress}`,
-        JSON.stringify(result),
+        cachePayload,
         60 * 60 * 2 // 2 hours TTL
       );
-      console.log(`✓ Cached ${allNfts.length} NFTs for ${userAddress}`);
+      console.log(`✓ Cached ${allNfts.length} NFTs for ${userAddress} (${sizeInMB}MB)`);
     }
 
     return result;
