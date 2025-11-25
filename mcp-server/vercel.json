@@ -6,6 +6,10 @@
     {
       "path": "/api/cron/keep-alive",
       "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/warm-nft-cache",
+      "schedule": "0 */2 * * *"
     }
   ]
 }
