@@ -303,7 +303,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
   }
 
   return (
-    <Card className={!isCurated ? "pulse-blue-border" : ""}>
+    <Card className={!isCurated ? "pulse-blue-border mb-40" : ""}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
           <Heart className="h-6 w-6 md:h-7 md:w-7 text-red-500 animate-pulse" />
@@ -352,7 +352,7 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
               </label>
               <div className="flex justify-center">
                 <Textarea
-                  placeholder="ex: Collecting art is my way of participating in culture as it's being written. Collecting on Shape creates a provable legacy, one that supports artists and grows our creative community."
+                  placeholder={'"Supporting artists and building a community brings me joy."\n"Here for the dollar bills. And Pepe."\n"Collecting art quiets the voices in my head."'}
                   value={sentiment}
                   onChange={(e) => setSentiment(e.target.value)}
                   onKeyDown={(e) => {
@@ -362,8 +362,8 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
                     }
                   }}
                   className="min-h-[120px] w-full md:w-4/5 text-center"
-                  style={{ 
-                    fontSize: '1.125rem', 
+                  style={{
+                    fontSize: '1.125rem',
                     lineHeight: '1.5',
                     minHeight: '120px',
                     resize: 'vertical',
