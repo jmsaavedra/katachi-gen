@@ -147,13 +147,17 @@ export async function POST(request: NextRequest) {
             const logResult = {
               ...result,
               selectedNfts: result.selectedNfts?.map((nft: unknown) => {
-                const { description: _description, ...nftWithoutDescription } = nft as Record<string, unknown>;
+                const nftCopy = { ...(nft as Record<string, unknown>) };
+                delete nftCopy.description;
+
                 // Also remove originalUrl from alchemyImages if it exists
-                if (nftWithoutDescription.alchemyImages && typeof nftWithoutDescription.alchemyImages === 'object') {
-                  const { originalUrl: _originalUrl, ...alchemyImagesWithoutUrl } = nftWithoutDescription.alchemyImages as Record<string, unknown>;
-                  return { ...nftWithoutDescription, alchemyImages: alchemyImagesWithoutUrl };
+                if (nftCopy.alchemyImages && typeof nftCopy.alchemyImages === 'object') {
+                  const alchemyImagesCopy = { ...(nftCopy.alchemyImages as Record<string, unknown>) };
+                  delete alchemyImagesCopy.originalUrl;
+                  nftCopy.alchemyImages = alchemyImagesCopy;
                 }
-                return nftWithoutDescription;
+
+                return nftCopy;
               })
             };
             console.log('Parsed MCP result (curate-nfts):', JSON.stringify(logResult, null, 2));
