@@ -534,7 +534,50 @@ function initCellColorizer(globals) {
             
             // Restore canvas state after rotation
             finalCtx.restore();
-            
+
+            // ========================================
+            // DRAW FOLD LINES ON TOP OF TEXTURES
+            // ========================================
+            console.log("Drawing fold lines on texture-mapped image...");
+
+            if (fold.edges_vertices && fold.edges_assignment) {
+                finalCtx.save();
+
+                // Apply the same 180° rotation used for textures
+                finalCtx.translate(canvasWidth / 2, canvasHeight / 2);
+                finalCtx.rotate(Math.PI);
+                finalCtx.translate(-canvasWidth / 2, -canvasHeight / 2);
+
+                // Thin black lines for all fold lines
+                const lineWidth = Math.max(1, scale * 0.5); // Scale-aware, minimum 1px
+                finalCtx.strokeStyle = "#000000"; // BLACK only
+                finalCtx.lineWidth = lineWidth;
+
+                // Draw each edge
+                for (let i = 0; i < fold.edges_vertices.length; i++) {
+                    const edge = fold.edges_vertices[i];
+
+                    // Get vertex coordinates
+                    const v1 = vertices[edge[0]];
+                    const v2 = vertices[edge[1]];
+
+                    // Transform to canvas space (same as texture coordinates)
+                    const p1 = transformPoint(v1);
+                    const p2 = transformPoint(v2);
+
+                    // Draw the fold line
+                    finalCtx.beginPath();
+                    finalCtx.moveTo(p1[0], p1[1]);
+                    finalCtx.lineTo(p2[0], p2[1]);
+                    finalCtx.stroke();
+                }
+
+                finalCtx.restore();
+                console.log(`✅ Drew ${fold.edges_vertices.length} black fold lines`);
+            } else {
+                console.warn("⚠️  No edge data available in fold structure");
+            }
+
             // Apply the generated texture to the origami model immediately
             applyTextureMappedImageToModel(finalCanvas, (globals.filename || "origami_pattern") + "_texture_mapped", {
                 bbox: bbox,
@@ -553,9 +596,13 @@ function initCellColorizer(globals) {
                         const url = URL.createObjectURL(blob);
                         const downloadLink = document.createElement("a");
                         downloadLink.href = url;
-                        
-                        const filename = globals.filename || "origami_pattern";
-                        downloadLink.download = filename + "_texture_mapped.png";
+
+                        // Generate filename based on mint mode
+                        let filename = "Katachi-Gen_print-pattern";
+                        if (window.nftData && window.nftData.tokenId) {
+                            filename = `Katachi-Gen_print-pattern_${window.nftData.tokenId}`;
+                        }
+                        downloadLink.download = filename + ".png";
                         
                         document.body.appendChild(downloadLink);
                         downloadLink.click();
