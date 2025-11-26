@@ -66,42 +66,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Create complete token metadata for minting (direct response or completed job)
+    // Backend only returns visual assets (Arweave IDs, URLs, pattern data)
+    // Frontend is responsible for generating all metadata attributes using buildNftAttributes()
     if (data.success && data.thumbnailId && data.htmlId) {
-      const tokenMetadata = {
-        name: `Katachi Gen`,
-        description: `Katachi Gen transforms your NFT collection into unique 3D origami patterns through sentiment analysis and AI curation. Each pattern reflects your personal collecting journey and aesthetic preferences, creating a one-of-a-kind digital origami that captures the essence of your on-chain identity.\n\nhttps://katachi-gen.com`,
-        image: `https://arweave.net/${data.thumbnailId}`,
-        animation_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,
-        external_url: data.htmlUrl || `https://arweave.net/${data.htmlId}`,
-        attributes: [
-          { trait_type: 'Sentiment', value: body.sentiment || 'Applied' },
-          { trait_type: 'Stack Medals', value: body.stackMedals || 0 },
-          { trait_type: 'Unique Collections', value: body.uniqueCollections || 0 },
-          { trait_type: 'Pattern Type', value: data.patternType || 'Origami' },
-          { trait_type: 'Total NFTs', value: body.totalNfts || 0 }
-        ],
-        properties: {
-          category: 'art',
-          creators: [{ address: body.walletAddress, share: 100 }]
-        },
-        arweave: {
-          thumbnailId: data.thumbnailId,
-          htmlId: data.htmlId,
-          thumbnailUrl: data.thumbnailUrl,
-          htmlUrl: data.htmlUrl
-        }
-      };
-
-      
-      // Return the complete token metadata instead of just the basic data
-      return NextResponse.json({
-        ...data,
-        metadata: tokenMetadata
+      console.log('✅ Pattern generation complete - visual assets ready:', {
+        thumbnailId: data.thumbnailId,
+        htmlId: data.htmlId,
+        thumbnailUrl: data.thumbnailUrl,
+        htmlUrl: data.htmlUrl
       });
     }
 
-    // If we couldn't create metadata, return just the basic data
+    // Return only the visual asset data (no metadata attributes)
     return NextResponse.json(data);
   } catch (error) {
     // Type guards for error properties
