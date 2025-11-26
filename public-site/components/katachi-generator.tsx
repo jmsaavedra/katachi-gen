@@ -310,6 +310,25 @@ export function KatachiGenerator({ overrideAddress, onGoHome, onReady }: Katachi
     });
   };
 
+  // Helper function to build consistent attributes for NFT metadata
+  // ARCHITECTURE: Frontend is single source of truth for all metadata attributes
+  // Backend only generates visual assets (pattern, Arweave IDs)
+  // Frontend has fresh wallet data from Alchemy and knows UX context (Explore Mode, etc)
+  const buildNftAttributes = (
+    sentiment: string,
+  ): Array<{ trait_type: string; value: string | number }> => {
+    const attributes = [
+      { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
+      { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
+      { trait_type: 'Pattern Type', value: 'Origami' },
+      { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 },
+      { trait_type: 'Revealed by', value: overrideAddress && !connectedAddress ? 'Explore Mode!' : (connectedAddress || '0x0000') },
+      { trait_type: 'Sentiment', value: sentiment }, // Last trait - shown in full on display
+    ];
+
+    return attributes;
+  };
+
   const handleCurationCompleted = async (
     interpretation: string,
     themes: string[],
@@ -656,14 +675,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome, onReady }: Katachi
           foldLines: 0,
           colors: ['#000000', '#ffffff'],
           arweaveId: result.htmlId, // Store HTML Arweave ID for minting
-          // Store the complete metadata from the API for minting + add "Minted by" attribute
-          attributes: (result.metadata?.attributes || [
-            { trait_type: 'Sentiment', value: dataToUse.sentiment },
-            { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
-            { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
-          ]).concat([
-            { trait_type: 'Revealed by', value: overrideAddress && !connectedAddress ? '0x0000' : connectedAddress },
-          ])
+          // Use helper function to build consistent attributes including "Revealed by"
+          attributes: buildNftAttributes(dataToUse.sentiment)
         },
         curated_nfts: dataToUse.filteredNfts.map(nft => ({
           name: nft.name || '',
@@ -809,14 +822,8 @@ export function KatachiGenerator({ overrideAddress, onGoHome, onReady }: Katachi
           foldLines: 0,
           colors: ['#000000', '#ffffff'],
           arweaveId: result.htmlId, // Store HTML Arweave ID for minting
-          // Store the complete metadata from the API for minting
-          attributes: result.metadata?.attributes || [
-            { trait_type: 'Sentiment', value: sentimentData.sentiment },
-            { trait_type: 'Stack Medals', value: stackMedals?.totalMedals || 0 },
-            { trait_type: 'Unique Collections', value: nfts?.ownedNfts ? new Set(nfts.ownedNfts.map(nft => nft.contract.address)).size : 0 },
-            { trait_type: 'Pattern Type', value: 'Origami' },
-            { trait_type: 'Total NFTs', value: nfts?.totalCount || 0 }
-          ],
+          // Use helper function to build consistent attributes including "Revealed by"
+          attributes: buildNftAttributes(sentimentData.sentiment),
           curatedNfts: sentimentData.filteredNfts.map(nft => ({
             name: nft.name || 'Untitled',
             image: nft.imageUrl || '',
@@ -1350,11 +1357,11 @@ export function KatachiGenerator({ overrideAddress, onGoHome, onReady }: Katachi
                         <h5 className="text-xs font-medium text-muted-foreground mb-2">TRAITS ({generatedPattern.metadata.attributes.length})</h5>
                         <div className="space-y-2 text-sm max-h-48 overflow-y-auto">
                           {generatedPattern.metadata.attributes.map((trait, i) => (
-                            <div key={i} className="flex justify-between items-center py-1 border-b border-border/30 last:border-b-0">
+                            <div key={i} className="flex justify-between items-start py-1 border-b border-border/30 last:border-b-0">
                               <span className="text-muted-foreground text-xs">{trait.trait_type}</span>
-                              <span className="font-mono text-xs ml-2">
-                                {typeof trait.value === 'string' && trait.value.length > 20 
-                                  ? `${trait.value.slice(0, 20)}...` 
+                              <span className="font-mono text-xs ml-2 text-right break-words max-w-[70%]">
+                                {typeof trait.value === 'string' && trait.value.length > 20 && trait.trait_type !== 'Sentiment'
+                                  ? `${trait.value.slice(0, 20)}...`
                                   : trait.value}
                               </span>
                             </div>
