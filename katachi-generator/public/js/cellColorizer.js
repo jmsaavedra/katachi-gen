@@ -2,6 +2,14 @@
  * Cell Colorizer - Generate colored cell map images of origami patterns
  */
 
+// ============================================================
+// CONFIGURATION: Fold Line Colors
+// ============================================================
+// Set to true for colored fold lines (red=mountain, blue=valley, black=border)
+// Set to false for all black lines
+const USE_COLORED_FOLD_LINES = true;
+// ============================================================
+
 function initCellColorizer(globals) {
     
     // Generate a set of visually distinct colors for cells
@@ -548,14 +556,34 @@ function initCellColorizer(globals) {
                 finalCtx.rotate(Math.PI);
                 finalCtx.translate(-canvasWidth / 2, -canvasHeight / 2);
 
-                // Thin black lines for all fold lines
-                const lineWidth = Math.max(1, scale * 0.5); // Scale-aware, minimum 1px
-                finalCtx.strokeStyle = "#000000"; // BLACK only
+                // Helper function to get edge color based on assignment
+                function getEdgeColor(assignment) {
+                    if (!USE_COLORED_FOLD_LINES) {
+                        return "#000000"; // All black when colored lines disabled
+                    }
+
+                    // Standard origami fold line colors
+                    if (assignment === "B") return "#000000"; // Border - black
+                    if (assignment === "M" || assignment === "CM") return "#ff0000"; // Mountain - red
+                    if (assignment === "V" || assignment === "CV") return "#0000ff"; // Valley - blue
+                    if (assignment === "C") return "#00ff00"; // Cut - green
+                    if (assignment === "F") return "#ffff00"; // Facet - yellow
+                    if (assignment === "U") return "#ff00ff"; // Hinge - magenta
+                    return "#000000"; // Default to black
+                }
+
+                // Scale-aware line width
+                const lineWidth = Math.max(1, scale * 0.5); // Minimum 1px
                 finalCtx.lineWidth = lineWidth;
 
                 // Draw each edge
+                let drawnLines = 0;
                 for (let i = 0; i < fold.edges_vertices.length; i++) {
                     const edge = fold.edges_vertices[i];
+                    const assignment = fold.edges_assignment[i];
+
+                    // Skip facet edges (yellow) - these are triangulation, not folds
+                    if (assignment === "F") continue;
 
                     // Get vertex coordinates
                     const v1 = vertices[edge[0]];
@@ -565,15 +593,21 @@ function initCellColorizer(globals) {
                     const p1 = transformPoint(v1);
                     const p2 = transformPoint(v2);
 
+                    // Set color for this edge type
+                    finalCtx.strokeStyle = getEdgeColor(assignment);
+
                     // Draw the fold line
                     finalCtx.beginPath();
                     finalCtx.moveTo(p1[0], p1[1]);
                     finalCtx.lineTo(p2[0], p2[1]);
                     finalCtx.stroke();
+
+                    drawnLines++;
                 }
 
                 finalCtx.restore();
-                console.log(`✅ Drew ${fold.edges_vertices.length} black fold lines`);
+                const colorMode = USE_COLORED_FOLD_LINES ? "colored" : "black";
+                console.log(`✅ Drew ${drawnLines} ${colorMode} fold lines (skipped ${fold.edges_vertices.length - drawnLines} facet edges)`);
             } else {
                 console.warn("⚠️  No edge data available in fold structure");
             }

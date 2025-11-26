@@ -24,16 +24,21 @@
     <script>
         // Global variables for NFT rendering
         window.nftRenderComplete = false;
-        
+
         // NFT data will be injected here during generation
         const nftData = <%- nftData %>;
-        
+
         // Edit mode configuration
         const editMode = false;
         window.editMode = editMode;
-        
+
         // Origami patterns will be loaded from the patterns directory
         // Declared as let to allow reassignment later
         let origamiPatterns = [];
+
+        // Update page title with token ID if available
+        if (typeof nftData !== 'undefined' && nftData && nftData.tokenId) {
+            document.title = 'Katachi Gen #' + nftData.tokenId;
+        }
     </script>
 </head>
