@@ -170,9 +170,6 @@ export default function Home() {
         }}
       />
 
-      {/* Dark overlay - pointer-events-none allows mouse to pass through to iframe */}
-      <div className="fixed inset-0 bg-black/50 pointer-events-none" style={{ zIndex: 1 }} />
-
       <div className="relative flex min-h-screen flex-col items-center justify-center px-4 py-8 md:py-12 pointer-events-none" style={{ zIndex: 2 }}>
         {/* Ambient loader while background iframe hydrates */}
         <div
@@ -198,29 +195,35 @@ export default function Home() {
             isBackgroundReady ? 'opacity-100' : 'opacity-0'
           }`}
         >
-          <h1 className="text-5xl font-bold tracking-tight sm:text-7xl font-[family-name:var(--font-montserrat)]">
-            Katachi Gen <br />
-            <span className="opacity-70 text-3xl sm:text-5xl font-bold font-[family-name:var(--font-montserrat)]">カタチ・ゲン</span>
-          </h1>
+          <div className="relative max-w-4xl mx-auto">
+            <div
+              className="absolute inset-0 bg-black/[0.57] blur-3xl -m-12"
+              style={{ zIndex: -1 }}
+            />
+            <h1 className="text-5xl font-bold tracking-tight sm:text-7xl font-[family-name:var(--font-montserrat)] relative">
+              Katachi Gen <br />
+              <span className="opacity-70 text-3xl sm:text-5xl font-bold font-[family-name:var(--font-montserrat)]">カタチ・ゲン</span>
+            </h1>
 
-          {/* Brief Description */}
-          <p className="text-white text-2xl md:text-3xl max-w-2xl mx-auto leading-relaxed font-semibold">
-            Generative 3D Origami artifacts of your collection on ShapeL2, co-curated by you and AI.
-          </p>
+            {/* Brief Description */}
+            <p className="text-white text-2xl md:text-3xl max-w-2xl mx-auto leading-relaxed font-semibold mt-4 md:mt-6 relative">
+              Generative 3D Origami artifacts of your collection on ShapeL2, co-curated by you and AI.
+            </p>
+          </div>
 
           {/* Japanese Etymology - Compact */}
           <div className="max-w-md mx-auto relative">
             <div
-              className="absolute inset-0 bg-black/50 blur-3xl -m-8"
+              className="absolute inset-0 bg-black/[0.57] blur-3xl -m-8"
               style={{ zIndex: -1 }}
             />
             <div className="text-white/60 text-lg md:text-xl leading-relaxed relative">
               <div className="border-t border-white/30 pb-2 mb-2 md:pb-3 md:mb-3 w-[70%] mx-auto">
               </div>
               <p>
-                <strong className="text-white/80">Katachi</strong> <span className="text-white/50">(</span>カタチ<span className="text-white/50">)</span> = Shape/Form<br/>
-                <strong className="text-white/80">Gen</strong> <span className="text-white/50">(</span>ゲン<span className="text-white/50">)</span> = To Appear/Manifest<br/>
-                カタチ・ゲン = <strong className="animate-gradient-text text-xl md:text-2xl">Shape Revealed</strong>
+                <strong className="text-white/80">Katachi</strong> <span className="text-white/50">(</span><span className="text-white">カタチ</span><span className="text-white/50">)</span> = <span className="text-white">Shape/Form</span><br/>
+                <strong className="text-white/80">Gen</strong> <span className="text-white/50">(</span><span className="text-white">ゲン</span><span className="text-white/50">)</span> = <span className="text-white">To Appear/Manifest</span><br/>
+                <span className="text-white">カタチ・ゲン</span> = <strong className="animate-gradient-text text-xl md:text-2xl">Shape Revealed</strong>
               </p>
             </div>
           </div>
@@ -229,26 +232,18 @@ export default function Home() {
         {/* Two Column CTAs */}
         <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
           {/* Primary CTA - Reveal Your Shape */}
-          <Card className="group hover:shadow-lg transition-all duration-300 border-[0.5px] border-[rgba(255,255,255,0.6)] hover:border-blue-600 bg-[rgba(0,0,0,0.35)] pointer-events-auto cursor-pointer">
-            <CardContent
-              className="p-6 md:p-8 pb-5 md:pb-6 flex flex-col"
-              onClick={() => {
-                if (!isConnected) {
-                  // Trigger the connect button click
-                  const connectBtn = document.querySelector('[data-reveal-connect-btn]') as HTMLButtonElement;
-                  connectBtn?.click();
-                } else {
-                  setIsMintReady(false);
-                  setShowGenerator(true);
-                }
-              }}
-            >
+          <Card className="group hover:shadow-lg transition-all duration-300 border-[0.5px] border-[rgba(255,255,255,0.6)] hover:border-blue-600 bg-[rgba(0,0,0,0.1)] pointer-events-none">
+            <CardContent className="p-6 md:p-8 pb-5 md:pb-6 flex flex-col">
               <div className="flex justify-center">
                 <Origami className="h-16 w-16 text-primary" />
               </div>
-              <div className="space-y-2 text-center mt-3 md:mt-4 mb-4 md:mb-6">
-                <h2 className="text-2xl font-semibold">Reveal Your Shape</h2>
-                <p className="text-sm text-white/80">
+              <div className="space-y-2 text-center mt-3 md:mt-4 mb-4 md:mb-6 relative">
+                <div
+                  className="absolute inset-0 bg-black/90 blur-3xl -mx-6 -mb-6"
+                  style={{ zIndex: -1 }}
+                />
+                <h2 className="text-2xl font-semibold relative">Reveal Your Shape</h2>
+                <p className="text-sm text-white/80 relative">
                   Connect your wallet to generate your unique origami pattern
                 </p>
               </div>
@@ -257,9 +252,8 @@ export default function Home() {
                   {({ openConnectModal }) => (
                     <Button
                       size="lg"
-                      className="w-full gap-2 animate-gradient-button transition-colors cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
+                      className="w-full gap-2 animate-gradient-button transition-colors cursor-pointer pointer-events-auto"
+                      onClick={() => {
                         handleConnectClick(openConnectModal);
                       }}
                       data-reveal-connect-btn
@@ -272,9 +266,8 @@ export default function Home() {
               ) : (
                 <Button
                   size="lg"
-                  className="w-full gap-2 animate-gradient-button cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
+                  className="w-full gap-2 animate-gradient-button cursor-pointer pointer-events-auto"
+                  onClick={() => {
                     setIsMintReady(false);
                     setShowGenerator(true);
                   }}
@@ -286,28 +279,25 @@ export default function Home() {
           </Card>
 
           {/* Secondary CTA - Explore */}
-          <Card
-            className="group hover:shadow-lg transition-all duration-300 border-[0.5px] border-[rgba(255,255,255,0.6)] hover:border-blue-600 bg-[rgba(0,0,0,0.35)] pointer-events-auto cursor-pointer"
-            onClick={handleExploreClick}
-          >
+          <Card className="group hover:shadow-lg transition-all duration-300 border-[0.5px] border-[rgba(255,255,255,0.6)] hover:border-blue-600 bg-[rgba(0,0,0,0.1)] pointer-events-none">
             <CardContent className="p-6 md:p-8 pb-5 md:pb-6 flex flex-col">
               <div className="flex justify-center">
                 <Sparkles className="h-16 w-16 text-white/80" />
               </div>
-              <div className="space-y-2 text-center mt-3 md:mt-4 mb-4 md:mb-6">
-                <h2 className="text-2xl font-semibold">Explore</h2>
-                <p className="text-sm text-white/80">
+              <div className="space-y-2 text-center mt-3 md:mt-4 mb-4 md:mb-6 relative">
+                <div
+                  className="absolute inset-0 bg-black/90 blur-3xl -mx-6 -mb-6"
+                  style={{ zIndex: -1 }}
+                />
+                <h2 className="text-2xl font-semibold relative">Explore</h2>
+                <p className="text-sm text-white/80 relative">
                   Share your sentiment and curate a collection of Shape artworks. No wallet needed!
                 </p>
               </div>
               <Button
                 size="lg"
-                variant="outline"
-                className="w-full gap-2 group-hover:!bg-blue-600 group-hover:!text-white group-hover:!border-blue-600 hover:!bg-blue-600 hover:!text-white hover:!border-blue-600 transition-colors cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleExploreClick();
-                }}
+                className="w-full gap-2 !bg-blue-400/60 !text-white !border-2 !border-white group-hover:!bg-blue-600 group-hover:!border-blue-600 hover:!bg-blue-600 hover:!border-blue-600 transition-colors cursor-pointer pointer-events-auto"
+                onClick={handleExploreClick}
               >
                 <Sparkles className="h-4 w-4" />
                 Try it out
