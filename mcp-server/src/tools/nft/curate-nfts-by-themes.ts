@@ -178,6 +178,12 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
   const nftDescription = (nft.description || '').toLowerCase();
   const collectionName = (nft.contract.name || '').toLowerCase();
 
+  // Extract attributes as searchable text
+  const attributes = (nft.raw?.metadata?.attributes || []) as Array<{ trait_type?: string; value?: any }>;
+  const attributesText = attributes
+    .map((attr) => `${attr.trait_type || ''} ${attr.value || ''}`.toLowerCase())
+    .join(' ');
+
   let score = 0;
   const reasons: string[] = [];
   const textMatches: string[] = [];
@@ -187,21 +193,27 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
   // Direct word matches in sentiment
   const sentimentWords = [...new Set(lowerSentiment.split(/\s+/))];
   const descriptionMatches: string[] = [];
+  const attributeMatches: string[] = [];
 
   for (const word of sentimentWords) {
     if (word.length > 3) {
       if (nftName.includes(word)) {
-        score += 3;
+        score += 2;
         reasons.push(`name contains "${word}"`);
         textMatches.push(`NFT name: "${word}"`);
       }
       if (nftDescription.includes(word)) {
-        score += 2;
+        score += 3;
         descriptionMatches.push(word);
         textMatches.push(`Description: "${word}"`);
       }
+      if (attributesText.includes(word)) {
+        score += 2;
+        attributeMatches.push(word);
+        textMatches.push(`Attributes: "${word}"`);
+      }
       if (collectionName.includes(word)) {
-        score += 1;
+        score += 0.5;
         reasons.push(`collection relates to "${word}"`);
         textMatches.push(`Collection: "${word}"`);
       }
@@ -219,6 +231,17 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
     }
   }
 
+  // Add consolidated attribute match reason
+  if (attributeMatches.length > 0) {
+    if (attributeMatches.length === 1) {
+      reasons.push(`attributes contain "${attributeMatches[0]}"`);
+    } else if (attributeMatches.length === 2) {
+      reasons.push(`attributes contain "${attributeMatches[0]}" and "${attributeMatches[1]}"`);
+    } else {
+      reasons.push(`attributes match ${attributeMatches.length} words`);
+    }
+  }
+
   // Theme matching
   for (const theme of themes) {
     const lowerTheme = theme.toLowerCase();
@@ -226,15 +249,21 @@ async function scoreNFT(nft: OwnedNft, sentiment: string, themes: string[]): Pro
 
     for (const word of themeWords) {
       if (nftName.includes(word)) {
-        score += 2;
+        score += 2.5;
         reasons.push(`${theme} theme: "${word}" in name`);
         themeMatches.push(`${theme}: "${word}" in name`);
         break;
       }
       if (nftDescription.includes(word)) {
-        score += 1;
+        score += 2.5;
         reasons.push(`${theme} theme: "${word}" in description`);
         themeMatches.push(`${theme}: "${word}" in description`);
+        break;
+      }
+      if (attributesText.includes(word)) {
+        score += 2;
+        reasons.push(`${theme} theme: "${word}" in attributes`);
+        themeMatches.push(`${theme}: "${word}" in attributes`);
         break;
       }
       if (collectionName.includes(word)) {
