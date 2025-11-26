@@ -123,11 +123,25 @@ export function CollectionReflection({ walletAddress, totalNfts, onSentimentSubm
         const nextChar = textToType[currentIndexRef.current + 1];
 
         currentIndexRef.current++;
-        // Convert \n to <div> with margin for proper spacing
-        const displayText = textToType.slice(0, currentIndexRef.current)
+
+        // Build display text with line breaks after sentences
+        let displayText = textToType.slice(0, currentIndexRef.current);
+
+        // Add <br><br> after each sentence (period followed by space or end of text)
+        // This regex finds periods followed by a space (or end) and replaces them with period + double line break
+        displayText = displayText.replace(/\.\s/g, '.<br><br>');
+
+        // Also handle the final period if it's at the end
+        if (displayText.endsWith('.')) {
+          displayText = displayText.slice(0, -1) + '.<br><br>';
+        }
+
+        // Convert remaining \n to <div> with margin for proper spacing
+        displayText = displayText
           .split('\n')
           .map((line, i, arr) => i < arr.length - 1 ? `<div style="margin-bottom: 0.75em;">${line}</div>` : line)
           .join('');
+
         setDisplayedText(displayText);
         console.log('Typing progress:', currentIndexRef.current, '/', textToType.length);
         if (currentChar === '\n') {
