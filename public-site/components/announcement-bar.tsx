@@ -12,9 +12,9 @@ export function AnnouncementBar() {
   }
 
   return (
-    <div className="fixed top-0 left-0 right-0 z-50 h-[40px] bg-blue-600/90 backdrop-blur-sm text-white text-center text-sm font-medium flex flex-col items-center justify-center">
+    <div className="fixed top-0 left-0 right-0 z-50 h-[40px] bg-gray-700 text-white text-center text-sm font-medium flex flex-col items-center justify-center">
       <div>
-        🥇{' '}
+        🏆{' '}
         <Link
           href="https://x.com/Shape_L2/status/1962942181271834826"
           target="_blank"
@@ -34,7 +34,7 @@ export function AnnouncementBar() {
         >
           SHAPECRAFT<sup className="text-[0.6em]">2</sup>
         </Link>
-        {' '}⚫️{' '}Mainnet soon 🚀
+        {' '}—{' '}Mainnet soon ⚫️
       </div>
     </div>
   );

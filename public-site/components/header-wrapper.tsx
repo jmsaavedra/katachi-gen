@@ -19,12 +19,7 @@ export function HeaderWrapper() {
     <header
       className={`fixed left-0 right-0 z-40 ${
         isInMintView ? 'top-0' : 'top-[40px] md:top-[40px]'
-      } bg-black/60 backdrop-blur-md ${
-        isInMintView ? 'md:bg-black/60 md:backdrop-blur-md' : 'md:bg-transparent md:backdrop-blur-none'
       }`}
-      style={{
-        willChange: 'backdrop-filter',
-      }}
     >
       <div className="container mx-auto px-4 h-16 flex items-center md:justify-between">
         {/* Mobile: landing page layout */}
