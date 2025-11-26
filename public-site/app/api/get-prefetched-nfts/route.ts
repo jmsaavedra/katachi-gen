@@ -56,9 +56,6 @@ export async function GET(request: NextRequest) {
 
     const mcpResponse = await response.json();
 
-    // Debug: Log the full MCP response structure
-    console.log('MCP Response:', JSON.stringify(mcpResponse, null, 2));
-
     // Handle JSON-RPC error response
     if (mcpResponse.error) {
       return NextResponse.json(
@@ -73,14 +70,7 @@ export async function GET(request: NextRequest) {
     // Extract result from JSON-RPC response
     let result = mcpResponse.result;
     if (mcpResponse.result && mcpResponse.result.content && mcpResponse.result.content[0] && mcpResponse.result.content[0].text) {
-      try {
-        console.log('Attempting to parse content[0].text:', mcpResponse.result.content[0].text.substring(0, 200));
-        result = JSON.parse(mcpResponse.result.content[0].text);
-      } catch (e) {
-        console.error('Could not parse MCP response as JSON:', e);
-        console.error('Full text content:', mcpResponse.result.content[0].text);
-        result = mcpResponse.result;
-      }
+      result = JSON.parse(mcpResponse.result.content[0].text);
     }
 
     // Check if the parsed result indicates an error
