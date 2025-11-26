@@ -541,6 +541,17 @@ export default async function curateNftsByThemes({
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
+    // Enhanced error logging
+    console.error(`❌ ERROR during curation:`);
+    console.error(`   Address: ${address}`);
+    console.error(`   Themes: ${themes.join(', ')}`);
+    console.error(`   Error Type: ${error instanceof Error ? error.constructor.name : typeof error}`);
+    console.error(`   Error Message: ${errorMessage}`);
+
+    if (error instanceof Error && error.stack) {
+      console.error(`   Stack Trace:\n${error.stack}`);
+    }
+
     const errorOutput: ToolErrorOutput = {
       error: true,
       message: `Error curating NFTs: ${errorMessage}`,
