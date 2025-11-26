@@ -146,11 +146,11 @@ export async function POST(request: NextRequest) {
             // Create a sanitized version for logging (remove description and originalUrl from NFTs)
             const logResult = {
               ...result,
-              selectedNfts: result.selectedNfts?.map((nft: any) => {
-                const { description, ...nftWithoutDescription } = nft;
+              selectedNfts: result.selectedNfts?.map((nft: unknown) => {
+                const { description: _description, ...nftWithoutDescription } = nft as Record<string, unknown>;
                 // Also remove originalUrl from alchemyImages if it exists
-                if (nftWithoutDescription.alchemyImages?.originalUrl) {
-                  const { originalUrl, ...alchemyImagesWithoutUrl } = nftWithoutDescription.alchemyImages;
+                if (nftWithoutDescription.alchemyImages && typeof nftWithoutDescription.alchemyImages === 'object') {
+                  const { originalUrl: _originalUrl, ...alchemyImagesWithoutUrl } = nftWithoutDescription.alchemyImages as Record<string, unknown>;
                   return { ...nftWithoutDescription, alchemyImages: alchemyImagesWithoutUrl };
                 }
                 return nftWithoutDescription;
