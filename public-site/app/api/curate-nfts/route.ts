@@ -7,7 +7,7 @@ const MCP_SERVER_URL = withRelatedProject({
   defaultHost: process.env.MCP_SERVER_URL || 'http://localhost:3002/mcp',
 }) + '/mcp';
 
-const MAX_RETRIES = 2;
+const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
 interface MCPPayload {
@@ -95,43 +95,125 @@ export async function POST(request: NextRequest) {
 
     console.log('Calling MCP server (curate-nfts) with payload:', payload);
 
-    const response = await fetchMCPWithRetry(payload);
+    // Retry logic with support for MCP response-level errors
+    let lastError: Error | null = null;
 
-    if (!response.ok) {
-      console.error('MCP server error:', response.status, response.statusText);
-      const errorText = await response.text();
-      console.error('MCP server error details:', errorText);
-      throw new Error(`MCP server returned ${response.status}: ${errorText}`);
-    }
-
-    const data = await response.json();
-
-    if (data.error) {
-      return NextResponse.json(
-        { error: true, message: data.error.message },
-        { status: 500 }
-      );
-    }
-
-    // Extract the actual result from MCP response format
-    let result = data.result;
-    if (data.result && data.result.content && data.result.content[0] && data.result.content[0].text) {
+    for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
       try {
-        result = JSON.parse(data.result.content[0].text);
-        console.log('Parsed MCP result (curate-nfts):', JSON.stringify(result, null, 2));
-      } catch (e) {
-        console.error('Could not parse MCP response as JSON:', e);
-        throw new Error('Invalid JSON response from MCP server');
+        const response = await fetchMCPWithRetry(payload);
+
+        if (!response.ok) {
+          console.error('MCP server error:', response.status, response.statusText);
+          const errorText = await response.text();
+          console.error('MCP server error details:', errorText);
+          lastError = new Error(`MCP server returned ${response.status}: ${errorText}`);
+
+          if (attempt < MAX_RETRIES) {
+            console.warn(`⚠️ Retrying curation (attempt ${attempt + 1}/${MAX_RETRIES}) in ${RETRY_DELAY_MS}ms...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+            continue;
+          }
+          throw lastError;
+        }
+
+        const data = await response.json();
+
+        if (data.error) {
+          lastError = new Error(data.error.message || 'MCP server returned error');
+
+          if (attempt < MAX_RETRIES) {
+            console.warn(`⚠️ MCP returned error response. Retrying (attempt ${attempt + 1}/${MAX_RETRIES}) in ${RETRY_DELAY_MS}ms...`);
+            await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+            continue;
+          }
+
+          return NextResponse.json(
+            {
+              error: true,
+              message: 'Error in MCP curation tool. Please try again.',
+              details: data.error.message
+            },
+            { status: 500 }
+          );
+        }
+
+        // Extract the actual result from MCP response format
+        let result = data.result;
+        if (data.result && data.result.content && data.result.content[0] && data.result.content[0].text) {
+          try {
+            result = JSON.parse(data.result.content[0].text);
+
+            // Create a sanitized version for logging (remove description field from NFTs)
+            const logResult = {
+              ...result,
+              selectedNfts: result.selectedNfts?.map((nft: any) => {
+                const { description, ...nftWithoutDescription } = nft;
+                return nftWithoutDescription;
+              })
+            };
+            console.log('Parsed MCP result (curate-nfts):', JSON.stringify(logResult, null, 2));
+
+            // Check if the parsed result also contains an error
+            if (result.error) {
+              lastError = new Error(result.message || 'Curation error');
+
+              if (attempt < MAX_RETRIES) {
+                console.warn(`⚠️ Parsed result contains error. Retrying (attempt ${attempt + 1}/${MAX_RETRIES}) in ${RETRY_DELAY_MS}ms...`);
+                await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+                continue;
+              }
+
+              return NextResponse.json(
+                {
+                  error: true,
+                  message: 'Error in MCP curation tool. Please try again.',
+                  details: result.message
+                },
+                { status: 500 }
+              );
+            }
+          } catch (e) {
+            console.error('Could not parse MCP response as JSON:', e);
+            lastError = new Error('Invalid JSON response from MCP server');
+
+            if (attempt < MAX_RETRIES) {
+              console.warn(`⚠️ JSON parse error. Retrying (attempt ${attempt + 1}/${MAX_RETRIES}) in ${RETRY_DELAY_MS}ms...`);
+              await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+              continue;
+            }
+            throw lastError;
+          }
+        }
+
+        // Success!
+        console.log(`✅ Curation successful on attempt ${attempt}`);
+        return NextResponse.json(result);
+
+      } catch (error: unknown) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+
+        if (attempt < MAX_RETRIES) {
+          console.warn(`⚠️ Attempt ${attempt} failed: ${lastError.message}. Retrying (attempt ${attempt + 1}/${MAX_RETRIES}) in ${RETRY_DELAY_MS}ms...`);
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY_MS));
+          continue;
+        }
+
+        // Max retries exceeded
+        throw lastError;
       }
     }
-    return NextResponse.json(result);
+
+    // Should never reach here, but just in case
+    throw lastError || new Error('Failed to curate NFTs');
+
   } catch (error: unknown) {
-    console.error('Error in curate-nfts API:', error);
+    console.error('Error in curate-nfts API after all retries:', error);
 
     return NextResponse.json(
       {
         error: true,
-        message: error instanceof Error ? error.message : 'Failed to curate NFTs',
+        message: 'Error in MCP curation tool. Please try again.',
+        details: error instanceof Error ? error.message : 'Failed to curate NFTs',
         timestamp: new Date().toISOString()
       },
       { status: 500 }
