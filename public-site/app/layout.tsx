@@ -174,7 +174,7 @@ export default function RootLayout({
               {process.env.NEXT_PUBLIC_MINT_CHAIN_ID === '11011' && <AnnouncementBar />}
               <HeaderWrapper />
               <main className="flex-1 pt-[104px]">{children}</main>
-              <footer className="border-t py-6 relative bg-black" style={{ zIndex: 10 }}>
+              <footer className="border-t py-6 relative bg-black pointer-events-none" style={{ zIndex: 10 }}>
               <div className="container mx-auto px-4">
                 <div className="text-center text-sm text-white/80 space-y-2">
                   <div>
@@ -183,6 +183,7 @@ export default function RootLayout({
                       href="https://x.com/quietloops"
                       target="_blank"
                       rel="noreferrer"
+                      className="pointer-events-auto"
                     >
                       quietloops
                     </Link>
@@ -191,6 +192,7 @@ export default function RootLayout({
                       href="https://x.com/1000b"
                       target="_blank"
                       rel="noreferrer"
+                      className="pointer-events-auto"
                     >
                       sembo
                     </Link>
@@ -202,6 +204,7 @@ export default function RootLayout({
                         href="https://shape.network"
                         target="_blank"
                         rel="noreferrer"
+                        className="pointer-events-auto"
                       >
                         Shape
                       </Link>
@@ -211,7 +214,7 @@ export default function RootLayout({
                         href="https://github.com/jmsaavedra/katachi-gen"
                         target="_blank"
                         rel="noreferrer"
-                        className="hover:underline inline-flex items-center gap-1"
+                        className="inline-flex items-center gap-1 pointer-events-auto"
                       >
                         <Github className="h-3 w-3" />
                         View on GitHub
@@ -225,7 +228,7 @@ export default function RootLayout({
                         href="https://shapescan.xyz/address/0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57?tab=contract"
                         target="_blank"
                         rel="noreferrer"
-                        className="font-mono hover:underline"
+                        className="font-mono pointer-events-auto"
                       >
                         <span className="md:hidden">0xE5CE...0f57</span>
                         <span className="hidden md:inline">0xE5CEc1C6a8f0fB8d85E41Eb6013477f7e1440f57</span>

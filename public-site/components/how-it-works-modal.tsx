@@ -28,7 +28,7 @@ export function HowItWorksModal({
     <Dialog>
       <DialogTrigger asChild>
         {trigger || (
-          <Button variant={variant} size={size} className={className}>
+          <Button variant={variant} size={size} className={`${className} cursor-pointer hover:!bg-gray-700 hover:!text-white transition-colors`}>
             How It Works
           </Button>
         )}
@@ -91,16 +91,16 @@ export function HowItWorksModal({
             <div className="space-y-3 text-lg text-muted-foreground text-left">
               <ol className="list-decimal list-outside space-y-3 ml-8">
                 <li>
-                  <span className="font-bold">Share your sentiment</span> about collecting on-chain artwork. Our AI will interpret your thought and curate a selection of artworks from your collection.
+                  <span className="font-bold text-white">Share your sentiment</span> about collecting on-chain artwork. Our AI will interpret your thought and curate a selection of artworks from your collection.
                 </li>
                 <li>
-                  <span className="font-bold">AI analyzes your collection</span> using Shape MCP data including your Stack rank and NFTs owned to determine fold complexity and pattern selection.
+                  <span className="font-bold text-white">AI analyzes your collection</span> using Shape MCP data including your Stack rank and NFTs owned to determine fold complexity and pattern selection.
                 </li>
                 <li>
-                  <span className="font-bold">Generate your unique origami</span> - A 2D origami pattern (FOLD file) is created, with your curated artworks graphically represented on the surface.
+                  <span className="font-bold text-white">Generate your unique origami</span> - A 2D origami pattern (FOLD file) is created, with your curated artworks graphically represented on the surface.
                 </li>
                 <li>
-                  <span className="font-bold">Mint and collect</span> your one-of-a-kind digital origami. Download the printable pattern and fold it into a physical artifact representing your on-chain identity.
+                  <span className="font-bold text-white">Mint and collect</span> your one-of-a-kind digital origami. Download the printable pattern and fold it into a physical artifact representing your on-chain identity.
                 </li>
               </ol>
             </div>
